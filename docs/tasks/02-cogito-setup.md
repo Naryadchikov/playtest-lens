@@ -62,8 +62,12 @@ The files changed, the commands with their exit codes, the deduplicated errors a
 
 ## What came back
 
-(The orchestrator fills this in after the task.)
+Grok 4.7 (xhigh, fast), one run. Import and a 600-frame run of the main scene both exit 0 in 4.7.2.stable.official.ed1daf0bf. Logs in `runs/checks/02-import.log` and `02-run.log` (not in the repo).
+- Import: Montserrat font and theme errors on the first import (the theme loaded before the fonts' `.fontdata` existed); the run doesn't repeat them. Exit cleanup lines (4 ObjectDB instances leaked, 2 resources in use) in both.
+- Run: COGITO's own `DynamicInputIcon: ISSUE: No rendering device detected.` 49 times, expected headless.
+- The move to 4.7: the import rewrote 261 tracked files in `game/` (`project.godot` features `4.6` to `4.7`, new keys in `.import` files). Grok restored them, so the submodule stays at upstream's files.
+- The asset list in `docs/PRIOR_WORK.md`, "Demo assets to check". Not read: the Codeberg credits wiki that `game/Readme.md` links to.
 
 ## What the orchestrator changed
 
-(The orchestrator fills this in after the task.)
+Nothing. Spot-checked three claims against `game/`: the Kenney prototype textures' `License.txt` (CC0), the credit list's ASSETS lines (Kenney, Quaternius), 18 Montserrat `.ttf` files.
