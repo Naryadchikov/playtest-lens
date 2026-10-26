@@ -1,6 +1,6 @@
 import pytest
 
-from analyzer.spark_test import parse_moments
+from analyzer.spark_test import parse_moments, to_recording_time
 
 
 def test_parser_accepts_good_reply():
@@ -24,3 +24,8 @@ def test_parser_rejects_moment_without_time():
 def test_parser_rejects_bad_kind():
     with pytest.raises(ValueError, match="invalid kind"):
         parse_moments('[{"time_s": 1, "kind": "bored", "reason": "x", "quote": null}]')
+
+
+def test_times_shifted_to_the_whole_recording():
+    moments = parse_moments('[{"time_s": 12.5, "kind": "stuck", "reason": "Door.", "quote": null}]')
+    assert to_recording_time(moments, 300)[0]["time_s"] == 312.5

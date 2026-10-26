@@ -1,6 +1,6 @@
 """Send one playtest recording to Muse Spark and save confused, stuck or surprised moments.
 
-Run as: tools/run-analyzer.sh analyzer/spark_test.py <recording> [--model muse-spark-1.3] [--seconds N]
+Run as: tools/run-analyzer.sh analyzer/spark_test.py <recording> [--model muse-spark-1.3] [--start S] [--seconds N]
 """
 
 from __future__ import annotations
@@ -56,6 +56,11 @@ def parse_moments(text: str):
     return data
 
 
+# Shift the model's times (seconds into the cut) to seconds into the whole recording.
+def to_recording_time(moments, start):
+    return [{**moment, "time_s": round(moment["time_s"] + start, 2)} for moment in moments]
+
+
 # Duration in seconds from ffprobe, or None if it cannot be read.
 def probe_duration(path):
     ffprobe = shutil.which("ffprobe")
@@ -76,12 +81,12 @@ def probe_duration(path):
 
 
 # Convert any recording to a 720p-max H.264/AAC mp4 with ffmpeg.
-def convert_video(recording: Path, output_path: Path, seconds=None) -> Path:
+def convert_video(recording: Path, output_path: Path, start=0.0, seconds=None) -> Path:
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         print("ffmpeg not found. Install ffmpeg first.", file=sys.stderr)
         raise SystemExit(1)
-    command = [ffmpeg, "-y", "-i", str(recording)]
+    command = [ffmpeg, "-y", "-ss", str(start), "-i", str(recording)]
     if seconds is not None:
         command += ["-t", str(seconds)]
     command += [
@@ -104,7 +109,8 @@ def main(argv=None) -> int:
     )
     parser.add_argument("recording", help="Path to the playtest recording (.mov, .mp4, ...)")
     parser.add_argument("--model", default="muse-spark-1.3", help="Model id (default: muse-spark-1.3)")
-    parser.add_argument("--seconds", type=int, default=None, help="Keep only the first N seconds")
+    parser.add_argument("--start", type=float, default=0.0, help="Start the cut S seconds into the recording")
+    parser.add_argument("--seconds", type=int, default=None, help="Keep only N seconds from the start of the cut")
     args = parser.parse_args(argv)
 
     # Fail before any conversion or upload when the key is missing.
@@ -119,7 +125,9 @@ def main(argv=None) -> int:
     input_hash = client_module.file_content_hash(recording)
 
     with tempfile.TemporaryDirectory(prefix="spark-test-") as tmp:
-        converted = convert_video(recording, Path(tmp) / "converted.mp4", seconds=args.seconds)
+        converted = convert_video(
+            recording, Path(tmp) / "converted.mp4", start=args.start, seconds=args.seconds
+        )
         duration = probe_duration(converted)
         converted_hash = client_module.file_content_hash(converted)
         try:
@@ -138,8 +146,10 @@ def main(argv=None) -> int:
     raw_text = client_module.extract_text(reply)
     output_dir = Path("runs/spark_test")
     stem = recording.stem
+    if args.start or args.seconds:
+        stem += f"-from{args.start:g}s-{args.seconds or 'end'}"
     try:
-        moments = parse_moments(raw_text)
+        moments = to_recording_time(parse_moments(raw_text), args.start)
     except ValueError as exc:
         output_dir.mkdir(parents=True, exist_ok=True)
         raw_path = output_dir / f"{stem}-{args.model}.raw.txt"
@@ -156,6 +166,7 @@ def main(argv=None) -> int:
         json.dumps(
             {
                 "recording": recording.name,
+                "start_s": args.start,
                 "model": args.model,
                 "input_hash": input_hash,
                 "video_hash": converted_hash,

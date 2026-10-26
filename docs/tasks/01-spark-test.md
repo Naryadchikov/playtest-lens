@@ -81,4 +81,6 @@ Round 2 (same thread): one request built in `call_model` and hashed for the key,
 
 ## What the orchestrator changed
 
-Nothing in the code. Not yet checked: the live reply shape, which the first real 30-second call tests.
+Nothing in Muse's code at commit time. Not yet checked: the live reply shape, which the first real call tests.
+
+After Sasha's decision 9 (a 2-minute cut where he talks, on Spark 1.3 and 1.2), the orchestrator added `--start S` (about 20 lines): ffmpeg seeks to S, the saved times are shifted to seconds into the whole recording, the output records `start_s` and its name carries the cut, and one test covers the shift. Checked on a synthetic clip: a cut from 3 s for 2 s lasts 2.0 s.
