@@ -1,0 +1,89 @@
+{
+  "format": 1,
+  "session": {
+    "id": "sample-01",
+    "recording": "sample-01.mov",
+    "duration_s": 840.0,
+    "start_flash_s": 2.4
+  },
+  "findings": [
+    {
+      "id": "f1",
+      "rank": 1,
+      "time_s": 312.5,
+      "end_s": 442.0,
+      "kind": "confused",
+      "summary": "Player reads the fictional lab door panel three times and still looks for another way in.",
+      "quote": "Wait, does this panel want the blue token or the round token?",
+      "clip": {"path": "clips/sample-01/f1.mp4", "start_s": 302.5, "end_s": 322.5},
+      "game_state": "Fictional lab door is locked; the blue token is in the player inventory.",
+      "sources": ["spark", "event_log"],
+      "check": {"verdict": "keep", "note": "Clip and event log both show three panel interactions with no door open.", "model": "muse-wonder-1.0"}
+    },
+    {
+      "id": "f2",
+      "rank": 2,
+      "time_s": 125.0,
+      "end_s": 180.0,
+      "kind": "stuck",
+      "summary": "Player walks the same fictional corridor loop twice without finding the stairwell.",
+      "quote": "I swear I have been down this corridor already.",
+      "clip": {"path": "clips/sample-01/f2.mp4", "start_s": 115.0, "end_s": 135.0},
+      "game_state": "Fictional corridor loop; stairwell door is unmarked.",
+      "sources": ["spark", "event_log"],
+      "check": {"verdict": "keep", "note": "Position log repeats the same corridor nodes twice.", "model": "muse-wonder-1.0"}
+    },
+    {
+      "id": "f3",
+      "rank": 3,
+      "time_s": 610.0,
+      "end_s": null,
+      "kind": "surprised",
+      "summary": "Player jumps when the fictional ceiling pipe bursts, then laughs and keeps going.",
+      "quote": null,
+      "clip": null,
+      "game_state": "Fictional ceiling pipe burst event fires as the player enters the room.",
+      "sources": ["spark"],
+      "check": {"verdict": "keep", "note": "Reaction is visible on camera audio; player recovers within seconds.", "model": "muse-wonder-1.0"}
+    },
+    {
+      "id": "f4",
+      "rank": null,
+      "time_s": 45.0,
+      "end_s": null,
+      "kind": "confused",
+      "summary": "Player pauses at the fictional title screen before starting.",
+      "quote": "Okay, starting now.",
+      "clip": {"path": "clips/sample-01/f4.mp4", "start_s": 35.0, "end_s": 55.0},
+      "game_state": "Fictional title screen waiting for input.",
+      "sources": ["spark"],
+      "check": {"verdict": "drop", "note": "Pause is the player settling in, not confusion with the game.", "model": "muse-wonder-1.0"}
+    },
+    {
+      "id": "f5",
+      "rank": null,
+      "time_s": 500.0,
+      "end_s": 515.0,
+      "kind": "stuck",
+      "summary": "Player stands still while a fictional cutscene plays.",
+      "quote": null,
+      "clip": null,
+      "game_state": "Fictional unskippable cutscene is playing; input is locked.",
+      "sources": ["event_log"],
+      "check": {"verdict": "drop", "note": "Idle time matches the cutscene window in the event log exactly.", "model": "muse-wonder-1.0"}
+    },
+    {
+      "id": "f6",
+      "rank": null,
+      "time_s": 720.5,
+      "end_s": null,
+      "kind": "surprised",
+      "summary": "Player reacts to a fictional distant bell sound in the courtyard.",
+      "quote": "Oh, that bell again.",
+      "clip": {"path": "clips/sample-01/f6.mp4", "start_s": 710.5, "end_s": 730.5},
+      "game_state": "Fictional courtyard bell rings on its ambient schedule.",
+      "sources": ["spark"],
+      "check": {"verdict": "drop", "note": "Bell is ambient audio; player shows no change in behaviour.", "model": "muse-wonder-1.0"}
+    }
+  ]
+}

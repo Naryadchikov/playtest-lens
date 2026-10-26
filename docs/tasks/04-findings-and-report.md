@@ -86,8 +86,8 @@ The files changed, the commands with their output, and what you didn't check. No
 
 ## What came back
 
-(The orchestrator fills this in after the task.)
+Muse Wonder, one round. `analyzer/findings.py` (`load` checks the format as briefed), `report/render.py` (kept findings by the file's rank, then Dropped; everything escaped; only m:ss formatting), a made-up six-finding sample, and tests. 19 tests pass, offline, with the earlier ones.
 
 ## What the orchestrator changed
 
-(The orchestrator fills this in after the task.)
+Nothing. Read the whole diff; reran the tests in main (19 passed); rendered the sample to `runs/checks/04/sample.html` and looked at it in T3's headless browser: findings in rank order, the quote-less finding without a quote, Dropped below. The clips are made up, so no video plays.
