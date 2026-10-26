@@ -56,8 +56,12 @@ The files changed, the commands with their output, and what you didn't check. No
 
 ## What came back
 
-(The orchestrator fills this in after the task.)
+Round 1 (Grok 4.7): `tools/video.py` with `convert_video` and `probe_duration` moved from `analyzer/spark_test.py` unchanged, `cut_clip` (centered, clamped to the recording, returns the start and end it used), and `find_start_flash` on the frame's minimum luma, as this brief asked. 25 tests pass.
+
+The orchestrator sent `find_start_flash` back: the brief was wrong. macOS records the mouse pointer, visible on COGITO's main menu where the flash happens, and COGITO opens as a 1920x1080 window, not fullscreen, so the real flash frame never has a high minimum luma.
+
+Round 2 (same thread): a white pulse in the frame's mean luma (signalstats YAVG): a jump of at least 100, held for 0.15 to 0.4 s, then a drop of at least 100; the time of the first bright frame. Tests: a full flash in a variable-frame-rate 60 fps recording, the same with a pointer-sized black square, a flash over the middle 80% of a grey frame (stored lossless, since H.264 squeezes the levels), all found within one frame; a 3 s white screen and a white menu with dark text both raise `ValueError`; 720p and 1080p. 31 tests pass.
 
 ## What the orchestrator changed
 
-(The orchestrator fills this in after the task.)
+Nothing. Read the diff, reran the whole suite in main (31 passed), `--help`, and the one-definition grep. Not checked: a real Mac recording of the game's flash (when Sasha's recording arrives), and the beep.

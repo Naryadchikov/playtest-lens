@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -16,6 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from analyzer import client as client_module  # noqa: E402
+from tools.video import convert_video, probe_duration  # noqa: E402
 
 KINDS = ("confused", "stuck", "surprised")
 PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "spark_test.md"
@@ -59,48 +58,6 @@ def parse_moments(text: str):
 # Shift the model's times (seconds into the cut) to seconds into the whole recording.
 def to_recording_time(moments, start):
     return [{**moment, "time_s": round(moment["time_s"] + start, 2)} for moment in moments]
-
-
-# Duration in seconds from ffprobe, or None if it cannot be read.
-def probe_duration(path):
-    ffprobe = shutil.which("ffprobe")
-    if not ffprobe:
-        return None
-    result = subprocess.run(
-        [ffprobe, "-v", "error", "-show_entries", "format=duration", "-of", "json", str(path)],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        return None
-    try:
-        return float(json.loads(result.stdout)["format"]["duration"])
-    except (ValueError, KeyError, TypeError):
-        return None
-
-
-# Convert any recording to a 720p-max H.264/AAC mp4 with ffmpeg.
-def convert_video(recording: Path, output_path: Path, start=0.0, seconds=None) -> Path:
-    ffmpeg = shutil.which("ffmpeg")
-    if not ffmpeg:
-        print("ffmpeg not found. Install ffmpeg first.", file=sys.stderr)
-        raise SystemExit(1)
-    command = [ffmpeg, "-y", "-ss", str(start), "-i", str(recording)]
-    if seconds is not None:
-        command += ["-t", str(seconds)]
-    command += [
-        "-vf", "scale=-2:min(720\\,ih)",
-        "-c:v", "libx264",
-        "-c:a", "aac",
-        "-movflags", "+faststart",
-        str(output_path),
-    ]
-    result = subprocess.run(command, capture_output=True, text=True, check=False)
-    if result.returncode != 0:
-        print(f"ffmpeg failed: {result.stderr.strip()[-500:]}", file=sys.stderr)
-        raise SystemExit(1)
-    return output_path
 
 
 def main(argv=None) -> int:
