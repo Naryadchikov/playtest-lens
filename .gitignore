@@ -1,0 +1,37 @@
+# Tester recordings and anything cut from them: never in this public repo
+recordings/
+clips/
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.wav
+*.m4a
+
+# Run output (costs, raw model replies, generated reports)
+runs/
+reports/
+
+# Muse Code's worktrees, and the Godot MCP runtime's session files
+.worktrees/
+.mcp/
+
+# Secrets
+.env
+*.key
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Godot
+.godot/
+exports/
+*.import.tmp
+
+# macOS
+.DS_Store
+
+# Claude Code local settings
+.claude/settings.local.json
