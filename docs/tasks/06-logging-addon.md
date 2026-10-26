@@ -66,8 +66,10 @@ The files changed, the commands with exit codes and output, the log paths, and w
 
 ## What came back
 
-(The orchestrator fills this in after the task.)
+Round 1 (Grok 4.7): the logger autoload, an editor plugin, and the headless test; test and demo run exit 0. The orchestrator sent back three changes: a held gamepad stick logged a press on every motion event (`_input` with `is_action_pressed`); scene changes had two paths (the `scene_changed` signal and a per-frame poll); the editor plugin only registered property info for a setting `project.godot` already held.
+
+Round 2 (same thread): input logged from `Input.is_action_just_pressed` / `just_released` once per frame, with no `_input`; only the scene poll; the plugin removed, so `project.godot` changes by the autoload line and the setting. The test adds a held-stick case (one press, not one per frame). Test and demo run exit 0; logs `runs/checks/06-*.log`.
 
 ## What the orchestrator changed
 
-(The orchestrator fills this in after the task.)
+Nothing in the files. Reran the test (exit 0, PASS). Committed on the fork's `playtest-lens` as `33ad57c` and pushed it.
