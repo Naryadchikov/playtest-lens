@@ -1,0 +1,5 @@
+[submodule "game"]
+	path = game
+	url = https://github.com/Naryadchikov/cogito-playtest-lens.git
+	branch = playtest-lens
+	shallow = true

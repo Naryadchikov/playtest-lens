@@ -23,7 +23,7 @@ You give it playtest recordings (the screen plus the player thinking out loud) a
 
 ## The test game
 
-The upstream COGITO demo (github.com/Phazorknight/Cogito, MIT), in Godot 4.7.2, as a submodule of Sasha's public fork. The fork has one branch with our few changes:
+The upstream COGITO demo (codeberg.org/Phazorknight/Cogito at 676be6d, MIT; it moved there from GitHub), in Godot 4.7.2, as a submodule of Sasha's public copy, `cogito-playtest-lens` on GitHub (DECISIONS.md, 2026-10-26). Its `main` is upstream's, unchanged; the `playtest-lens` branch has our few changes:
 - the logging add-on wired in;
 - the in-game developer helper documents removed, so testers don't read setup notes.
 

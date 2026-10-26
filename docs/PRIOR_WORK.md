@@ -4,7 +4,7 @@ The hackathon's rule: what's presented must be built during the event, and what 
 
 ## Third-party
 
-- **COGITO** by Phazorknight (MIT), the immersive-sim template whose demo is the test game. It's a submodule of Sasha's fork; our changes are the commits on the fork's `playtest-lens` branch, listed below.
+- **COGITO** by Phazorknight (MIT), the immersive-sim template whose demo is the test game. Origin: codeberg.org/Phazorknight/Cogito at 676be6d (MIT). Sasha's copy, [github.com/Naryadchikov/cogito-playtest-lens](https://github.com/Naryadchikov/cogito-playtest-lens), keeps upstream's `main` at that commit, unchanged, with its full history. Our changes are only the commits on its `playtest-lens` branch, listed below. It's the submodule at `game/`.
 - **Godot 4.7.2**, **Python**, **ffmpeg**, and any library listed in the analyzer's requirements file.
 - Demo asset credits: listed here once each asset's license is checked.
 - Tools used to build it, not part of the submission: T3 Code, Claude Code, Muse Code and Cursor.

@@ -7,7 +7,7 @@ Watching playtest recordings takes hours, so small teams skip it or skim it. Pla
 ## Built with
 
 - Meta Model API: Muse Spark, Voice Transcribe; Muse Spark Open for the open-weights mode.
-- Test game: the COGITO demo by Phazorknight (MIT), as a submodule. See [docs/PRIOR_WORK.md](docs/PRIOR_WORK.md).
+- Test game: the COGITO demo by Phazorknight (MIT), from codeberg.org/Phazorknight/Cogito at 676be6d. It's the submodule at `game/`, from Sasha's copy, [cogito-playtest-lens](https://github.com/Naryadchikov/cogito-playtest-lens). See [docs/PRIOR_WORK.md](docs/PRIOR_WORK.md).
 - Godot 4.7.2, Python 3.13, ffmpeg.
 - Built with coding agents run from T3 Code: Muse Code (Meta) on Muse Wonder, Grok through Cursor, and Claude Code. Which agent built what is in [docs/tasks/](docs/tasks/).
 
