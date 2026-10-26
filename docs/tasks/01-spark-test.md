@@ -75,8 +75,10 @@ The files changed, the commands you ran and their output, and what you didn't ch
 
 ## What came back
 
-(The orchestrator fills this in after the task.)
+Round 1 (Muse Wonder, high effort): the client, the script, the prompt and 8 offline tests, all passing. The no-key run exits before any upload. The orchestrator converted the same 1080p60 clip twice and got identical bytes, so caching by converted content holds. Sent back four changes: the request was built in two places (one for the cache key, one to send), the cost logic was repeated in the script, defensive branches handled reply shapes the API doesn't send, and Muse Wonder's price was missing.
+
+Round 2 (same thread): one request built in `call_model` and hashed for the key, one `usage_and_cost` function, the dead branches gone, Wonder priced. 8 tests pass.
 
 ## What the orchestrator changed
 
-(The orchestrator fills this in after the task.)
+Nothing in the code. Not yet checked: the live reply shape, which the first real 30-second call tests.
