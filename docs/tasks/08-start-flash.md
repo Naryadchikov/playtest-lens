@@ -51,8 +51,8 @@ The files changed, the commands with exit codes and output, the screenshot and l
 
 ## What came back
 
-(The orchestrator fills this in after the task.)
+Grok 4.7, one run. `start_flash.gd`, a child of the logger: about 1 s after start, a full-window white `CanvasLayer` (input ignored) and a 1000 Hz beep built in memory, both removed after 0.25 s; the `start_flash` line is stamped from `RenderingServer.frame_post_draw` (headless, which draws nothing, stamps on the next process frame). Headless test PASS (`t=1.0129`). Windowed test PASS: the screenshot during the flash is pure white (`runs/checks/08-flash.png`), the one after is the scene again (`08-after.png`), and the master bus recorded the beep (peak 16380 of 32767). The logger and adapter tests and the main menu run unchanged.
 
 ## What the orchestrator changed
 
-(The orchestrator fills this in after the task.)
+Nothing. Read the diff, looked at both screenshots, reran the headless flash test (PASS, exit 0). Committed on the fork's `playtest-lens` as `9520a99` and pushed it. Not checked: the flash over the COGITO main menu in a window, and a real screen recording lined up with the log (the flash-finding tool comes next).
