@@ -1,6 +1,6 @@
 # Reviews
 
-A Proposal (Claude Opus 5.5, in Sasha's claude.ai chat, 2026-10-26), until Sasha confirms it in DECISIONS.md. It's a lighter version of a loop he already runs: there are no PRs here, and nine days.
+Proposed by Claude Opus 5.5 in Sasha's claude.ai chat, 2026-10-26; Sasha confirmed it the same day (DECISIONS.md). It's a lighter version of a loop he already runs: there are no PRs here, and nine days.
 
 ## When
 

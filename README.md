@@ -8,7 +8,7 @@ Watching playtest recordings takes hours, so small teams skip it or skim it. Pla
 
 - Meta Model API: Muse Spark, Voice Transcribe; Muse Spark Open for the open-weights mode.
 - Test game: the COGITO demo by Phazorknight (MIT), as a submodule. See [docs/PRIOR_WORK.md](docs/PRIOR_WORK.md).
-- Godot 4.7.2, Python 3.12, ffmpeg.
+- Godot 4.7.2, Python 3.13, ffmpeg.
 - Built with coding agents run from T3 Code: Muse Code (Meta) on Muse Wonder, Grok through Cursor, and Claude Code. Which agent built what is in [docs/tasks/](docs/tasks/).
 
 ## License

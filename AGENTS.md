@@ -30,7 +30,7 @@ Sasha decides what gets built, every word a user reads, the look, the prompts' g
 
 ## Who does what
 
-Sasha's plan, a Proposal until he confirms it (DECISIONS.md): "opus on high - orchestrates, muse writes most of the code with grok, sonnet reviews. if it goes poorly, we can switch to more claude code instead". Its aim, in his words: "I might not want spend too much of claude code usage".
+Sasha's plan, confirmed in DECISIONS.md on 2026-10-26: "opus on high - orchestrates, muse writes most of the code with grok, sonnet reviews. if it goes poorly, we can switch to more claude code instead". Its aim, in his words: "I might not want spend too much of claude code usage".
 
 | Who | Model and harness | What |
 |---|---|---|
