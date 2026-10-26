@@ -116,7 +116,7 @@ As [docs/REVIEW.md](docs/REVIEW.md) says: a milestone gets a new reviewer on a d
 - Never write a polling or sleep loop. Run long jobs in the background and wait with the harness's monitor; say nothing while nothing needs doing.
 - Build and test each change before writing the next one.
 - Ask Sasha before installing anything outside the project's `.venv`.
-- Small commits on `main`, each built and tested. No PRs for this solo repo. Don't create the GitHub repo or push until Sasha says so.
+- Small commits on `main`, each built and tested. No PRs for this solo repo. Don't create the GitHub repo or push until Sasha says so. When pushing, push only `main`. Sasha, T3 Code chat, 2026-10-26: "When we push later, push only main."
 - Every commit names the agent and model in a `Co-Authored-By:` trailer, and the harness in a `Harness:` trailer (for example `Harness: Claude Code in T3 Code`).
 - **A brief stands alone:** the base commit, one outcome, the files it owns, the checks that prove it, and Sasha's decisions quoted. Two tasks run at once only when they touch different files.
 - **T3 Code's tools are the orchestrator's:** it starts the authors and the reviewers with them, reads their threads, and follows their runs. An agent it starts gets a narrower brief: "Do not call any t3-code tools" and "never run rm". A child's approval prompt appears in a thread nobody watches, so on the Mac both once stalled a review for good. If T3 is set to approve a child's calls on its own, Sasha can drop this line.

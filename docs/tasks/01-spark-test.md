@@ -84,3 +84,9 @@ Round 2 (same thread): one request built in `call_model` and hashed for the key,
 Nothing in Muse's code at commit time. Not yet checked: the live reply shape, which the first real call tests.
 
 After Sasha's decision 9 (a 2-minute cut where he talks, on Spark 1.3 and 1.2), the orchestrator added `--start S` (about 20 lines): ffmpeg seeks to S, the saved times are shifted to seconds into the whole recording, the output records `start_s` and its name carries the cut, and one test covers the shift. Checked on a synthetic clip: a cut from 3 s for 2 s lasts 2.0 s.
+
+Two timing checks Sasha asked for before the real run (2026-10-26), by the orchestrator, on synthetic clips; evidence in `runs/checks/` (not in the repo):
+- **`--start` is frame-accurate.** A 10 fps `testsrc` video whose only keyframe is at 0 s, cut from 3 s: the cut's first frame shows the counter at 3, and it matches source frame 30 (3.0 s) at 48.0 dB PSNR, against 26.0 dB for 2.9 s and 33.7 dB for 3.1 s. The script re-encodes, so the cut doesn't snap to a keyframe.
+- **A Cmd+Shift+5-style `.mov` converts without moving times.** 60 fps H.264, variable frame rate (539 frames in 12 s), AAC 48 kHz, a white flash and a beep at 7.0 s: the flash is at 7.000 s in the `.mov` and in the converted mp4, and at 2.000 s in a cut from 5 s, which `to_recording_time` maps to 7.0. The beep matches the same way in all three.
+Not covered: a real Mac recording's own quirks (an edit list, HEVC, a start offset). Checked again on Sasha's file when it arrives, by a scene change in the `.mov` and the converted mp4.
+
