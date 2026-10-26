@@ -45,8 +45,8 @@ The file changed, the pages you read, the "To decide" list in short form, and wh
 
 ## What came back
 
-(The orchestrator fills this in after the task.)
+Grok 4.7, one run. Every item in "Demo assets to check" now has its license and the page it came from: the credits page, Kenney's support page, each Freesound, Pixabay, Sketchfab, Quaternius and Poly Haven page. A "Credit lines" list (OFL for Montserrat, three CC BY sounds, the CC BY screw model, the MIT notices) and a "To decide (Sasha)" list: the CC BY-NC fireplace sound, the two squidge316 sliding-door sounds (unknown), and the two Freepik flags (unknown). Nothing cut or replaced.
 
 ## What the orchestrator changed
 
-(The orchestrator fills this in after the task.)
+Nothing in Grok's section. Added the list of commits on `playtest-lens` at the end of the file.
