@@ -59,8 +59,8 @@ The files changed, the signals you used (and any you couldn't find), the command
 
 ## What came back
 
-(The orchestrator fills this in after the task.)
+Grok 4.7, one run. `addons/playtest_lens_cogito/adapter.gd` connects to `CogitoDoor.door_state_changed` and `lock_state_changed`, `CogitoKeypad.correct_code_entered`, the four `CogitoQuestManager` quest signals, and for pickups `CogitoInventory.picked_up_new_inventory_item` (COGITO's pickup component has no signal of its own). `player_path` is `Player`. The adapter test logs every event kind; the Laboratory level, run headless, logs `position` lines; the main menu run has no new error. Not provable headless: a real player picking up or opening.
 
 ## What the orchestrator changed
 
-(The orchestrator fills this in after the task.)
+`logger.gd`: Grok added the public `log_event` but kept `_emit` as a wrapper that only forwarded to it. The orchestrator pointed the six callers at `log_event` and removed `_emit` (about 5 lines). Reran the logger test, the adapter test (both PASS, exit 0) and the Laboratory run (4 position lines). Committed on the fork's `playtest-lens` as `48f8550` and pushed it. The stacked-pickup gap is in docs/FOLLOWUPS.md.

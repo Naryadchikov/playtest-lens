@@ -94,3 +94,4 @@ On top of upstream's `676be6d`, in order:
 
 - `de772aa` "Open in Godot 4.7.2": the Godot 4.7.2 editor's own rewrite of the 4.6 project, no content changes. `project.godot` `config/features` from `4.6` to `4.7`, and three new default keys in each of 260 `.import` files.
 - `33ad57c` "Add the Playtest Lens logging add-on, general part": `addons/playtest_lens/` (a passive logger autoload and its headless test), and in `project.godot` the autoload line and the `playtest_lens/player_path` setting.
+- `48f8550` "Add the COGITO adapter to the Playtest Lens logger": `addons/playtest_lens_cogito/` (an autoload on COGITO's signals and its headless test), a public `log_event` in the logger, and in `project.godot` the adapter's autoload line and `playtest_lens/player_path="Player"`.
