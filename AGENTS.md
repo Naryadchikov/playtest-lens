@@ -78,7 +78,7 @@ Claude's usage is the budget that runs out first. Muse's plan and the Cursor cre
 
 ## Working with the authors
 
-- **Start them as T3 Code subagents,** with worktree isolation: Muse on T3's Muse provider, Grok on T3's `cursor` provider. A brief stands alone (see "How to work") and names the skill file the author follows, since only Claude loads `.claude/skills/` by itself.
+- **Start them as T3 Code subagents,** with worktree isolation: Muse on T3's Muse provider, Grok on T3's `cursor` provider. Godot tasks are the exception: Grok works directly in `game/` on `playtest-lens`, with no new worktree. Sasha, T3 Code chat, 2026-10-26: "for Godot tasks, Grok works directly in game/ on playtest-lens instead of a new worktree each time, since no other author touches it." A brief stands alone (see "How to work") and names the skill file the author follows, since only Claude loads `.claude/skills/` by itself.
 - **Fallbacks.** Muse: `muse exec` (JSON output, a step cap of 40, the brief as a prompt file; check `muse exec --help` for the current flags), run inside `.worktrees/muse-NN` on a branch `muse/NN-name`. Grok: the Cursor CLI (`cursor-agent`, model `grok-4.7-xhigh-fast`; check `--list-models` and `--help`), run inside `.worktrees/grok-NN`.
 - **Never** use `--yolo` or any flag that turns off approvals or the sandbox: this is Sasha's own laptop.
 - **Keep Grok's tasks short:** one outcome, about 15 minutes. Cursor ends a run after 10 connection errors and the count never resets, so a long run can die. When a run fails, read its thread before rerunning: the work is often there.
@@ -117,7 +117,7 @@ As [docs/REVIEW.md](docs/REVIEW.md) says: a milestone gets a new reviewer on a d
 - Never write a polling or sleep loop. Run long jobs in the background and wait with the harness's monitor; say nothing while nothing needs doing.
 - Build and test each change before writing the next one.
 - Ask Sasha before installing anything outside the project's `.venv`.
-- Small commits on `main`, each built and tested. No PRs for this solo repo. Don't create the GitHub repo or push until Sasha says so. When pushing, push only `main`. Sasha, T3 Code chat, 2026-10-26: "When we push later, push only main."
+- Small commits on `main`, each built and tested. No PRs for this solo repo. Don't create the GitHub repo or push until Sasha says so. When pushing, push only `main`. Sasha, T3 Code chat, 2026-10-26: "When we push later, push only main." That's about this repo; on the fork, `playtest-lens` is our branch and gets pushed. Sasha, same chat: "“push only main” is about this repo; on the fork, playtest-lens is our branch."
 - Every commit names the agent and model in a `Co-Authored-By:` trailer, and the harness in a `Harness:` trailer (for example `Harness: Claude Code in T3 Code`).
 - **A brief stands alone:** the base commit, one outcome, the files it owns, the checks that prove it, and Sasha's decisions quoted. Two tasks run at once only when they touch different files.
 - **T3 Code's tools are the orchestrator's:** it starts the authors and the reviewers with them, reads their threads, and follows their runs. An agent it starts gets a narrower brief: "Do not call any t3-code tools" and "never run rm". A child's approval prompt appears in a thread nobody watches, so on the Mac both once stalled a review for good. If T3 is set to approve a child's calls on its own, Sasha can drop this line.
