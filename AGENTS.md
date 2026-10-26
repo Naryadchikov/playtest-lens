@@ -97,6 +97,7 @@ Claude's usage is the budget that runs out first. Muse's plan and the Cursor cre
 
 ## The Godot side
 
+- **Godot is the standard 4.7.2 build only:** `/Applications/Godot.app/Contents/MacOS/Godot`, never `Godot_mono.app`. Sasha, T3 Code chat, 2026-10-26: "this project uses only the standard 4.7.2 build, /Applications/Godot.app/Contents/MacOS/Godot, never Godot_mono.app."
 - The test game is Sasha's COGITO fork, a submodule. Our changes live only on its `playtest-lens` branch: the logging add-on wired in, and the in-game setup documents removed.
 - **The logging add-on is passive.** It listens and writes; it never changes gameplay, timing or input. The COGITO adapter subscribes to COGITO's signals and never edits COGITO's own scripts beyond wiring it in.
 - Use the `godot-addon-change` skill for the add-on and the adapter (`.claude/skills/godot-addon-change/SKILL.md`).
