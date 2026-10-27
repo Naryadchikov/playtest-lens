@@ -64,3 +64,17 @@ The files changed, the commands with their output, your rules and numbers for `i
 - Install Python packages only into this checkout's `.venv` (create it with `python3 -m venv .venv` and install `requirements.txt`). Standard library only for this module.
 - Ignore the `game/` folder.
 - No em dashes or spaced en dashes in anything you write.
+
+## What came back
+
+Muse Wonder, one run. `analyzer/log_candidates.py`: `load_log` (checks each line, naming the line number) and `find_candidates(events, video_flash_s)`, mapping through the first `sync_flash`. Its rules, with the numbers as a proposal (Muse Code on Muse Wonder) for Sasha:
+
+- `death`: each `death` line. `retry`: the first `scene` line after a death that names the death's scene.
+- `idle`: position samples all within `IDLE_MAX_MOVE_M = 0.5` m of the first, no gap over `IDLE_MAX_GAP_S = 2.0` s, no `input` line, lasting at least `IDLE_MIN_S = 10.0` s.
+- `backtrack`: the player comes within `BACKTRACK_NEAR_M = 2.0` m of a point passed at least `BACKTRACK_MIN_GAP_S = 5.0` s earlier, after getting at least `BACKTRACK_MIN_AWAY_M = 5.0` m from it; one candidate per return, from the farthest point to the return.
+
+On the fixture: one of each (backtrack 3.88 to 6.41 s, idle 6.92 to 47.80 s, death 47.87 s, retry 48.73 s, with the flash at video 0). 11 new tests; 46 pass.
+
+## What the orchestrator changed
+
+Nothing. Read the module, reran the whole suite in main (46 passed) and the fixture by hand. Not checked: a real session's log, where looking around without moving counts as idle (mouse motion isn't logged) and walking around a room may give many backtracks. The numbers wait for Sasha.
