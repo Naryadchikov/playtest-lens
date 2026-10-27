@@ -52,3 +52,11 @@ The files changed, the New Game button's node path and how you found it, the com
 - Only `/Applications/Godot.app/Contents/MacOS/Godot`, never `Godot_mono.app`.
 - Don't commit, push, or change branches, remotes, submodule or LFS settings.
 - No em dashes or spaced en dashes in anything you write.
+
+## What came back
+
+Grok 4.7, one run. `sync_flash.gd` (renamed from `start_flash.gd`) flashes on request through `PlaytestLensLogger.sync_flash(reason)`, queuing the request for the next frame so the line is never stamped before the white is drawn, and drops a request while a flash is showing. The logger calls it with `level_load` (plus `scene`) when a scene with the player loads; the adapter connects to a button named `NewGame` under COGITO's `CogitoMainMenuController` (live path `/root/01_MainMenu/MainMenu/ContentMain/GameMenu/VBoxContainer/MarginContainer2/NewGame`) and calls it with `new_game`. A launch that stays on the main menu doesn't flash. Headless: the flash test and a New Game test from COGITO's real main menu (`new_game`, then the Lobby's `scene`, then `level_load`, 0.87 s apart) pass. In a window: both flash screenshots full white, the one after shows the Lobby, the master bus has the beep at both flashes (peaks 21417 and 28522), 10.7 s between the flashes. The main menu run's errors and warnings match task 08's.
+
+## What the orchestrator changed
+
+Nothing. Read the diff, reran the logger, flash, adapter and New Game tests headless (all exit 0, PASS), looked at `runs/checks/10-newgame-flash.png` and `10-after.png`. Committed on the fork's `playtest-lens` as `cbfb616` and pushed it. Not checked: a retry reloading the same level (task 12 covers it), and a real screen recording lined up with the log.
