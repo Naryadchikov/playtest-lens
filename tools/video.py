@@ -12,6 +12,9 @@ from pathlib import Path
 
 # signalstats YAVG, on a 0 to 255 scale. A start flash is a short white pulse.
 YAVG_JUMP = 100.0
+# The pulse must actually be white, not just brighter than before:
+# a dark grey pulse (10 to 120) jumps by more than YAVG_JUMP but is no flash.
+YAVG_WHITE_MIN = 200.0
 FLASH_MIN_S = 0.15
 FLASH_MAX_S = 0.4
 
@@ -155,7 +158,7 @@ def _first_white_pulse(frames):
     for index in range(1, len(frames)):
         start_t, start_y = frames[index]
         before = frames[index - 1][1]
-        if start_y < before + YAVG_JUMP:
+        if start_y < before + YAVG_JUMP or start_y < YAVG_WHITE_MIN:
             continue
         floor = before + YAVG_JUMP
         drop_t = None

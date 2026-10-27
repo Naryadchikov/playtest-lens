@@ -71,6 +71,8 @@ def _response_to_dict(response) -> dict:
 
 
 # Pull the text out of a Responses API reply dict.
+# Only message items and their output_text blocks count: reasoning
+# items are the model's private notes, not its answer.
 def extract_text(response: dict) -> str:
     if not isinstance(response, dict):
         return ""
@@ -78,10 +80,14 @@ def extract_text(response: dict) -> str:
         return response["output_text"]
     parts = []
     for item in response.get("output") or []:
-        if not isinstance(item, dict):
+        if not isinstance(item, dict) or item.get("type") != "message":
             continue
         for block in item.get("content") or []:
-            if isinstance(block, dict) and isinstance(block.get("text"), str):
+            if (
+                isinstance(block, dict)
+                and block.get("type") == "output_text"
+                and isinstance(block.get("text"), str)
+            ):
                 parts.append(block["text"])
     if parts:
         return "".join(parts)

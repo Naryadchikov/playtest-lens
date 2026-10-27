@@ -133,6 +133,28 @@ def test_real_call_adds_one_cost_line(tmp_path):
     assert len(costs.read_text().strip().splitlines()) == 1
 
 
+def test_extract_text_skips_reasoning_items():
+    reply = {
+        "output": [
+            {
+                "type": "reasoning",
+                "content": [{"type": "reasoning_text", "text": "I think the player is stuck. "}],
+                "summary": [{"type": "summary_text", "text": "thinking"}],
+            },
+            {
+                "type": "message",
+                "content": [
+                    {"type": "output_text", "text": '[{"time_s": 4.0, "kind": "stuck", '
+                     '"reason": "Player cannot find the door.", "quote": null}]'}
+                ],
+            },
+        ]
+    }
+    text = client.extract_text(reply)
+    assert text.startswith("[{")
+    assert "I think" not in text
+
+
 def test_upload_remembered_by_content_hash(tmp_path):
     video = _video(tmp_path)
     fake_files = FakeFiles()

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from tools.video import cut_clip, find_start_flash, probe_duration
+from tools.video import _first_white_pulse, cut_clip, find_start_flash, probe_duration
 
 
 def _run(command):
@@ -315,6 +315,14 @@ def test_find_start_flash_rejects_a_white_screen_held_for_3s(tmp_path, size):
     )
     with pytest.raises(ValueError, match="white flash"):
         find_start_flash(path)
+
+
+def test_first_white_pulse_rejects_a_dark_grey_pulse():
+    # 10 to 120 jumps by 110 but never gets near white.
+    frames = [(0.0, 10.0), (0.1, 10.0), (0.2, 120.0), (0.3, 120.0), (0.45, 10.0)]
+    assert _first_white_pulse(frames) is None
+    white = [(0.0, 10.0), (0.1, 10.0), (0.2, 255.0), (0.3, 255.0), (0.45, 10.0)]
+    assert _first_white_pulse(white) == pytest.approx(0.2)
 
 
 def test_find_start_flash_rejects_white_menu_with_dark_text(tmp_path):
