@@ -60,3 +60,17 @@ The files changed, the commands with their output, and what you didn't check. No
 - Install Python packages only into this checkout's `.venv` (create it with `python3 -m venv .venv` and install `requirements.txt`). Prefer what's there: `openai` brings `httpx`.
 - Ignore the `game/` folder.
 - No em dashes or spaced en dashes in anything you write.
+
+## What came back
+
+Round 1 (Muse Wonder): `transcribe(...)` in `analyzer/client.py` (multipart `request` and `audio`, `ENDPOINTING`, cache key from the settings and the audio's content hash, a cost line with `audio_s`), `extract_audio` in `tools/video.py` (mono 16-bit 16 kHz WAV), the CLI `analyzer/transcribe.py`, and offline tests. The orchestrator sent it back: it imported `httpx`, which the main `.venv` doesn't have (openai 3.39 brings `httpx2`), and Muse had installed it outside `requirements.txt`; four ways to inject an HTTP client; a `"test-key"` fallback in production code; the voice price inside the per-token `PRICES` table with an exception in `compute_cost`; a reply without `audioDurationMs` billed as 0 s; duplicated ffmpeg code and payload fields.
+
+Round 2 (same thread): `httpx2` only, one `http_client` injection, the key from `api_key or require_api_key()`, `TRANSCRIBE_USD_PER_HOUR` on its own, `audioDurationMs` required, one `_run_ffmpeg` helper for `convert_video` and `extract_audio`, `--seconds` default 20. 35 tests pass.
+
+## What the orchestrator changed
+
+- A 120 s timeout on the default HTTP client (the library default of 5 s is too short for a transcription), and removed `length_s` from the CLI's output (it repeated `seconds`). 2 lines.
+- The one real call, on a 20 s mp4 of macOS `say` speech over black: `tools/run-analyzer.sh -m analyzer.transcribe /tmp/pl-voice/playtest-voice-20s.mp4 --start 0 --seconds 20`, exit 0. The transcript matched the spoken text word for word ("Hello. This is a playtest I am trying to open the lab door it will not open maybe I need a key card I will look around the room and try the other corridor"), one turn 0 to 9180 ms. Billed 9 s of speech (`audioDurationMs` 9680: the service counts the audio track, which `say` made 9.7 s long), $0.00045. A rerun hit the cache and wrote no cost line.
+- The real reply has an integer `turnId` and no `speaker` field; the test fixture now matches.
+
+Not checked: a real tester's voice, non-English speech, live error replies (400, 413, 429, 500).

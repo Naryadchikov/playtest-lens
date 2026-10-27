@@ -13,6 +13,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import httpx2
+
 BASE_URL = "https://api.meta.ai/v1"
 DEFAULT_CACHE_DIR = Path("runs/cache")
 DEFAULT_COSTS_PATH = Path("runs/costs.jsonl")
@@ -23,6 +25,9 @@ PRICES = {
     "muse-spark-1.2": (1.25, 4.25),
     "muse-wonder-1.0": (4.00, 20.00),
 }
+
+TRANSCRIBE_MODEL = "muse-voice-transcribe-1.0"
+TRANSCRIBE_USD_PER_HOUR = 0.18
 
 MISSING_KEY_MESSAGE = (
     "META_API_KEY is not set. Run via tools/run-analyzer.sh, "
@@ -101,6 +106,11 @@ def compute_cost(model: str, input_tokens: int, output_tokens: int):
         return None
     in_price, out_price = PRICES[model]
     return (input_tokens * in_price + output_tokens * out_price) / 1_000_000
+
+
+# Cost in USD for whole seconds of transcribed audio.
+def transcribe_cost_usd(audio_s: int):
+    return audio_s * TRANSCRIBE_USD_PER_HOUR / 3600.0
 
 
 def _upload_index_path(cache_dir: Path) -> Path:
@@ -195,6 +205,70 @@ def call_model(
         "cost_usd": cost,
         "purpose": purpose,
     }
+    with open(costs_path, "a", encoding="utf-8") as handle:
+        handle.write(json.dumps(line) + "\n")
+    return reply
+
+
+# Transcribe one WAV clip with Muse Voice Transcribe, cached and costed.
+def transcribe(
+    audio_path,
+    purpose,
+    *,
+    cache_dir=DEFAULT_CACHE_DIR,
+    costs_path=DEFAULT_COSTS_PATH,
+    api_key=None,
+    http_client=None,
+) -> dict:
+    cache_dir = Path(cache_dir)
+    costs_path = Path(costs_path)
+    audio_path = Path(audio_path)
+    content_hash = file_content_hash(audio_path)
+    settings = {"model": TRANSCRIBE_MODEL, "audioEncoding": "WAV", "mode": "ENDPOINTING"}
+    canonical = json.dumps(
+        {"request": settings, "audio_sha256": content_hash},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    key = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    cache_file = cache_dir / f"{key}.json"
+    if cache_file.exists():
+        return json.loads(cache_file.read_text(encoding="utf-8"))
+
+    key_value = api_key or require_api_key()
+    own_client = http_client is None
+    http = http_client if http_client is not None else httpx2.Client(timeout=120.0)
+    try:
+        files = {
+            "request": (None, json.dumps(settings), "application/json"),
+            "audio": (audio_path.name, audio_path.read_bytes(), "audio/wav"),
+        }
+        headers = {
+            "Authorization": f"Bearer {key_value}",
+            "Accept": "application/json",
+        }
+        response = http.post(f"{BASE_URL}/asr/transcribe", headers=headers, files=files)
+        response.raise_for_status()
+        reply = response.json()
+    finally:
+        if own_client:
+            http.close()
+
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_file.write_text(json.dumps(reply, indent=2), encoding="utf-8")
+
+    audio_s = reply["audioDurationMs"] // 1000
+    line = {
+        "time": datetime.now(timezone.utc).isoformat(),
+        "model": TRANSCRIBE_MODEL,
+        "input_tokens": None,
+        "output_tokens": None,
+        "cost_usd": transcribe_cost_usd(audio_s),
+        "purpose": purpose,
+        "audio_s": audio_s,
+    }
+    costs_path.parent.mkdir(parents=True, exist_ok=True)
     with open(costs_path, "a", encoding="utf-8") as handle:
         handle.write(json.dumps(line) + "\n")
     return reply

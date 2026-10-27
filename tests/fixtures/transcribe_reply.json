@@ -1,0 +1,19 @@
+{
+  "sessionId": "sess_fixture",
+  "transcript": "hello world this is a test",
+  "audioDurationMs": 20900,
+  "turns": [
+    {
+      "turnId": 0,
+      "startMs": 0,
+      "endMs": 4500,
+      "transcript": "hello world"
+    },
+    {
+      "turnId": 1,
+      "startMs": 5000,
+      "endMs": 20900,
+      "transcript": "this is a test"
+    }
+  ]
+}

@@ -35,13 +35,23 @@ def probe_duration(path):
         return None
 
 
-# Convert any recording to a 720p-max H.264/AAC mp4 with ffmpeg.
-def convert_video(recording: Path, output_path: Path, start=0.0, seconds=None) -> Path:
+# Find ffmpeg and run it, exiting with the stderr tail on failure.
+def _run_ffmpeg(args):
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         print("ffmpeg not found. Install ffmpeg first.", file=sys.stderr)
         raise SystemExit(1)
-    command = [ffmpeg, "-y", "-ss", str(start), "-i", str(recording)]
+    result = subprocess.run(
+        [ffmpeg, *args], capture_output=True, text=True, check=False
+    )
+    if result.returncode != 0:
+        print(f"ffmpeg failed: {result.stderr.strip()[-500:]}", file=sys.stderr)
+        raise SystemExit(1)
+
+
+# Convert any recording to a 720p-max H.264/AAC mp4 with ffmpeg.
+def convert_video(recording: Path, output_path: Path, start=0.0, seconds=None) -> Path:
+    command = ["-y", "-ss", str(start), "-i", str(recording)]
     if seconds is not None:
         command += ["-t", str(seconds)]
     command += [
@@ -51,11 +61,27 @@ def convert_video(recording: Path, output_path: Path, start=0.0, seconds=None) -
         "-movflags", "+faststart",
         str(output_path),
     ]
-    result = subprocess.run(command, capture_output=True, text=True, check=False)
-    if result.returncode != 0:
-        print(f"ffmpeg failed: {result.stderr.strip()[-500:]}", file=sys.stderr)
-        raise SystemExit(1)
+    _run_ffmpeg(command)
     return output_path
+
+
+# Extract the audio as the WAV the transcribe API takes: mono, 16-bit, 16 kHz.
+def extract_audio(video, output_path, start=0.0, seconds=None) -> Path:
+    command = ["-y", "-ss", str(start), "-i", str(video)]
+    if seconds is not None:
+        command += ["-t", str(seconds)]
+    command += [
+        "-vn",
+        "-ac",
+        "1",
+        "-ar",
+        "16000",
+        "-c:a",
+        "pcm_s16le",
+        str(output_path),
+    ]
+    _run_ffmpeg(command)
+    return Path(output_path)
 
 
 # Clip centered on time_s (from time_s - seconds/2), clamped to the recording.
