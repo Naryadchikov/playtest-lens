@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import sys
 from datetime import datetime, timezone
@@ -255,10 +256,18 @@ def transcribe(
         if own_client:
             http.close()
 
+    duration_ms = reply.get("audioDurationMs") if isinstance(reply, dict) else None
+    if (
+        isinstance(duration_ms, bool)
+        or not isinstance(duration_ms, (int, float))
+        or not math.isfinite(duration_ms)
+        or duration_ms < 0
+    ):
+        raise ValueError("Transcribe reply has no numeric audioDurationMs.")
+    audio_s = int(duration_ms // 1000)
+
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_file.write_text(json.dumps(reply, indent=2), encoding="utf-8")
-
-    audio_s = reply["audioDurationMs"] // 1000
     line = {
         "time": datetime.now(timezone.utc).isoformat(),
         "model": TRANSCRIBE_MODEL,

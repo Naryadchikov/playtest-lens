@@ -87,6 +87,31 @@ def test_transcribe_request_cache_and_cost(tmp_path):
     http_client.close()
 
 
+@pytest.mark.parametrize("bad", [None, True, -1500, "20900"])
+def test_transcribe_rejects_bad_duration_without_caching(tmp_path, bad):
+    audio = _audio(tmp_path)
+    cache_dir = tmp_path / "cache"
+    costs = tmp_path / "costs.jsonl"
+    payload = _reply()
+    if bad is None:
+        del payload["audioDurationMs"]
+    else:
+        payload["audioDurationMs"] = bad
+
+    def handler(request):
+        return httpx2.Response(200, json=payload)
+
+    http_client = httpx2.Client(transport=httpx2.MockTransport(handler))
+    with pytest.raises(ValueError, match="audioDurationMs"):
+        client.transcribe(
+            audio, "transcribe:clip.wav", cache_dir=cache_dir, costs_path=costs,
+            api_key="test", http_client=http_client,
+        )
+    assert not list(cache_dir.glob("*.json")) if cache_dir.exists() else True
+    assert not costs.exists()
+    http_client.close()
+
+
 def test_transcribe_same_content_new_path_is_cache_hit(tmp_path):
     first = _audio(tmp_path, name="a.wav")
     second = _audio(tmp_path, name="b.wav")
