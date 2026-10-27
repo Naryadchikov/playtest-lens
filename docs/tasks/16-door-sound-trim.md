@@ -43,3 +43,11 @@ The files changed, the commands with exit codes and output, and what you didn't 
 - Only `/Applications/Godot.app/Contents/MacOS/Godot`, never `Godot_mono.app`.
 - Don't commit, push, or change branches, remotes, submodule or LFS settings.
 - No em dashes or spaced en dashes in anything you write.
+
+## What came back
+
+Grok 4.7, one run. `sliding_door_open.ogg`: the first 0.4 s of `stoneDrag4.ogg` (Vorbis, 96 kHz stereo, as the source), faded out over the last 0.1 s with a cubic curve (a linear fade left the end within about 1 dB, because the drag gets louder there); RMS -30.5 dB at 0.10 to 0.15 s, -49.4 dB over the last 0.05 s. Godot loads it as 0.400 s; `sliding_door.tscn`'s open sound points at it; the main menu run log is identical to task 15's.
+
+## What the orchestrator changed
+
+Nothing. Read the diff. Committed on the fork's `playtest-lens` as `7ad0f20` and pushed it. Not checked: hearing it (Sasha's, when he's back).
