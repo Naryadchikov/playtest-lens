@@ -54,3 +54,11 @@ The files changed, the signals you used, the commands with exit codes and output
 - Only `/Applications/Godot.app/Contents/MacOS/Godot`, never `Godot_mono.app`.
 - Don't commit, push, or change branches, remotes, submodule or LFS settings.
 - No em dashes or spaced en dashes in anything you write.
+
+## What came back
+
+Grok 4.7, one run. The adapter connects `death` on the player's `CogitoHealthAttribute` named `health` and writes `death` with `x`, `y`, `z`. `test_session.gd` presses New Game on the real main menu, slides the player about 10 m out and back in the Lobby, waits 40 s, damages health through `decrease_attribute` until `death`, presses the death screen's button (after New Game it starts a new game, which reloads the Lobby), walks a few metres and quits. 113 lines: 3 `sync_flash` (`new_game`, then `level_load` twice), 3 `scene`, 1 `death`, 99 `position`. All five headless tests exit 0; the main menu run's errors match task 10's. Headless, COGITO's death screen prints a `grab_screenshot` error (no viewport image) and still works.
+
+## What the orchestrator changed
+
+Nothing in the game. Reran the session test (exit 0, PASS). Committed on the fork's `playtest-lens` as `1be0ed4` and pushed it. Copied the log to `tests/fixtures/session_log.jsonl` for task 13, with `session_start`'s `log_path` (an absolute path holding the home folder's user name) replaced by its `user://` form. Not checked: a real death from a real hazard, the death screen's load-a-save branch.
