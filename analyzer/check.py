@@ -81,6 +81,36 @@ def clamp_time(value, duration_s):
     return rounded
 
 
+LOG_KIND_TO_FINDING_KIND = {
+    "death": "stuck",
+    "retry": "stuck",
+    "idle": "stuck",
+    "backtrack": "stuck",
+    "looking_around": "confused",
+}
+
+
+# Spark candidates plus event-log candidates, by time. A log candidate
+# within 5 s of a Spark candidate is dropped: the video moment already
+# covers it, and the checker sees the log slice either way.
+def merge_candidates(spark_candidates, log_cands):
+    merged = [dict(candidate, _source="spark") for candidate in spark_candidates]
+    spark_times = [float(candidate["time_s"]) for candidate in spark_candidates]
+    for candidate in log_cands:
+        if any(abs(float(candidate["time_s"]) - spark_t) <= 5.0 for spark_t in spark_times):
+            continue
+        merged.append(
+            {
+                "time_s": candidate["time_s"],
+                "kind": LOG_KIND_TO_FINDING_KIND[candidate["kind"]],
+                "reason": candidate["detail"],
+                "quote": None,
+                "_source": "event_log",
+            }
+        )
+    return sorted(merged, key=lambda item: float(item["time_s"]))
+
+
 # Event-log lines whose video time falls in [start_s, end_s], as text.
 def log_slice_text(events, video_flash_s, start_s, end_s) -> str:
     if not events or video_flash_s is None:
@@ -139,7 +169,7 @@ def run_checks(candidates, *, model, clip_for, transcript_for, call_for, templat
                 "quote": verified_quote(verdict["quote"], transcript),
                 "clip": {"path": str(clip_path), "start_s": clip_start, "end_s": clip_end},
                 "game_state": verdict["game_state"],
-                "sources": ["spark"],
+                "sources": [candidate.get("_source", "spark")],
                 "check": {"verdict": verdict["verdict"], "note": verdict["note"], "model": model},
             }
         )
@@ -157,6 +187,7 @@ def main(argv=None) -> int:
     parser.add_argument("--log", default=None, help="Optional session event log (JSONL)")
     parser.add_argument("--video-flash-s", type=float, default=None, help="Video time of the first sync_flash, when --log is given")
     parser.add_argument("--limit", type=int, default=None, help="Check only the first N candidates")
+    parser.add_argument("--include-log-candidates", action="store_true", help="Also check event-log candidates (needs --log and --video-flash-s)")
     args = parser.parse_args(argv)
 
     client_module.require_api_key()
@@ -167,8 +198,9 @@ def main(argv=None) -> int:
         return 1
     candidates_data = json.loads(Path(args.candidates).read_text(encoding="utf-8"))
     candidates = candidates_data["moments"]
-    if args.limit:
-        candidates = candidates[: args.limit]
+    if args.include_log_candidates and not args.log:
+        print("--include-log-candidates needs --log and --video-flash-s.", file=sys.stderr)
+        return 1
     duration_s = float(candidates_data.get("duration_s") or 0.0)
     if duration_s <= 0:
         print("Candidates file has no duration_s, so findings times cannot be checked.", file=sys.stderr)
@@ -185,6 +217,17 @@ def main(argv=None) -> int:
         if duration_s and not 0 <= args.video_flash_s <= duration_s:
             print("--video-flash-s is outside the recording.", file=sys.stderr)
             return 1
+
+    if args.include_log_candidates:
+        try:
+            candidates = merge_candidates(
+                candidates, log_candidates.find_candidates(events, args.video_flash_s)
+            )
+        except ValueError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+    if args.limit:
+        candidates = candidates[: args.limit]
 
     template = PROMPT_PATH.read_text(encoding="utf-8")
     out_path = Path(args.out) if args.out else Path("runs/check") / f"{recording.stem}-findings.json"

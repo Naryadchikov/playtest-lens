@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from analyzer import findings as findings_module
-from analyzer.check import build_prompt, clamp_time, log_slice_text, parse_check, run_checks, verified_quote
+from analyzer.check import build_prompt, clamp_time, log_slice_text, merge_candidates, parse_check, run_checks, verified_quote
 
 FIXTURE = Path(__file__).parent / "fixtures" / "check_reply.json"
 TEMPLATE = (Path(__file__).parent.parent / "analyzer" / "prompts" / "check.md").read_text(
@@ -67,6 +67,19 @@ def test_run_checks_keeps_and_drops_into_valid_findings(tmp_path):
         encoding="utf-8",
     )
     assert findings_module.load(path)["findings"][0]["quote"] == "I can't take it from here"
+
+
+def test_merge_candidates_maps_log_kinds_and_dedupes_near_spark():
+    spark = [{"time_s": 100.0, "kind": "stuck", "reason": "Barrier.", "quote": None}]
+    log_cands = [
+        {"time_s": 103.0, "end_s": 103.0, "kind": "death", "detail": "Died in Lab"},
+        {"time_s": 200.0, "end_s": 230.0, "kind": "looking_around", "detail": "Still 30 s, view turning"},
+        {"time_s": 300.0, "end_s": 300.0, "kind": "death", "detail": "Died in Lab"},
+    ]
+    merged = merge_candidates(spark, log_cands)
+    assert [m["time_s"] for m in merged] == [100.0, 200.0, 300.0]
+    assert merged[1]["kind"] == "confused" and merged[1]["_source"] == "event_log"
+    assert merged[2]["kind"] == "stuck" and merged[2]["reason"] == "Died in Lab"
 
 
 def test_clamp_time_never_passes_duration():
