@@ -16,7 +16,7 @@ Read AGENTS.md, "The analyzer's rules", and follow the `change-analyzer` skill (
 
 - `analyzer/log_candidates.py` (task 13): `load_log`, `find_candidates`, and an `idle` kind: position samples within `IDLE_MAX_MOVE_M = 0.5` m, gaps up to `IDLE_MAX_GAP_S = 2.0` s, no `input` line, at least `IDLE_MIN_S = 10.0` s. Keep those numbers (Sasha's words above).
 - The log's `position` line now also has `yaw` and `pitch` (degrees, from the camera the player sees through), every 0.5 s. Mouse and gamepad looking write no `input` lines. Older logs may have `yaw` only, or neither.
-- `tests/fixtures/session_log.jsonl` is replaced in this commit by a new run of the same scripted session: in its 40 s stand, the player looks around for the first 20 s, then holds the view still for 20 s.
+- `tests/fixtures/session_log.jsonl` was replaced in `71cb567` by a new run of the same scripted session (its `log_path` is now the `user://` form): in its 40 s stand, the player looks around for the first 20 s, then holds the view still for 20 s.
 
 ## What to build
 
