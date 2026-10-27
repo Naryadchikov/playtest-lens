@@ -4,6 +4,8 @@ One path: load_log parses the JSONL written by the game's add-on, and
 find_candidates flags deaths, retries, idle stretches and backtracks.
 Log times map to video time through the first sync_flash, whose video
 time the caller supplies (tools/video.py's find_start_flash).
+Headless sync_flash stamps are approximate (about one frame late, and
+no frame was drawn); windowed stamps mark the drawn frame.
 """
 
 import json
