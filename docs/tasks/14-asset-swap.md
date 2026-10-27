@@ -43,3 +43,11 @@ The files changed, the Kenney sounds you chose, the commands with exit codes and
 - Only `/Applications/Godot.app/Contents/MacOS/Godot`, never `Godot_mono.app`.
 - Don't commit, push, or change branches, remotes, submodule or LFS settings.
 - No em dashes or spaced en dashes in anything you write.
+
+## What came back
+
+Grok 4.7, one run. `pagdev_fireplace_loop.ogg` (29.3 s, Vorbis stereo 44.1 kHz, imported with `loop=true`) in `audio_burning`; the sliding door opens with Kenney's `stoneDrag4.ogg` (a drag already used in the Lobby; it runs 1.7 s against the door's 0.3 s slide) and closes with `metalLatch.ogg`; the language picker lists "English" and "Deutsch" without icons. The grep for the old names finds nothing; a headless check loads the three streams (the fire loops); the import and main menu run have the same errors and warnings as before; all five add-on tests pass; `runs/checks/14-language.png` shows the picker. The headless import also wrote `.uid` files for the nine Playtest Lens scripts.
+
+## What the orchestrator changed
+
+Removed the five old files and their `.import` files with `git rm`, committed the swap on the fork's `playtest-lens` as `1a381f1` and the nine `.uid` files as `708528e`, and pushed. Updated docs/PRIOR_WORK.md (the fire loop's credit, the "To decide" list closed). Not checked: hearing the sounds, opening the sliding door or lighting a fire in a window.
