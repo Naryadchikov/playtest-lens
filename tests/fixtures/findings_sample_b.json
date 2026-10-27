@@ -1,0 +1,37 @@
+{
+  "format": 1,
+  "session": {
+    "id": "sample-02",
+    "recording": "sample-02.mov",
+    "duration_s": 800.0,
+    "start_flash_s": 3.1
+  },
+  "findings": [
+    {
+      "id": "f1",
+      "rank": 1,
+      "time_s": 280.0,
+      "end_s": 390.0,
+      "kind": "confused",
+      "summary": "Player tries the fictional lab door panel twice, then backtracks for the round token.",
+      "quote": "Maybe it wants the other token first.",
+      "clip": {"path": "clips/sample-02/f1.mp4", "start_s": 270.0, "end_s": 290.0},
+      "game_state": "Fictional lab door is locked; the blue token is in the player inventory.",
+      "sources": ["spark"],
+      "check": {"verdict": "keep", "note": "Two panel interactions, then a backtrack.", "model": "muse-wonder-1.0"}
+    },
+    {
+      "id": "f2",
+      "rank": null,
+      "time_s": 90.0,
+      "end_s": null,
+      "kind": "surprised",
+      "summary": "Player reacts to the fictional menu music starting.",
+      "quote": null,
+      "clip": null,
+      "game_state": "Fictional main menu, music starts on load.",
+      "sources": ["spark"],
+      "check": {"verdict": "drop", "note": "Music startle only; play is unaffected.", "model": "muse-wonder-1.0"}
+    }
+  ]
+}
