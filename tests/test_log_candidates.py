@@ -27,14 +27,14 @@ def test_fixture_has_one_of_each_candidate():
 def test_fixture_times_map_through_the_flash():
     candidates = find_candidates(load_log(FIXTURE), VIDEO_FLASH_S)
     death = next(c for c in candidates if c["kind"] == "death")
-    # By hand: the first sync_flash is at log t 0.185428 and death at
-    # log t 48.060375, so 48.060375 - 0.185428 + 12.34 = 60.21.
-    assert death["time_s"] == 60.21
-    assert death["end_s"] == 60.21
+    # By hand: the first sync_flash is at log t 0.182098 and death at
+    # log t 48.041704, so 48.041704 - 0.182098 + 12.34 = 60.20.
+    assert death["time_s"] == 60.2
+    assert death["end_s"] == 60.2
     assert "COGITO_3_Lobby" in death["detail"]
 
     retry = next(c for c in candidates if c["kind"] == "retry")
-    assert retry["time_s"] == 61.07
+    assert retry["time_s"] == 61.06
     assert "COGITO_3_Lobby" in retry["detail"]
 
 

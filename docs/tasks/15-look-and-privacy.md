@@ -50,3 +50,11 @@ The files changed, the privacy table, the commands with exit codes and output, t
 - Only `/Applications/Godot.app/Contents/MacOS/Godot`, never `Godot_mono.app`.
 - Don't commit, push, or change branches, remotes, submodule or LFS settings.
 - No em dashes or spaced en dashes in anything you write.
+
+## What came back
+
+Grok 4.7, one run. `position` lines take `yaw` and `pitch` from `get_viewport().get_camera_3d()` (left out when there's no camera); `log_path` is `user://playtest_lens/<utc>.jsonl`. The privacy table covered every field the logger and the adapter write, and the file name: after the path fix, none names a person or a machine (the rest are UTC times, `res://` paths, scene-tree node paths, action names, item and quest names from the game, coordinates). In the scripted session, the first 20 s of the stand sweep the view (yaw span 354 degrees across the 180 wrap, pitch span 50), the last 20 s hold it still. In the new log, `grep -c` finds 0 of `/Users/`, the account name and the host name. All five tests pass; the main menu run's errors match task 14's.
+
+## What the orchestrator changed
+
+Nothing in the game. Read the diff, reran the session test (exit 0, PASS). Committed on the fork's `playtest-lens` as `5d585f9` and pushed it. Replaced `tests/fixtures/session_log.jsonl` with the new log, and updated the hand-checked death and retry times in `tests/test_log_candidates.py` to it (60.2 and 61.06 s), so the suite stays green until task 17. Not checked: a real mouse or gamepad look in a window.
