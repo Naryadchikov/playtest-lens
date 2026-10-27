@@ -28,8 +28,8 @@ Sasha's answers of 2026-10-27 are in DECISIONS.md (two entries). Tasks 10 to 17 
 
 ## Next
 
-1. **The Spark test** on Sasha's The Talos Principle 2 recording: a Game Bar mp4 with game sound and his voice, plus `notes.md` in `recordings/spike/`. No event log and no flash. Steps:
-   1. Probe it and convert it, and check that one visible moment sits at the same time before and after.
+1. **The Spark test** on Sasha's The Talos Principle 2 recording: a Game Bar mp4 with game sound and his voice, plus `notes.md` in `recordings/spike/`. No event log and no flash. **No Spark call on it, the 2-minute comparison included, until `notes.md` is in** (DECISIONS.md, 2026-10-27). Steps:
+   1. Probe it and convert it, and check that one visible moment sits at the same time before and after. This calls no model and may run before the notes.
    2. Run a 2-minute stretch where he talks on `muse-spark-1.3` and `muse-spark-1.2`. Show each model's quotes and times next to what he said.
    3. Give the measured cost of the full run, then run it on the model that hears him better.
    4. Make the table against his notes. Go if 7 of the first 10 are real, within about 5 s.
@@ -42,7 +42,7 @@ Sasha's answers of 2026-10-27 are in DECISIONS.md (two entries). Tasks 10 to 17 
 
 ## Open questions for Sasha
 
-1. **The view-turn number** (Muse's proposal): the view counts as turning when it moves more than 5 degrees between two samples, 0.5 s apart. The orchestrator recommends keeping it with the idle and walk-back numbers until Thursday's log.
+None. The view-turn number (5 degrees) stays until Thursday's log, with the idle and walk-back numbers (DECISIONS.md, 2026-10-27).
 
 Note for the testers' guide (Sasha's words to write): the flash comes when New Game is pressed, so testers start recording before that.
 
