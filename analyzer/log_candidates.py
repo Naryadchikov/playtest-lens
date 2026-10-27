@@ -15,6 +15,9 @@ from pathlib import Path
 IDLE_MIN_S = 10.0
 IDLE_MAX_MOVE_M = 0.5
 IDLE_MAX_GAP_S = 2.0
+# View turning: more than this many degrees between two position
+# samples (about 0.5 s apart). Also a proposal, as above.
+VIEW_TURN_MIN_DEG = 5.0
 BACKTRACK_NEAR_M = 2.0
 BACKTRACK_MIN_AWAY_M = 5.0
 BACKTRACK_MIN_GAP_S = 5.0
@@ -71,25 +74,92 @@ def _candidate(kind, start_log_t, end_log_t, offset, detail):
     }
 
 
+def _has_view(event):
+    return _is_number(event.get("yaw")) or _is_number(event.get("pitch"))
+
+
+# Degrees the view turned between two samples, or None when the two
+# samples share no yaw or pitch. Yaw wraps at 180, so 179 to -179
+# is 2 degrees.
+def _view_turn_deg(a, b):
+    dyaw = 0.0
+    dpitch = 0.0
+    shared = False
+    if _is_number(a.get("yaw")) and _is_number(b.get("yaw")):
+        dyaw = abs((b["yaw"] - a["yaw"] + 180.0) % 360.0 - 180.0)
+        shared = True
+    if _is_number(a.get("pitch")) and _is_number(b.get("pitch")):
+        dpitch = abs(b["pitch"] - a["pitch"])
+        shared = True
+    if not shared:
+        return None
+    return math.hypot(dyaw, dpitch)
+
+
 # Idle stretches: no input, and every position within IDLE_MAX_MOVE_M
-# of the stretch's first position, for at least IDLE_MIN_S.
+# of the stretch's first position, for at least IDLE_MIN_S. With view
+# data, a run where the view stays still for at least IDLE_MIN_S is an
+# idle part; what is left between and around those runs, if at least
+# IDLE_MIN_S long, is one looking_around part, short pauses included.
 def _idle_candidates(events, offset):
     candidates = []
     run = []
 
+    def emit(start, end, kind, steps=None):
+        # start and end are sample indexes into run, both included.
+        if end <= start:
+            return
+        duration = run[end]["t"] - run[start]["t"]
+        if duration < IDLE_MIN_S:
+            return
+        if steps is None:
+            detail = f"No input for {duration:.1f} s"
+        else:
+            turned_deg = sum(
+                step for step in steps[start:end] if step is not None
+            )
+            detail = (
+                f"No input for {duration:.1f} s, "
+                f"view turned {turned_deg:.0f} degrees"
+            )
+        candidates.append(
+            _candidate(kind, run[start]["t"], run[end]["t"], offset, detail)
+        )
+
     def close_run():
-        if len(run) >= 2:
-            duration = run[-1]["t"] - run[0]["t"]
-            if duration >= IDLE_MIN_S:
-                candidates.append(
-                    _candidate(
-                        "idle",
-                        run[0]["t"],
-                        run[-1]["t"],
-                        offset,
-                        f"No input for {duration:.1f} s",
-                    )
-                )
+        if len(run) < 2:
+            return
+        if not any(_has_view(event) for event in run):
+            emit(0, len(run) - 1, "idle")
+            return
+        steps = [
+            _view_turn_deg(run[index], run[index + 1])
+            for index in range(len(run) - 1)
+        ]
+        # Maximal runs of still steps, kept as idle only when long
+        # enough. Their sample spans share a boundary sample with
+        # the looking_around parts around them.
+        def is_turning(step):
+            return step is not None and step > VIEW_TURN_MIN_DEG
+
+        idle_parts = []
+        index = 0
+        while index < len(steps):
+            if is_turning(steps[index]):
+                index += 1
+                continue
+            last = index
+            while last + 1 < len(steps) and not is_turning(steps[last + 1]):
+                last += 1
+            if run[last + 1]["t"] - run[index]["t"] >= IDLE_MIN_S:
+                idle_parts.append((index, last + 1))
+            index = last + 1
+        cursor = 0
+        for start, end in idle_parts:
+            emit(cursor, start, "looking_around", steps)
+            emit(start, end, "idle", steps)
+            cursor = end
+        emit(cursor, len(run) - 1, "looking_around", steps)
 
     for event in events:
         kind = event["event"]

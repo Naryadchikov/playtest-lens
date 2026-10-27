@@ -48,3 +48,13 @@ The files changed, the commands with their output, your rule and number for "the
 - Install Python packages only into this checkout's `.venv` from `requirements.txt`; nothing else.
 - Ignore the `game/` folder.
 - No em dashes or spaced en dashes in anything you write.
+
+## What came back
+
+Round 1 (Muse Wonder): `VIEW_TURN_MIN_DEG = 5.0` (the view is turning when `hypot(yaw change with the 180 wrap, pitch change)` between two samples is more than 5 degrees; a proposal for Sasha), and a split of each still stretch at every sample pair where turning started or stopped. The orchestrator sent the split back, its own brief's fault: a real lost player looks, pauses, looks again, so on-and-off looking broke into parts under 10 s that were all dropped.
+
+Round 2 (same thread): inside a still stretch, runs where the view stays still for at least `IDLE_MIN_S` are `idle` (away); what's left between and around them, if at least `IDLE_MIN_S`, is one `looking_around`, short pauses included. No new number. The detail says how far the view turned. Tests: on-and-off looking gives one 30 s `looking_around`; one turn in a 30 s still stretch gives two `idle` parts; yaw wrap; no view data gives `idle`. 52 pass.
+
+## What the orchestrator changed
+
+Nothing. Read the diff, reran the suite in main (52 passed) and the fixture: `looking_around` 6.92 to 27.16 s (480 degrees), then `idle` 27.16 to 47.38 s, with the flash at video 0. Not checked: a real log.

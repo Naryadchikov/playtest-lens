@@ -18,6 +18,7 @@ def test_fixture_has_one_of_each_candidate():
     assert _kinds(candidates).count("death") == 1
     assert _kinds(candidates).count("retry") == 1
     assert _kinds(candidates).count("idle") == 1
+    assert _kinds(candidates).count("looking_around") == 1
     assert _kinds(candidates).count("backtrack") == 1
     assert [c["time_s"] for c in candidates] == sorted(
         c["time_s"] for c in candidates
@@ -38,10 +39,15 @@ def test_fixture_times_map_through_the_flash():
     assert "COGITO_3_Lobby" in retry["detail"]
 
 
-def test_fixture_idle_covers_the_long_stand():
+def test_fixture_stand_splits_into_looking_then_idle():
     candidates = find_candidates(load_log(FIXTURE), VIDEO_FLASH_S)
+    looking = next(c for c in candidates if c["kind"] == "looking_around")
     idle = next(c for c in candidates if c["kind"] == "idle")
-    assert 39.0 <= idle["end_s"] - idle["time_s"] <= 42.0
+    assert 19.0 <= looking["end_s"] - looking["time_s"] <= 21.0
+    assert 19.0 <= idle["end_s"] - idle["time_s"] <= 21.0
+    assert looking["end_s"] == idle["time_s"]
+    assert "view turned" in looking["detail"]
+    assert "view turned 0 degrees" in idle["detail"]
 
 
 def test_fixture_backtrack_is_on_the_way_back():
@@ -129,6 +135,98 @@ def test_still_and_quiet_is_idle():
     assert _kinds(candidates) == ["idle"]
     assert candidates[0]["time_s"] == 101.0
     assert candidates[0]["end_s"] == 112.0
+    assert candidates[0]["detail"] == "No input for 11.0 s"
+
+
+def _still_events(view_for_step, steps=12):
+    events = [{"t": 0.0, "event": "sync_flash"}]
+    for step in range(steps):
+        event = {
+            "t": 1.0 + step,
+            "event": "position",
+            "x": 0.0, "y": 0.0, "z": 0.0,
+        }
+        event.update(view_for_step(step))
+        events.append(event)
+    return events
+
+
+def test_yaw_wrap_counts_as_two_degrees_not_358():
+    # Yaw only, no pitch: 179 to -179 is a 2 degree step, below the
+    # turning threshold, so the stretch stays idle.
+    events = _still_events(
+        lambda step: {"yaw": 179.0 if step % 2 == 0 else -179.0}
+    )
+    candidates = find_candidates(events, 0.0)
+    assert _kinds(candidates) == ["idle"]
+    assert candidates[0]["detail"] == (
+        "No input for 11.0 s, view turned 22 degrees"
+    )
+
+
+def test_yaw_only_turning_is_looking_around():
+    events = _still_events(lambda step: {"yaw": -150.0 + 15.0 * step})
+    candidates = find_candidates(events, 0.0)
+    assert _kinds(candidates) == ["looking_around"]
+    assert candidates[0]["detail"] == (
+        "No input for 11.0 s, view turned 165 degrees"
+    )
+
+
+def test_on_and_off_looking_is_one_looking_around():
+    # 2 s turning, 1 s still, repeated: the still runs are too short
+    # to be idle, so the whole 30 s is one looking_around part.
+    def view(step):
+        turned_steps = (step // 3) * 2 + min(step % 3, 2)
+        yaw = (15.0 * turned_steps + 180.0) % 360.0 - 180.0
+        return {"yaw": yaw, "pitch": 0.0}
+
+    candidates = find_candidates(_still_events(view, steps=31), 0.0)
+    assert _kinds(candidates) == ["looking_around"]
+    assert candidates[0]["time_s"] == 1.0
+    assert candidates[0]["end_s"] == 31.0
+    assert candidates[0]["detail"] == (
+        "No input for 30.0 s, view turned 300 degrees"
+    )
+
+
+def test_one_turn_in_middle_of_still_gives_two_idle():
+    events = _still_events(
+        lambda step: {"yaw": 15.0 if step >= 16 else 0.0, "pitch": 0.0},
+        steps=31,
+    )
+    candidates = find_candidates(events, 0.0)
+    assert _kinds(candidates) == ["idle", "idle"]
+    assert candidates[0]["time_s"] == 1.0
+    assert candidates[0]["end_s"] == 16.0
+    assert candidates[1]["time_s"] == 17.0
+    assert candidates[1]["end_s"] == 31.0
+    assert "view turned 0 degrees" in candidates[0]["detail"]
+    assert "view turned 0 degrees" in candidates[1]["detail"]
+
+
+def test_one_turn_near_start_gives_one_idle():
+    # The 5 s still side before the turn is under IDLE_MIN_S, and the
+    # leftover before the long still run is 6 s, also under it, so
+    # only the long still run remains, as one idle from the turn.
+    events = _still_events(
+        lambda step: {"yaw": 15.0 if step >= 6 else 0.0, "pitch": 0.0},
+        steps=31,
+    )
+    candidates = find_candidates(events, 0.0)
+    assert _kinds(candidates) == ["idle"]
+    assert candidates[0]["time_s"] == 7.0
+    assert candidates[0]["end_s"] == 31.0
+
+
+def test_short_looking_part_is_dropped():
+    def view(step):
+        return {"yaw": 15.0 * min(step, 5), "pitch": 0.0}
+
+    candidates = find_candidates(_still_events(view, steps=21), 0.0)
+    assert _kinds(candidates) == ["idle"]
+    assert candidates[0]["time_s"] == 6.0
+    assert candidates[0]["end_s"] == 21.0
 
 
 def test_out_and_back_is_one_backtrack():
