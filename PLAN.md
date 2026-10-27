@@ -30,7 +30,9 @@ The upstream COGITO demo (codeberg.org/Phazorknight/Cogito at 676be6d, MIT; it m
 
 Check the license of every demo asset and credit what needs credit. Sasha writes the testers' task (10 to 15 minutes).
 
-**The logging add-on** is a general Godot add-on (inputs, scene changes, player position by node path) with a COGITO adapter (pickups, doors, keypads, quest steps). It writes JSON lines with a timestamp.
+**The Spark test's recording is a different game:** The Talos Principle 2, recorded by Sasha on the PC with Game Bar (DECISIONS.md, 2026-10-27): "I know COGITO too well to struggle in it." It has no event log. His COGITO session is Thursday's play, and its log is what the idle and walk-back numbers are tuned on.
+
+**The logging add-on** is a general Godot add-on (inputs, scene changes, player position by node path) with a COGITO adapter (pickups, doors, keypads, quest steps). It writes JSON lines with a timestamp, including where the player looks (yaw and pitch, twice a second), and nothing that names a person or a machine (DECISIONS.md, 2026-10-27).
 
 ## What we don't build
 
