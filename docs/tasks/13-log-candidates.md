@@ -23,7 +23,7 @@ One JSON object per line, each with `t` (seconds on one clock, from the logger's
 - `sync_flash`: `reason` (`new_game` or `level_load`), `duration_s`, `beep_hz`; logged on the frame the white was drawn
 - `death`; and COGITO's `door`, `lock`, `keypad`, `pickup`, `quest`
 
-The test input is `tests/fixtures/session_log.jsonl`, a headless run of a real COGITO level: New Game, about 15 m out and back, 40 s standing still, a death, a retry through the death screen, a few metres, quit.
+The test input is `tests/fixtures/session_log.jsonl`, a headless run of a real COGITO level: New Game, about 10 m out and back, about 40 s standing still, a death, a retry through the death screen, a few metres, quit.
 
 ## Lining up with the video
 
