@@ -6,6 +6,8 @@ This playtest is for Playtest Lens, a hackathon project by Sasha. Please read th
 
 **What it's used for:** testing the tool, which analyzes playtests with AI models through Meta's API (the recording is sent there for analysis). The results help build and judge the project.
 
+The recording is sent to Meta's model API in a mode where Meta may use your content to train future Meta models, in exchange for a lower price. If you don't want that, tell me before you send the recording, and I'll analyze it in a mode that doesn't.
+
 **Who sees it:** Sasha, and the AI models that analyze it. It is not published unless you choose to allow that below.
 
 **Your choice, pick one:**

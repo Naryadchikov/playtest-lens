@@ -18,6 +18,10 @@ The pipeline is one path: Spark 1.2 windowed candidates, the checking pass, beat
 - Spark 1.2 and Spark 1.2 contributor as the checker on the 35 cached Talos clips, compared with Wonder's verdicts (`runs/check/talos-findings-spark12*.json`).
 - Grok bot brief: docs/tasks/22-grok-bot.md. Sasha's COGITO steps: docs/COGITO_VOLUMES.md.
 
+## Remind Sasha
+
+- Before testers get the build (and when the first tester recording arrives): the consent text now says Meta may train on recordings (contributor mode). Ask whether any tester objects; a tester who does gets the standard model (`muse-spark-1.2`). Sasha, 2026-10-28: "add it for now, and remind me about it once we do testing."
+
 ## Next
 
 1. Sasha plays COGITO with telemetry volumes, recording before New Game.
