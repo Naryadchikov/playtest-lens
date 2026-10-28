@@ -119,7 +119,7 @@ def _moments_for_cut(recording, prompt, model, start, seconds, tmp_dir, stem):
     except ValueError as exc:
         output_dir = Path("runs/spark_test")
         output_dir.mkdir(parents=True, exist_ok=True)
-        raw_path = output_dir / f"{stem}-{model}.raw.txt"
+        raw_path = output_dir / f"{stem}-{model.replace('/', '-')}.raw.txt"
         raw_path.write_text(raw_text, encoding="utf-8")
         raise ValueError(f"Invalid model reply: {exc} Raw reply saved to {raw_path}") from exc
     input_tokens, output_tokens, cost = client_module.usage_and_cost(model, reply)
@@ -195,7 +195,9 @@ def main(argv=None) -> int:
                 return 1
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / f"{stem}-{args.model}.json"
+    # Model ids can contain a slash (meta-models/muse-spark-open-1026). A slash
+    # in the file name makes the write look for a folder that is not there.
+    output_path = output_dir / f"{stem}-{args.model.replace('/', '-')}.json"
     output_path.write_text(
         json.dumps(
             {
