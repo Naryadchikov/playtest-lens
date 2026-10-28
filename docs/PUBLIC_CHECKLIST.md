@@ -14,7 +14,16 @@ The repo is private for now (Sasha, 2026-10-27, DECISIONS.md: "I'll make it publ
 
 1. **LICENSE:** the copyright line still reads `__AUTHOR__`. Sasha gives the name to use.
 2. **README:** replace the "How to run it comes here once it runs" line and the stale agent list with the real run steps, the three modes, the open-weights result, the demo video link, and the score table. Problem first, then the solution.
-3. **Hackathon rules:** the official rules text is not in the repo. A secondary listing (Internshala, unverified) gives the deadline as 2026-11-05 06:30 IST, which is 2026-11-04 20:00 ET, an hour earlier than the 21:00 ET in AGENTS.md. Sasha checks the official page and the exact deadline, then the orchestrator writes the verified rules and the deliverables checklist (video length, repo, README, license, open-weights prize terms) into this file.
+3. **Hackathon rules** (verified from the Participant Guide Sasha sent on 2026-10-28; the Internshala deadline I found earlier was wrong):
+   - Submission due **Wed 2026-11-04, 9:00 PM Eastern (EST)** on the Cerebral Valley platform. Late submissions are not considered. Building period 2026-10-27 to 2026-11-04; kickoff was Mon 2026-10-26, 12:00 ET. Our first commit is 2026-10-26 20:39 CET, a planning commit made after the kickoff and before the building period: ask in the Discord #questions channel whether that is fine.
+   - The repository must be public; the video link must be reachable; everyone who worked on it is listed on the submission page (solo here).
+   - A three-minute demo video that highlights only what was built during the hackathon. Judges must be able to identify the new work. COGITO, Godot and the assets are prior work: say so in the video and in PRIOR_WORK.md.
+   - New work only; no code, data or assets without the rights to them.
+   - The project must use Meta's models. Rubric (0 to 10): Impact 30%, Use of Meta AI Tooling 25% (beyond a basic integration), Technical Depth and Execution 20%, Demo 25%. Stage one is pass or fail on theme fit and real use of Meta's models.
+   - Anti-projects named in the guide include sports analyzers or coaches and simple image analyzers: the README and the video should make clear this is a multi-source analyst (video, voice, event log) for game developers.
+   - Bonus prizes in reach: Best Build on Meta Open Weight Models ($10,000: Muse Glimmer or Muse Spark Open, own hardware or partner inference, so Modal or Baseten counts), Best Agentic Use-Case ($5,000), Most Viral Project ($20,000, a demo post on X) and Community Vote ($10,000, public gallery).
+   - Baseten: use `meta-models/muse-spark-open-1026`, not `muse-spark-open` (the guide says so).
+   - Credits: Meta's $150 must be claimed by the same deadline, and the Modal $100 is offered for running Meta's open-weight models through Endpoints. Sasha's agent work on DeepSeek, GLM and Kimi has drawn on his Modal credits so far (billing summary, 2026-10-28): keep that small if those credits are meant for Meta models.
 4. **Rerun the scans on the final commit,** in the main repo and in the fork:
    - `git ls-files -co --exclude-standard | xargs grep -InE 'wk-[A-Za-z0-9]{10,}|ws-[A-Za-z0-9]{10,}|sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|Bearer [A-Za-z0-9._-]{20,}|AKIA[0-9A-Z]{16}'` shows nothing;
    - `git ls-files | grep -Ei '\.(mp4|mov|mkv|webm|wav|m4a|zip|key|pem|env)$|recordings/|runs/'` shows nothing outside the fork's licensed game audio;
@@ -23,6 +32,18 @@ The repo is private for now (Sasha, 2026-10-27, DECISIONS.md: "I'll make it publ
 5. **Tester privacy:** no tester video, audio, name or message anywhere in the repo or the docs. Sasha's own recordings stay out too. The demo's clips are shown in the video only, or added only with Sasha's yes.
 6. **PRIOR_WORK.md:** complete. COGITO and its assets, Montserrat and OFL, every CC0 sound, the dev tools (DeepSeek on Modal, Grok, Claude), and any new add-on or library added since.
 7. **The fork's `playtest-lens` branch** holds every logger change that main relies on, pushed, and a fresh `git clone --recursive` of the public repo builds and runs the offline tests.
-8. **Docs that go public:** DECISIONS.md, docs/tasks, docs/reviews and STATUS.md quote Sasha's chat. Sasha reads DECISIONS.md once and says yes or names lines to cut. Remove or tidy STATUS.md's day-to-day notes.
-9. **Visibility:** Sasha makes `playtest-lens` public in GitHub settings, sets the repo description and topics, and checks that the fork is public too. Open the public URL in a signed-out browser.
-10. **Submit** only after step 9, with the public URL.
+8. **Docs that go public:** docs/tasks, docs/reviews, AGENTS.md, docs/PRIOR_WORK.md and STATUS.md quote Sasha's chat in places (AGENTS.md, PRIOR_WORK.md and the task 18 brief carry his verbatim quotes). Sasha reads them once and says yes or names lines to cut. Tidy STATUS.md's day-to-day notes.
+9. **Remove DECISIONS.md from the public history** (Sasha, 2026-10-28, wants it gone from the public release and its commits cleaned): do it while the repo is still private, then flip. See "DECISIONS.md removal" below.
+10. **Visibility:** Sasha makes `playtest-lens` public in GitHub settings, sets the repo description and topics, and checks that the fork is public too. Open the public URL in a signed-out browser.
+11. **Submit** only after step 10, with the public URL.
+
+## DECISIONS.md removal
+
+Possible, with these limits. The file touches 10 commits, and 9 other files link to it. A plain `git rm` only hides it from the latest tree: the old commits keep it, and anyone can read it from the history.
+
+1. **While still private, rewrite the history** so no commit contains `DECISIONS.md`: `git filter-branch --index-filter 'git rm --cached --ignore-unmatch DECISIONS.md' -- --all` (Git 2.54 is installed; `git filter-repo` is not, and would need Sasha's yes to install). Back up first: a private copy of the file and of the repo outside the repo folder.
+2. **Force-push `main`** to the private remote. AGENTS.md and Sasha's global rules forbid force-pushing the default branch, so this needs his explicit word for that push at that time. The T3 checkpoint refs under `refs/t3/` stay local and are never pushed.
+3. **Only then flip to public.** If the repo is made public first, GitHub can keep the old commits reachable by SHA and in forks, and a rewrite no longer helps.
+4. **Clean the links and quotes:** replace the references in the 9 files with the short rule they point to, drop `DECISIONS.md` from `.gitignore`-tracked reading lists, and review the verbatim quotes in AGENTS.md, docs/PRIOR_WORK.md and docs/tasks/18-telemetry-volumes.md. Commit messages that name decisions (1 does) are rewritten by the same pass only if Sasha wants them cut.
+5. **Keep the file for agents.** After the flip the working copy stays in the folder, git-ignored, and a private copy lives in Sasha's agent-rules repo or another private place, because AGENTS.md calls it the source of truth. Fresh clones will not have it: the public README must not depend on it.
+6. **Cost of removing it:** judges lose the readable trail of who decided what. Commit trailers still name each author model, and PRIOR_WORK.md says what is prior work. This is Sasha's call; the orchestrator recommends keeping a short public DECISIONS-free "How this was built" section in the README instead.

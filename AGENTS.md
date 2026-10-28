@@ -1,6 +1,6 @@
 # Playtest Lens: rules for agents
 
-A playtest analyst for game developers, built solo by Sasha for the Meta Global AI Developer Hackathon (kickoff 2026-10-26 at 12:00 ET; submissions due 2026-11-04 at 21:00 ET). Read [PLAN.md](PLAN.md) first, then [DECISIONS.md](DECISIONS.md).
+A playtest analyst for game developers, built solo by Sasha for the Meta Global AI Developer Hackathon (kickoff 2026-10-26 at 12:00 ET; building period 2026-10-27 to 2026-11-04; submissions due 2026-11-04 at 9:00 PM Eastern, verified from the Participant Guide, 2026-10-28). Read [PLAN.md](PLAN.md) first, then [DECISIONS.md](DECISIONS.md).
 
 Every agent that works here reads this file: the orchestrator, DeepSeek, Grok, the reviewers. The rules apply to all of them.
 
