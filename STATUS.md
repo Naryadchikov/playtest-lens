@@ -10,7 +10,7 @@ Going public is the last step: docs/PUBLIC_CHECKLIST.md.
 
 ## Where things stand (2026-10-28, evening)
 
-The pipeline on main is one path: Spark 1.2 windowed candidates, the checking pass, beats, the cross-player summary, the report. Main is in sync with origin apart from the logger fix below. Fork `playtest-lens` is `b0b3647`: the level-load crash that freed volumes is fixed. Sasha is committing the volume scenes from Windows on top of that. He places volumes and records on Windows (`docs/COGITO_VOLUMES.md`). The analyzer stays on the Mac.
+The pipeline on main is one path: Spark 1.2 windowed candidates, the checking pass, beats, the cross-player summary, the report. Fork `playtest-lens` is `8049b5d`: the level-load fix plus Sasha's Lobby and Laboratory volumes. The first-room video and logs are not here yet. He places volumes and records on Windows (`docs/COGITO_VOLUMES.md`). The analyzer stays on the Mac.
 
 ## In flight
 
