@@ -350,10 +350,8 @@ def _pin_title(finding):
 def _render_header(data):
     session = data["session"]
     player = session.get("player")
-    title = LABELS["title"].format(id=session["id"])
-    heading = LABELS["session"].format(id=session["id"])
+    heading = LABELS["session"].format(id=_e(session["id"]))
     if player:
-        title += f", {_e(player)}"
         heading += f": {_e(player)}"
 
     meta = []
@@ -831,15 +829,22 @@ def _attempt_sort_key(attempt_key):
     )
 
 
+# The first value that is not None: a stored time of 0 is a real time.
+def _first_set(*values):
+    return next(value for value in values if value is not None)
+
+
+def _moment_end(finding):
+    return _first_set(finding.get("end_s"), finding["time_s"])
+
+
 def _group_span(findings):
     start = min(
-        (f.get("beat") or {}).get("attempt_start_s") or f["time_s"]
+        _first_set((f.get("beat") or {}).get("attempt_start_s"), f["time_s"])
         for f in findings
     )
     end = max(
-        ((f.get("beat") or {}).get("attempt_end_s"))
-        or f.get("end_s")
-        or f["time_s"]
+        _first_set((f.get("beat") or {}).get("attempt_end_s"), _moment_end(f))
         for f in findings
     )
     return start, end
@@ -877,19 +882,17 @@ def _render_groups(kept, markers_by_moment, pins_available):
         for attempt_key in attempt_keys:
             findings = group["attempts"][attempt_key]
             attempt = attempt_key[0]
+            findings = sorted(findings, key=lambda f: f["rank"])
             if attempt is not None:
-                findings = sorted(findings, key=lambda f: (f["time_s"], f["rank"]))
-                attempt_start = attempt_key[1]
-                if attempt_start is None:
-                    attempt_start = findings[0]["time_s"]
-                attempt_end = attempt_key[2]
-                if attempt_end is None:
-                    attempt_end = findings[-1].get("end_s") or findings[-1]["time_s"]
+                attempt_start = _first_set(
+                    attempt_key[1], min(f["time_s"] for f in findings)
+                )
+                attempt_end = _first_set(
+                    attempt_key[2], max(_moment_end(f) for f in findings)
+                )
                 out.append(
                     f'<h4>{_e(LABELS["moments"]["attempt"].format(n=attempt, start=_mss(attempt_start), end=_mss(attempt_end)))}</h4>'
                 )
-            else:
-                findings = sorted(findings, key=lambda f: f["rank"])
             out.extend(
                 _render_card(finding, markers_by_moment, pins_available)
                 for finding in findings

@@ -81,7 +81,7 @@ def test_sections_follow_the_mockup_order(redesign):
 def test_groups_and_cards_follow_beat_and_rank(redesign):
     page = render_html(redesign)
     assert re.findall(r'<article class="card [^"]+" id="m(\d+)"', page) == [
-        "9", "2", "1", "3", "7", "6", "4", "5", "8"
+        "2", "9", "1", "3", "7", "4", "6", "5", "8"
     ]
     assert re.findall(
         r"<summary>([^<]*)<span class=\"note\">", page
@@ -110,6 +110,7 @@ def test_missing_optional_fields_hide_their_elements(path):
 
 def test_every_string_from_the_file_is_escaped(redesign):
     payload = "<script>alert(1)</script>"
+    redesign["session"]["id"] = payload
     redesign["session"]["player"] = payload
     redesign["summary"]["verdict"] = payload
     redesign["cross_player"][0]["place"] = payload
@@ -117,7 +118,17 @@ def test_every_string_from_the_file_is_escaped(redesign):
     redesign["findings"][0]["quote"] = payload
     page = render_html(redesign)
     assert "<script>" not in page
-    assert page.count(html.escape(payload)) >= 5
+    assert page.count(html.escape(payload)) >= 7
+
+
+def test_a_stored_time_of_zero_is_shown_as_zero(redesign):
+    first = redesign["findings"][0]
+    redesign["findings"] = [first]
+    first["beat"].update(attempt_start_s=0, attempt_end_s=90)
+    first["time_s"], first["end_s"] = 12, 20
+    page = render_html(redesign)
+    assert "(0:00-1:30)" in page
+    assert "1 attempt, 1 moment, 0:00-1:30" in page
 
 
 def test_route_and_pin_pixels_match_the_map_json(redesign):
