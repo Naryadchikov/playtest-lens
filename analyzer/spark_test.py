@@ -1,6 +1,6 @@
 """Send one playtest recording to Muse Spark and save confused, stuck or surprised moments.
 
-Run as: tools/run-analyzer.sh analyzer/spark_test.py <recording> [--model muse-spark-1.3] [--start S] [--seconds N]
+Run as: tools/run-analyzer.sh analyzer/spark_test.py <recording> [--model muse-spark-1.2-contributor] [--start S] [--seconds N]
 """
 
 from __future__ import annotations
@@ -132,7 +132,7 @@ def main(argv=None) -> int:
         description="Send a playtest recording to Muse Spark and save moments where the player was confused, stuck or surprised."
     )
     parser.add_argument("recording", help="Path to the playtest recording (.mov, .mp4, ...)")
-    parser.add_argument("--model", default="muse-spark-1.3", help="Model id (default: muse-spark-1.3)")
+    parser.add_argument("--model", default="muse-spark-1.2-contributor", help="Model id (default: muse-spark-1.2-contributor)")
     parser.add_argument("--start", type=float, default=0.0, help="Start the cut S seconds into the recording")
     parser.add_argument("--seconds", type=int, default=None, help="Keep only N seconds from the start of the cut")
     parser.add_argument("--window-seconds", type=float, default=None, help="Split the recording into windows of N seconds, one call each, and merge (the candidate pass; ignores --start/--seconds)")

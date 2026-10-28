@@ -15,7 +15,7 @@ The pipeline is one path: Spark 1.2 windowed candidates, the checking pass, beat
 ## In flight (2026-10-28, later)
 
 - DeepSeek on task 21 (docs/tasks/21-open-weights.md): Baseten backend for Muse Spark Open, in `.worktrees/ds-21`. Baseten key and model `meta-models/muse-spark-open-1026` answered a first text call.
-- Spark 1.2 and Spark 1.2 contributor as the checker on the 35 cached Talos clips, compared with Wonder's verdicts (`runs/check/talos-findings-spark12*.json`).
+- Done: Spark 1.2 and its contributor variant as the checker on the 35 Talos clips (results in PLAN.md); `muse-spark-1.2-contributor` is now the default of check.py and spark_test.py. Task 21 is under Grok review (branch `ds/21-open-weights`, 204776f).
 - Grok bot brief: docs/tasks/22-grok-bot.md. Sasha's COGITO steps: docs/COGITO_VOLUMES.md.
 
 ## Remind Sasha

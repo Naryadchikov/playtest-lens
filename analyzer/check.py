@@ -7,7 +7,7 @@ slice. It answers keep or drop with evidence. Dropped moments stay in
 the file, listed, not hidden.
 
 Run as: tools/run-analyzer.sh analyzer/check.py <recording> <candidates.json>
-    [--model muse-wonder-1.0] [--out <findings.json>] [--log <session.jsonl>]
+    [--model muse-spark-1.2-contributor] [--out <findings.json>] [--log <session.jsonl>]
     [--video-flash-s S] [--limit N]
 """
 
@@ -218,7 +218,7 @@ def main(argv=None) -> int:
     )
     parser.add_argument("recording", help="Path to the playtest recording")
     parser.add_argument("candidates", help="Candidates JSON written by spark_test.py (windowed)")
-    parser.add_argument("--model", default="muse-wonder-1.0", help="Checker model id")
+    parser.add_argument("--model", default="muse-spark-1.2-contributor", help="Checker model id")
     parser.add_argument("--out", default=None, help="Findings path (default runs/check/<recording stem>-findings.json)")
     parser.add_argument("--log", default=None, help="Optional session event log (JSONL)")
     parser.add_argument("--video-flash-s", type=float, default=None, help="Video time of the first sync_flash, when --log is given")
