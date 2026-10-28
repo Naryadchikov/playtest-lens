@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playtest Lens: session demo-02, Player 2 (mockup, fictional data)</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f5f6f8; --surface: #ffffff; --sunk: #eceef2;
+  --ink: #151a24; --ink2: #434b5c; --muted: #596175; --line: #d6dae3;
+  --accent: #2f45c7; --accent-tint: #e6e9fb;
+  --k-stuck: #c2410c; --k-confused: #946200; --k-surprised: #0f766e; --k-bug: #a3195b;
+  --t-stuck: #fbe9e0; --t-confused: #f7edd2; --t-surprised: #d9f1ee; --t-bug: #f9dfea;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 40px;
+  --fs-s: .8125rem; --fs-b: .9375rem; --fs-m: 1.125rem; --fs-l: 1.5rem; --fs-xl: 2rem;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f131b; --surface: #171c27; --sunk: #202636;
+    --ink: #e8ecf4; --ink2: #b0b8c8; --muted: #909ab0; --line: #2c3344;
+    --accent: #8da2ff; --accent-tint: #232b52;
+    --k-stuck: #ff8a5c; --k-confused: #f2c14e; --k-surprised: #4fd1c5; --k-bug: #ff7aa8;
+    --t-stuck: #3a2219; --t-confused: #382e12; --t-surprised: #12322f; --t-bug: #3b1a2a;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: var(--fs-b)/1.5 var(--font); }
+main { max-width: 1040px; margin: 0 auto; padding: var(--s5) var(--s4) var(--s6); }
+a { color: var(--accent); }
+a:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+h1 { font-size: var(--fs-xl); line-height: 1.2; margin: 0 0 var(--s2); }
+h2 { font-size: var(--fs-l); margin: var(--s6) 0 var(--s3); }
+h3 { font-size: var(--fs-m); margin: 0 0 var(--s1); }
+h4 { font-size: var(--fs-b); margin: var(--s4) 0 var(--s2); color: var(--ink2); }
+.sub { color: var(--muted); font-size: var(--fs-s); margin: 0 0 var(--s3); }
+.note { color: var(--muted); font-size: var(--fs-s); }
+.mock { background: var(--accent-tint); border-radius: 6px; padding: var(--s2) var(--s3); font-size: var(--fs-s); margin-bottom: var(--s4); }
+
+/* header */
+.meta { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s5); margin: 0 0 var(--s4); padding: 0; list-style: none; color: var(--ink2); font-size: var(--fs-s); }
+.meta b { color: var(--muted); font-weight: 600; margin-right: var(--s1); }
+.verdict { font-size: var(--fs-m); font-weight: 600; margin: 0; padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--accent); border-radius: 6px; }
+
+/* kind shapes, shared by tiles, badges, legend */
+.k { display: inline-block; width: .85em; height: .85em; background: var(--c); flex: none; }
+.k-stuck { --c: var(--k-stuck); }
+.k-confused { --c: var(--k-confused); border-radius: 50%; }
+.k-surprised { --c: var(--k-surprised); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.k-bug { --c: var(--k-bug); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+
+/* at a glance */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--s3); }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: var(--s3) var(--s4); }
+.tile .n { font-size: var(--fs-xl); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tile .l { display: flex; align-items: center; gap: var(--s2); color: var(--ink2); font-size: var(--fs-s); margin-top: var(--s1); }
+.tile.wide { grid-column: span 2; }
+
+/* across players */
+.groups { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
+.group { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: var(--s3) var(--s4); display: grid; gap: var(--s2); }
+.group p { margin: 0; color: var(--ink2); }
+.group .who { font-weight: 600; color: var(--ink); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: var(--s1); padding: 2px var(--s3); border: 1px solid var(--line); border-radius: 999px; font-size: var(--fs-s); background: var(--sunk); color: var(--ink2); text-decoration: none; }
+.chip.you { background: var(--accent-tint); border-color: var(--accent); color: var(--ink); }
+a.chip:hover { border-color: var(--accent); }
+
+/* map */
+.where { display: grid; grid-template-columns: minmax(0, 480px) 1fr; gap: var(--s5); align-items: start; }
+.map { position: relative; margin: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #0a0d14; }
+.map img, .map svg { display: block; width: 100%; height: auto; }
+.map svg { position: absolute; inset: 0; height: 100%; }
+.pin { cursor: pointer; --pf: #ff8a5c; }
+.pin.confused { --pf: #f2c14e; } .pin.surprised { --pf: #4fd1c5; } .pin.bug { --pf: #ff7aa8; }
+.pin .shape { fill: var(--pf); stroke: #fff; stroke-width: 6; }
+.pin text { font: 700 38px var(--font); fill: #0b1020; text-anchor: middle; pointer-events: none; }
+.pin:focus { outline: none; }
+.pin:focus-visible .shape, .pin:target .shape, .pin:hover .shape { stroke: #3d5afe; stroke-width: 14; paint-order: stroke; }
+.pin.f9 .shape { fill: #0b1020; stroke: #fff; stroke-width: 6; stroke-dasharray: 10 7; }
+.pin.f9 text { fill: #fff; font-size: 28px; }
+.halo { font: 700 40px var(--font); fill: #fff; stroke: #0a0d14; stroke-width: 9; paint-order: stroke; text-anchor: middle; }
+.legend { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: var(--s3) var(--s4); font-size: var(--fs-s); }
+.legend ul { list-style: none; margin: 0 0 var(--s3); padding: 0; display: grid; gap: var(--s2); }
+.legend li { display: flex; align-items: center; gap: var(--s2); color: var(--ink2); }
+.legend svg { width: 28px; height: 20px; flex: none; background: #0a0d14; border-radius: 3px; }
+.pinlist { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--s1); }
+.pinlist a { display: flex; gap: var(--s2); align-items: center; color: var(--ink); text-decoration: none; padding: 2px var(--s2); border-radius: 4px; }
+.pinlist a:hover { background: var(--sunk); }
+.pinlist .num { font-weight: 700; min-width: 1.4em; font-variant-numeric: tabular-nums; }
+.pinlist time { color: var(--muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+
+/* moments */
+details.puzzle { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; margin-bottom: var(--s3); }
+details.puzzle > summary { cursor: pointer; padding: var(--s3) var(--s4); font-weight: 600; list-style-position: inside; }
+details.puzzle > summary .note { font-weight: 400; margin-left: var(--s2); }
+.puzzle-body { padding: 0 var(--s4) var(--s4); }
+.card { border: 1px solid var(--line); border-left: 6px solid var(--c); border-radius: 6px; padding: var(--s3) var(--s4); margin-bottom: var(--s3); background: var(--bg); scroll-margin-top: var(--s4); display: grid; gap: var(--s2); }
+.card:target { outline: 3px solid var(--accent); outline-offset: 2px; }
+.card.stuck { --c: var(--k-stuck); } .card.confused { --c: var(--k-confused); }
+.card.surprised { --c: var(--k-surprised); } .card.bug { --c: var(--k-bug); }
+.card-head { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s3); align-items: center; }
+.num-pin { display: inline-grid; place-items: center; min-width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--bg); font-weight: 700; text-decoration: none; font-size: var(--fs-s); }
+.time { font-variant-numeric: tabular-nums; font-weight: 600; }
+.time small { color: var(--muted); font-weight: 400; }
+.badge { display: inline-flex; align-items: center; gap: var(--s1); padding: 1px var(--s2); border-radius: 4px; font-size: var(--fs-s); font-weight: 600; background: var(--tint); color: var(--ink); border: 1px solid var(--c); }
+.stuck .badge { --tint: var(--t-stuck); } .confused .badge { --tint: var(--t-confused); }
+.surprised .badge { --tint: var(--t-surprised); } .bug .badge { --tint: var(--t-bug); }
+.intent { font-size: var(--fs-s); padding: 1px var(--s2); border-radius: 4px; border: 1px dashed var(--muted); color: var(--ink2); }
+.intent.unplanned { border-style: solid; border-color: var(--ink2); font-weight: 600; }
+.to-map { margin-left: auto; font-size: var(--fs-s); }
+.summary { font-size: var(--fs-m); font-weight: 600; margin: 0; line-height: 1.35; }
+.quote { margin: 0; padding-left: var(--s3); border-left: 3px solid var(--line); color: var(--ink2); font-style: italic; }
+.quote.none { font-style: normal; color: var(--muted); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: var(--s1) var(--s3); margin: 0; font-size: var(--fs-s); color: var(--ink2); }
+.facts dt { color: var(--muted); font-weight: 600; }
+.facts dd { margin: 0; }
+.fric { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-s); }
+.meter { display: inline-flex; gap: 2px; }
+.meter i { width: 14px; height: 8px; border: 1px solid var(--ink2); border-radius: 2px; }
+.meter i.on { background: var(--ink2); }
+.status { font-weight: 600; }
+.status.open::before { content: "\25CB  "; } .status.done::before { content: "\2713  "; }
+.f9line { font-size: var(--fs-s); color: var(--ink2); margin: 0; }
+.f9line b { border: 1px dashed var(--ink2); border-radius: 4px; padding: 0 var(--s1); margin-right: var(--s1); }
+.clip { display: grid; place-items: center; height: 72px; border-radius: 4px; background: repeating-linear-gradient(135deg, var(--sunk) 0 10px, transparent 10px 20px), var(--sunk); color: var(--muted); font-size: var(--fs-s); border: 1px solid var(--line); }
+.dropped li { margin-bottom: var(--s2); }
+@media (max-width: 760px) { .where { grid-template-columns: 1fr; } .tile.wide { grid-column: auto; } }
+@media (prefers-reduced-motion: no-preference) { .pin .shape, a.chip { transition: stroke-width .15s, border-color .15s; } html { scroll-behavior: smooth; } }
+@media print {
+  body { background: #fff; color: #000; } main { max-width: none; padding: 0; }
+  .card, .group, .tile { break-inside: avoid; } .clip, .to-map { display: none; }
+  .map { max-width: 300px; }
+}
+</style>
+</head>
+<body>
+<main>
+<p class="mock">Mockup with made-up data (fictional players, quotes and findings). Pin and route positions are invented on the Lobby map.</p>
+
+<header>
+  <h1>Session demo-02: Player 2</h1>
+  <ul class="meta">
+    <li><b>Level</b>Lobby</li>
+    <li><b>Recording</b><span style="font-family:var(--mono)">player2-lobby.mov</span></li>
+    <li><b>Length</b>14:20</li>
+    <li><b>Date</b>2026-10-29</li>
+  </ul>
+  <p class="verdict">Players got stuck in 2 places. One of them, the weighted plates, stopped all 3 players.</p>
+</header>
+
+<section aria-labelledby="glance">
+  <h2 id="glance">At a glance</h2>
+  <div class="tiles">
+    <div class="tile"><div class="n">4</div><div class="l"><span class="k k-stuck" aria-hidden="true"></span>Stuck</div></div>
+    <div class="tile"><div class="n">3</div><div class="l"><span class="k k-confused" aria-hidden="true"></span>Confused</div></div>
+    <div class="tile"><div class="n">1</div><div class="l"><span class="k k-surprised" aria-hidden="true"></span>Surprised</div></div>
+    <div class="tile"><div class="n">1</div><div class="l"><span class="k k-bug" aria-hidden="true"></span>Suspected bug</div></div>
+    <div class="tile wide"><div class="n">4:45 <span class="note">of 14:20</span></div><div class="l">Time lost to being stuck or confused</div></div>
+    <div class="tile wide"><div class="n">9 <span class="note">kept, 3 dropped</span></div><div class="l">Moments checked against the video and the event log</div></div>
+  </div>
+</section>
+
+<section aria-labelledby="across">
+  <h2 id="across">Across players</h2>
+  <ul class="groups">
+    <li class="group">
+      <h3>North room, Puzzle 2: weighted plates</h3>
+      <p><span class="who">3 of 3 players got stuck here.</span> Longest: Player 2, 1:25.</p>
+      <div class="chips"><a class="chip you" href="#m2">Player 2: 3 moments</a><span class="chip">Player 1: 4:10</span><span class="chip">Player 3: 2:35</span></div>
+    </li>
+    <li class="group">
+      <h3>South room, Puzzle 3: crate shelf</h3>
+      <p><span class="who">2 of 3 players got stuck here.</span></p>
+      <div class="chips"><a class="chip you" href="#m4">Player 2: 12:20</a><span class="chip">Player 3: 1:50</span></div>
+    </li>
+    <li class="group">
+      <h3>Hall, Puzzle 1: badge reader</h3>
+      <p><span class="who">2 of 3 players were confused here</span>, briefly.</p>
+      <div class="chips"><a class="chip you" href="#m5">Player 2: 1:12</a><span class="chip">Player 1: 0:50</span></div>
+    </li>
+  </ul>
+  <p class="note">Chips in the accent outline are this page's player. Others come from their own reports.</p>
+</section>
+
+<section aria-labelledby="where">
+  <h2 id="where">Where it happened</h2>
+  <div class="where">
+    <figure class="map" id="map">
+      <img src="../../report/maps/lobby.png" width="1334" height="2048" alt="Top-down plan of the Lobby level. The player's route, a heat layer where they lingered, and numbered pins are drawn on top.">
+      <svg viewBox="0 0 1334 2048" aria-labelledby="map-title">
+        <title id="map-title">Route and pins on the Lobby map</title>
+        <defs>
+          <radialGradient id="heat"><stop offset="0" stop-color="#ff6b3d" stop-opacity=".8"/><stop offset=".6" stop-color="#ff6b3d" stop-opacity=".4"/><stop offset="1" stop-color="#ff6b3d" stop-opacity="0"/></radialGradient>
+          <symbol id="sh-stuck" overflow="visible"><rect x="-30" y="-30" width="60" height="60" rx="6"/></symbol>
+          <symbol id="sh-confused" overflow="visible"><circle r="34"/></symbol>
+          <symbol id="sh-surprised" overflow="visible"><polygon points="0,-44 44,0 0,44 -44,0"/></symbol>
+          <symbol id="sh-bug" overflow="visible"><polygon points="0,-42 42,32 -42,32"/></symbol>
+          <symbol id="sh-f9" overflow="visible"><polygon points="0,-38 33,-19 33,19 0,38 -33,19 -33,-19"/></symbol>
+        </defs>
+        <!-- heat layer: one blob per place the player lingered, plus a dashed ring so it is not color alone -->
+        <g aria-hidden="true">
+          <circle cx="743" cy="557" r="170" fill="url(#heat)"/><circle cx="743" cy="557" r="170" fill="none" stroke="#ffb199" stroke-width="5" stroke-dasharray="14 10"/>
+          <circle cx="1024" cy="1162" r="100" fill="url(#heat)"/><circle cx="1024" cy="1162" r="100" fill="none" stroke="#ffb199" stroke-width="5" stroke-dasharray="14 10"/>
+          <circle cx="705" cy="1834" r="90" fill="url(#heat)"/><circle cx="705" cy="1834" r="90" fill="none" stroke="#ffb199" stroke-width="5" stroke-dasharray="14 10"/>
+          <circle cx="624" cy="1705" r="70" fill="url(#heat)"/><circle cx="624" cy="1705" r="70" fill="none" stroke="#ffb199" stroke-width="5" stroke-dasharray="14 10"/>
+          <text class="halo" x="743" y="372">5:30</text><text class="halo" x="1024" y="1048">1:10</text>
+          <text class="halo" x="560" y="1610">0:40</text><text class="halo" x="860" y="1920">1:40</text>
+        </g>
+        <!-- route: casing plus line, arrows show direction, S and E mark start and end -->
+        <g aria-hidden="true" fill="none" stroke-linejoin="round" stroke-linecap="round">
+          <polyline stroke="#0a0d14" stroke-width="16" points="920,1515 900,1415 891,1310 981,1195 1024,1157 972,1114 1029,1195 1024,1167 962,1086 881,1024 715,953 667,862 657,800 662,714 786,643 834,557 800,481 715,495 657,533 667,614 715,481 834,510 834,605 758,667 667,633 667,510 715,495 819,491 834,557 819,624 758,667 715,714 667,800 667,900 715,1024 738,1124 748,1281 796,1434 796,1534 786,1596 715,1657 657,1710 605,1705 615,1696 657,1715 715,1710 772,1767 762,1834 715,1857 667,1838 624,1867 677,1848 715,1862"/>
+          <polyline stroke="#dbe7ff" stroke-width="7" points="920,1515 900,1415 891,1310 981,1195 1024,1157 972,1114 1029,1195 1024,1167 962,1086 881,1024 715,953 667,862 657,800 662,714 786,643 834,557 800,481 715,495 657,533 667,614 715,481 834,510 834,605 758,667 667,633 667,510 715,495 819,491 834,557 819,624 758,667 715,714 667,800 667,900 715,1024 738,1124 748,1281 796,1434 796,1534 786,1596 715,1657 657,1710 605,1705 615,1696 657,1715 715,1710 772,1767 762,1834 715,1857 667,1838 624,1867 677,1848 715,1862"/>
+          <g fill="#fff" stroke="#0a0d14" stroke-width="4">
+            <path d="M-16,-12L16,0L-16,12z" transform="translate(896 1362) rotate(-95) scale(1.3)"/>
+            <path d="M-16,-12L16,0L-16,12z" transform="translate(798 988) rotate(-157) scale(1.3)"/>
+            <path d="M-16,-12L16,0L-16,12z" transform="translate(724 679) rotate(-30) scale(1.3)"/>
+            <path d="M-16,-12L16,0L-16,12z" transform="translate(834 557) rotate(90) scale(1.3)"/>
+            <path d="M-16,-12L16,0L-16,12z" transform="translate(691 488) rotate(-42) scale(1.3)"/>
+            <path d="M-16,-12L16,0L-16,12z" transform="translate(691 962) rotate(69) scale(1.3)"/>
+            <path d="M-16,-12L16,0L-16,12z" transform="translate(796 1484) rotate(90) scale(1.3)"/>
+            <path d="M-16,-12L16,0L-16,12z" transform="translate(631 1707) rotate(-175) scale(1.3)"/>
+            <path d="M-16,-12L16,0L-16,12z" transform="translate(743 1738) rotate(45) scale(1.3)"/>
+          </g>
+          <circle cx="920" cy="1515" r="24" fill="#fff" stroke="#0a0d14" stroke-width="6"/>
+          <circle cx="715" cy="1862" r="24" fill="#0a0d14" stroke="#fff" stroke-width="6"/>
+          <text x="920" y="1573" class="halo" style="font-size:34px">start</text>
+          <text x="715" y="1930" class="halo" style="font-size:34px" dx="-70">end</text>
+        </g>
+        <!-- kept findings, numbered by rank -->
+        <a class="pin stuck" id="pin-m1" href="#m1" aria-label="Moment 1, stuck, 5:45" transform="translate(667 614)"><use href="#sh-stuck" class="shape"/><text y="13">1</text></a>
+        <a class="pin stuck" id="pin-m2" href="#m2" aria-label="Moment 2, stuck, 3:20" transform="translate(786 643)"><use href="#sh-stuck" class="shape"/><text y="13">2</text></a>
+        <a class="pin stuck" id="pin-m3" href="#m3" aria-label="Moment 3, stuck, 8:50" transform="translate(667 510)"><use href="#sh-stuck" class="shape"/><text y="13">3</text></a>
+        <a class="pin stuck" id="pin-m4" href="#m4" aria-label="Moment 4, stuck, 12:20" transform="translate(772 1767)"><use href="#sh-stuck" class="shape"/><text y="13">4</text></a>
+        <a class="pin confused" id="pin-m5" href="#m5" aria-label="Moment 5, confused, 1:12" transform="translate(1010 1110)"><use href="#sh-confused" class="shape"/><text y="13">5</text></a>
+        <a class="pin confused" id="pin-m6" href="#m6" aria-label="Moment 6, confused, 11:10" transform="translate(605 1705)"><use href="#sh-confused" class="shape"/><text y="13">6</text></a>
+        <a class="pin bug" id="pin-m7" href="#m7" aria-label="Moment 7, suspected bug, 9:35" transform="translate(834 557)"><use href="#sh-bug" class="shape"/><text y="22">7</text></a>
+        <a class="pin surprised" id="pin-m8" href="#m8" aria-label="Moment 8, surprised, 2:05" transform="translate(1072 1186)"><use href="#sh-surprised" class="shape"/><text y="13">8</text></a>
+        <a class="pin confused" id="pin-m9" href="#m9" aria-label="Moment 9, confused, 3:12" transform="translate(662 714)"><use href="#sh-confused" class="shape"/><text y="13">9</text></a>
+        <!-- F9 markers: the player pressed F9 to flag confusion -->
+        <a class="pin f9" id="pin-f1" href="#m5" aria-label="F9 marker at 1:55" transform="translate(972 1215)"><use href="#sh-f9" class="shape"/><text y="10">F9</text></a>
+        <a class="pin f9" id="pin-f2" href="#m1" aria-label="F9 marker at 6:20" transform="translate(715 481)"><use href="#sh-f9" class="shape"/><text y="10">F9</text></a>
+        <a class="pin f9" id="pin-f3" href="#m6" aria-label="F9 marker at 11:55" transform="translate(672 1681)"><use href="#sh-f9" class="shape"/><text y="10">F9</text></a>
+      </svg>
+      <figcaption class="sr-only" style="position:absolute;left:-9999px">Pins are numbered by rank; the list beside the map gives each pin's kind and time.</figcaption>
+    </figure>
+    <aside class="legend" aria-label="Map legend and pin list">
+      <ul>
+        <li><svg viewBox="0 0 28 20" aria-hidden="true"><path d="M3 10H25" stroke="#dbe7ff" stroke-width="3"/><path d="M18 5L26 10L18 15z" fill="#fff"/></svg>Route, arrows point the way walked (start circle to end circle)</li>
+        <li><svg viewBox="0 0 28 20" aria-hidden="true"><circle cx="14" cy="10" r="8" fill="#ff6b3d" fill-opacity=".6" stroke="#ffb199" stroke-dasharray="3 2"/></svg>Lingered or looped, dashed ring with time spent</li>
+        <li><svg viewBox="0 0 28 20" aria-hidden="true"><polygon points="14,2 22,6 22,14 14,18 6,14 6,6" fill="#0b1020" stroke="#fff" stroke-dasharray="3 2"/></svg>F9: the player flagged confusion</li>
+        <li><span class="k k-stuck"></span>Stuck</li>
+        <li><span class="k k-confused"></span>Confused</li>
+        <li><span class="k k-surprised"></span>Surprised</li>
+        <li><span class="k k-bug"></span>Suspected bug</li>
+      </ul>
+      <ol class="pinlist">
+        <li><a href="#m1"><span class="num">1</span><span class="k k-stuck"></span>Plates, attempt 2<time>5:45</time></a></li>
+        <li><a href="#m2"><span class="num">2</span><span class="k k-stuck"></span>Plates, attempt 1<time>3:20</time></a></li>
+        <li><a href="#m3"><span class="num">3</span><span class="k k-stuck"></span>Plates, attempt 3<time>8:50</time></a></li>
+        <li><a href="#m4"><span class="num">4</span><span class="k k-stuck"></span>Crate shelf<time>12:20</time></a></li>
+        <li><a href="#m5"><span class="num">5</span><span class="k k-confused"></span>Badge reader<time>1:12</time></a></li>
+        <li><a href="#m6"><span class="num">6</span><span class="k k-confused"></span>Shelf lock<time>11:10</time></a></li>
+        <li><a href="#m7"><span class="num">7</span><span class="k k-bug"></span>Plate flicker<time>9:35</time></a></li>
+        <li><a href="#m8"><span class="num">8</span><span class="k k-surprised"></span>Door opens early<time>2:05</time></a></li>
+        <li><a href="#m9"><span class="num">9</span><span class="k k-confused"></span>Room entry<time>3:12</time></a></li>
+      </ol>
+    </aside>
+  </div>
+</section>
+
+<section aria-labelledby="moments">
+  <h2 id="moments">The moments</h2>
+  <p class="sub">Grouped by area, puzzle and attempt. The worst puzzle is open. Time is from the recording's start flash.</p>
+
+  <details class="puzzle" open>
+    <summary>North room, Puzzle 2: weighted plates<span class="note">3 attempts, 7 moments, 3:10-10:05</span></summary>
+    <div class="puzzle-body">
+      <h4>Attempt 1 (3:10-4:20)</h4>
+      <article class="card confused" id="m9">
+        <div class="card-head"><a class="num-pin" href="#pin-m9" aria-label="Show moment 9 on the map">9</a><span class="time">3:12-3:19 <small>(7 s)</small></span><span class="badge"><span class="k k-confused" aria-hidden="true"></span>Confused</span><span class="intent">planned challenge?</span></div>
+        <p class="summary">Player stops in the doorway and looks around for 7 seconds before moving in.</p>
+        <p class="quote">"What am I looking at?"</p>
+        <dl class="facts"><dt>Game</dt><dd>Player enters the room. The pedestal hums. No objective text is shown.</dd><dt>Checker</dt><dd>One pause at the doorway, then normal movement. First visit to the room.</dd></dl>
+        <p class="fric"><span class="meter" role="img" aria-label="Friction: low"><i class="on"></i><i></i><i></i></span>Low <span class="status done">Resolved after 0:07</span></p>
+        <div class="clip" role="img" aria-label="Video clip placeholder, 3:07 to 3:27">Clip 3:07-3:27</div>
+      </article>
+      <article class="card stuck" id="m2">
+        <div class="card-head"><a class="num-pin" href="#pin-m2" aria-label="Show moment 2 on the map">2</a><span class="time">3:20-4:05 <small>(45 s)</small></span><span class="badge"><span class="k k-stuck" aria-hidden="true"></span>Stuck</span><span class="intent">planned challenge?</span></div>
+        <p class="summary">Player presses two plates in turn and expects the door to open. It does not.</p>
+        <p class="quote">"Okay, so I need weight on both. Hm."</p>
+        <dl class="facts"><dt>Game</dt><dd>Door locked. Plate 1 lit, plate 2 not lit, plate 3 out of view behind the pedestal.</dd><dt>Checker</dt><dd>Two presses, 1.5 laps around the pedestal, then the player leaves to reread the wall note.</dd></dl>
+        <p class="fric"><span class="meter" role="img" aria-label="Friction: medium"><i class="on"></i><i class="on"></i><i></i></span>Medium <span class="status open">Unresolved, attempt ended 4:20</span></p>
+        <div class="clip" role="img" aria-label="Video clip placeholder, 3:10 to 4:15">Clip 3:10-4:15</div>
+      </article>
+
+      <h4>Attempt 2 (5:30-7:10)</h4>
+      <article class="card stuck" id="m1">
+        <div class="card-head"><a class="num-pin" href="#pin-m1" aria-label="Show moment 1 on the map">1</a><span class="time">5:45-7:10 <small>(1:25)</small></span><span class="badge"><span class="k k-stuck" aria-hidden="true"></span>Stuck</span><span class="intent unplanned">unplanned</span></div>
+        <p class="summary">Player stands on the plates holding the crate and cannot make the door open.</p>
+        <p class="quote">"I'm on it. Why is nothing happening?"</p>
+        <dl class="facts"><dt>Game</dt><dd>Two of three plates held. The third plate is behind the pedestal, out of the player's view.</dd><dt>Checker</dt><dd>Eight plate presses in 85 s, door state never changes, camera never turns toward the third plate.</dd></dl>
+        <p class="fric"><span class="meter" role="img" aria-label="Friction: high"><i class="on"></i><i class="on"></i><i class="on"></i></span>High <span class="status open">Unresolved, attempt ended 7:10</span></p>
+        <p class="f9line"><b>F9</b>Player pressed F9 at 6:20</p>
+        <div class="clip" role="img" aria-label="Video clip placeholder, 5:35 to 6:00">Clip 5:35-6:00</div>
+      </article>
+
+      <h4>Attempt 3 (8:40-10:05)</h4>
+      <article class="card stuck" id="m3">
+        <div class="card-head"><a class="num-pin" href="#pin-m3" aria-label="Show moment 3 on the map">3</a><span class="time">8:50-9:30 <small>(40 s)</small></span><span class="badge"><span class="k k-stuck" aria-hidden="true"></span>Stuck</span><span class="intent">planned challenge?</span></div>
+        <p class="summary">Player tries the crate on plate 1 again, then walks the room edge looking for something new.</p>
+        <p class="quote">"It has to be the crate, right? The crate."</p>
+        <dl class="facts"><dt>Game</dt><dd>Plate 1 and plate 2 held. The player has not yet seen plate 3.</dd><dt>Checker</dt><dd>Repeats the attempt 2 approach, then explores. Finds plate 3 at 9:30.</dd></dl>
+        <p class="fric"><span class="meter" role="img" aria-label="Friction: medium"><i class="on"></i><i class="on"></i><i></i></span>Medium <span class="status done">Resolved after 1:15</span></p>
+        <div class="clip" role="img" aria-label="Video clip placeholder, 8:45 to 9:10">Clip 8:45-9:10</div>
+      </article>
+      <article class="card bug" id="m7">
+        <div class="card-head"><a class="num-pin" href="#pin-m7" aria-label="Show moment 7 on the map">7</a><span class="time">9:35-9:42 <small>(7 s)</small></span><span class="badge"><span class="k k-bug" aria-hidden="true"></span>Suspected bug</span><span class="intent unplanned">unplanned</span></div>
+        <p class="summary">Plate 3 flickers on and off while the crate rests on its edge.</p>
+        <p class="quote none">No spoken comment.</p>
+        <dl class="facts"><dt>Game</dt><dd>Crate half on plate 3. Plate state toggles 6 times in 7 s.</dd><dt>Checker</dt><dd>Event log shows plate_3 pressed and released repeatedly with no player input.</dd></dl>
+        <p class="fric"><span class="meter" role="img" aria-label="Friction: medium"><i class="on"></i><i class="on"></i><i></i></span>Medium <span class="status done">Resolved after 0:30</span></p>
+        <div class="clip" role="img" aria-label="Video clip placeholder, 9:30 to 9:50">Clip 9:30-9:50</div>
+      </article>
+    </div>
+  </details>
+
+  <details class="puzzle" open>
+    <summary>South room, Puzzle 3: crate shelf<span class="note">1 attempt, 2 moments, 11:00-13:20</span></summary>
+    <div class="puzzle-body">
+      <h4>Attempt 1 (11:00-13:20)</h4>
+      <article class="card confused" id="m6">
+        <div class="card-head"><a class="num-pin" href="#pin-m6" aria-label="Show moment 6 on the map">6</a><span class="time">11:10-11:50 <small>(40 s)</small></span><span class="badge"><span class="k k-confused" aria-hidden="true"></span>Confused</span><span class="intent unplanned">unplanned</span></div>
+        <p class="summary">Player tries three inventory keys on the shelf lock before noticing the number dial.</p>
+        <p class="quote">"Is it one of these keys, or a code?"</p>
+        <dl class="facts"><dt>Game</dt><dd>Shelf lock shows a four-digit dial. Keys in the inventory cannot be used on it.</dd><dt>Checker</dt><dd>Three failed use attempts. The lock gives no feedback that keys are the wrong item.</dd></dl>
+        <p class="fric"><span class="meter" role="img" aria-label="Friction: medium"><i class="on"></i><i class="on"></i><i></i></span>Medium <span class="status done">Resolved after 0:40</span></p>
+        <p class="f9line"><b>F9</b>Player pressed F9 at 11:55</p>
+        <div class="clip" role="img" aria-label="Video clip placeholder, 11:05 to 11:30">Clip 11:05-11:30</div>
+      </article>
+      <article class="card stuck" id="m4">
+        <div class="card-head"><a class="num-pin" href="#pin-m4" aria-label="Show moment 4 on the map">4</a><span class="time">12:20-13:00 <small>(40 s)</small></span><span class="badge"><span class="k k-stuck" aria-hidden="true"></span>Stuck</span><span class="intent unplanned">unplanned</span></div>
+        <p class="summary">Player searches the shelves for a crate that is behind the locked cage.</p>
+        <p class="quote">"There's no crate. There has to be a crate."</p>
+        <dl class="facts"><dt>Game</dt><dd>The cage opens after the dial is set. The code is on a wall plate behind the player's start point.</dd><dt>Checker</dt><dd>Player sets the dial to a wrong code twice, then searches four shelves.</dd></dl>
+        <p class="fric"><span class="meter" role="img" aria-label="Friction: high"><i class="on"></i><i class="on"></i><i class="on"></i></span>High <span class="status open">Unresolved, session ended 14:20</span></p>
+        <div class="clip" role="img" aria-label="Video clip placeholder, 12:15 to 12:40">Clip 12:15-12:40</div>
+      </article>
+    </div>
+  </details>
+
+  <details class="puzzle">
+    <summary>Hall, Puzzle 1: badge reader<span class="note">1 attempt, 2 moments, 1:05-2:40</span></summary>
+    <div class="puzzle-body">
+      <h4>Attempt 1 (1:05-2:40)</h4>
+      <article class="card confused" id="m5">
+        <div class="card-head"><a class="num-pin" href="#pin-m5" aria-label="Show moment 5 on the map">5</a><span class="time">1:12-1:40 <small>(28 s)</small></span><span class="badge"><span class="k k-confused" aria-hidden="true"></span>Confused</span><span class="intent">planned challenge?</span></div>
+        <p class="summary">Player walks past the badge reader twice before using it.</p>
+        <p class="quote">"Is that a screen or a button?"</p>
+        <dl class="facts"><dt>Game</dt><dd>Reader is lit but shows no prompt until the player is within 1 m.</dd><dt>Checker</dt><dd>Two passes within 1.5 m before the first use.</dd></dl>
+        <p class="fric"><span class="meter" role="img" aria-label="Friction: low"><i class="on"></i><i></i><i></i></span>Low <span class="status done">Resolved after 0:28</span></p>
+        <p class="f9line"><b>F9</b>Player pressed F9 at 1:55</p>
+        <div class="clip" role="img" aria-label="Video clip placeholder, 1:10 to 1:35">Clip 1:10-1:35</div>
+      </article>
+      <article class="card surprised" id="m8">
+        <div class="card-head"><a class="num-pin" href="#pin-m8" aria-label="Show moment 8 on the map">8</a><span class="time">2:05-2:12 <small>(7 s)</small></span><span class="badge"><span class="k k-surprised" aria-hidden="true"></span>Surprised</span><span class="intent unplanned">unplanned</span></div>
+        <p class="summary">Player flinches when the door opens at the same moment the reader beeps.</p>
+        <p class="quote">"Whoa, okay."</p>
+        <dl class="facts"><dt>Game</dt><dd>Door opens 0.2 s after the beep, with a loud slide sound.</dd><dt>Checker</dt><dd>Brief startle, play continues at once.</dd></dl>
+        <p class="fric"><span class="meter" role="img" aria-label="Friction: none"><i></i><i></i><i></i></span>None <span class="status done">Resolved after 0:07</span></p>
+        <div class="clip" role="img" aria-label="Video clip placeholder, 2:00 to 2:20">Clip 2:00-2:20</div>
+      </article>
+    </div>
+  </details>
+</section>
+
+<section aria-labelledby="dropped">
+  <h2 id="dropped">Dropped moments</h2>
+  <details>
+    <summary>3 candidates the check did not keep</summary>
+    <ul class="dropped">
+      <li><b>0:40, surprised.</b> Player flinches at a loading hitch. <span class="note">Reason: the hitch is in the recording, not in the game's event log.</span></li>
+      <li><b>4:30, confused.</b> Player looks at the ceiling. <span class="note">Reason: looking at the lighting, no pause in play.</span></li>
+      <li><b>10:50, stuck.</b> Player stops on the stairs for 4 s. <span class="note">Reason: reading the objective text, no failed attempt found.</span></li>
+    </ul>
+  </details>
+</section>
+</main>
+</body>
+</html>
