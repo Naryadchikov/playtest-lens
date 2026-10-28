@@ -30,19 +30,18 @@ Sasha decides what gets built, every word a user reads, the look, the prompts' g
 
 ## Who does what
 
-Sasha's plan, confirmed in DECISIONS.md on 2026-10-26: "opus on high - orchestrates, muse writes most of the code with grok, sonnet reviews. if it goes poorly, we can switch to more claude code instead". Its aim, in his words: "I might not want spend too much of claude code usage".
+Temporary arrangement while Claude limits restart (Sasha, T3 Code chat, 2026-10-27, in DECISIONS.md: "The previous orchestrator (Claude Opus) is out of usage, and Claude models are unavailable until further notice. Only Muse (Wonder, Spark 1.3) and Grok 4.7 (through Cursor) are available."). Sasha confirmed it again on 2026-10-28: running it like this temp while waiting for Claude limits to restart. The original split (Claude Opus orchestrates, Muse and Grok author, Sonnet reviews) returns when Claude is back, if Sasha says so.
 
 | Who | Model and harness | What |
 |---|---|---|
-| The orchestrator | Claude Opus 5.5, high effort, Claude Code in T3 Code | Plans, briefs, starts and follows the authors, checks their evidence, reads every diff, commits, keeps STATUS.md, brings Sasha results and questions. Writes only small fixes itself |
-| Muse Code | Muse Wonder (`muse-wonder-1.0`), high effort, on Sasha's Muse Code plan | Most of the code: the analyzer in Python (the Meta Model API client, the prompts, the pipeline steps, their tests) and the report page |
-| Grok | Grok 4.7 (xhigh, fast) through Cursor | The Godot side: the logging add-on, the COGITO adapter, the fork's branch, the Windows export; `tools/verify.py`; the ffmpeg clip tools |
-| Code reviewer | Claude Sonnet 5.5, a new subagent each round | Code and tech, at each milestone |
-| UX review | Claude Fable 5.1, a new subagent | The report page's captures and the README, once each |
-| Freeze review | Claude Opus 5.5, a new subagent, not the orchestrator's thread | Once, the whole repo, at the freeze |
+| The orchestrator | Muse Wonder (`muse-wonder-1.0`), Muse Code in T3 Code | Plans, briefs, starts and follows the authors, checks their evidence, reads every diff, commits, keeps STATUS.md, brings Sasha results and questions |
+| Main author | Muse Wonder, Muse Code | Most of the code: the analyzer in Python (the Meta Model API client, the prompts, the pipeline steps, their tests) and the report page |
+| Second author | Grok 4.7 (xhigh, fast) through Cursor, via T3 Code orchestration | Scoped parallel tasks, including the Godot side when briefed so |
+| Code reviewer | Always the other vendor, a fresh reviewer every round | Muse-authored work gets Grok 4.7 xhigh; Grok-authored work gets Muse Wonder. Muse Spark 1.3 is never the final review |
+| Screenshots, recordings, UI | Muse Wonder | Judges captures and the report page |
 | Sasha | | Decides; judges the findings, the report and the video; plays the build |
 
-Claude models run only through Claude Code, and Grok only through Cursor (Sasha's rule for his projects; it may change).
+Claude models are unavailable under this temporary arrangement. Grok runs only through Cursor (Sasha's rule for his projects; it may change).
 
 ## When to switch to more Claude
 
