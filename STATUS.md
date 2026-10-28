@@ -2,32 +2,26 @@
 
 The orchestrator keeps this file up to date at each milestone and at the end of each day, so a fresh thread can pick up from it (AGENTS.md, "Saving Claude usage"). Keep it under a page.
 
-## Roles (Sasha, 2026-10-27, in DECISIONS.md)
+## Roles (Sasha, 2026-10-28, DECISIONS.md)
 
-Claude models are unavailable until further notice. Orchestrator and main author: Muse Wonder (Muse Code). Second author for scoped parallel tasks: Grok 4.7 through Cursor. Code review always comes from the other vendor, a fresh reviewer every round: Muse work gets Grok 4.7 xhigh, Grok work gets Muse Wonder. Screenshots, recordings and UI: Muse Wonder. Muse Spark 1.3: quick mechanical tasks only, never the final review.
+Orchestrator: Claude Sonnet 5.5 (Claude Code, about $13 of usage; more Claude returns Saturday evening 2026-10-31). Main author: DeepSeek V4.1 Flash 1017 on Modal through `tools/run-modal-agent.sh`. Second author and every reviewer: Grok 4.7 xhigh through Cursor. Muse Wonder is not called, and the Meta pool (about $23.90) is kept for the product's video and audio processing only. The open-weights mode is separate, so Sasha can enter several hackathon categories. His Windows machine may join later. Sasha's Grok bot (own VM) takes parallel Godot work. Modal endpoint `deepseek-1017` is live and smoke-tested (a Read tool call through the wrapper worked).
 
-## Where things stand (2026-10-27, evening)
+Backup plan if Claude's usage runs out before Saturday: docs/BACKUP_ORCHESTRATOR.md. Going public is the last step: docs/PUBLIC_CHECKLIST.md.
 
-Tasks 01 to 17 are done. The cross-vendor re-review of everything landed is done: five reports in docs/reviews/ (Grok on the Muse tasks, Muse on the Grok tasks, Grok on the checking pass). One blocking finding, fixed and re-reviewed PASS. Local main is ahead of origin and not pushed in this session. The fork playtest-lens is at 03ba23f, pushed. 76 offline tests pass. Beats are in (12a2bb9): findings group into Puzzles, Attempts and Sub-beats, the checker labels friction (learning, stuck, blocked), resolved, and can reclassify as suspected_bug. Telemetry volumes are in the fork (6e4e0ad): a designer places a volume, the log stamps zone and puzzle on every event inside. Talos rerun with the new checker: 15 kept, the fan area reads as one beat. API total $7.09 of $150. The checker also takes event-log candidates (--include-log-candidates, 0bb55ed, Grok PASS), so Thursday's COGITO session flows through the same check with its log slices. The cross-player summary (analyzer/summary.py) groups kept findings by place across sessions, tested on made-up data; it has no real second session yet. Pipeline on the Talos recording: Spark 1.2 windowed candidates (35, 0f5ab21), then the checking pass (612557f, Grok PASS after quote and duration fixes): 14 kept, 21 dropped, findings in runs/check/talos-findings.json and the rendered page in runs/check/talos-report.html. Against Sasha's 4 blind notes the checker kept 3 episodes and dropped the 6:28 sigil bug (read as a solve). API total $2.41 of $150.
+## Where things stand (2026-10-28)
 
-- **Analyzer (Muse):** analyzer/client.py (every API call, cached and costed, Voice Transcribe included), spark_test.py, transcribe.py, findings.py, log_candidates.py (deaths, retries, idle versus looking_around, walk-backs, through the first flash), report/render.py. Pre-Spark fixes in: extract_text skips reasoning items, find_start_flash needs YAVG 200 or more, httpx2 is declared.
-- **Video tools (Grok):** tools/video.py: convert_video, extract_audio, cut_clip, find_start_flash. Grok also checked the --start wiring (PASS).
-- **Game:** game/ at 03ba23f on playtest-lens, pushed. Logger with yaw and pitch every 0.5 s and a user:// path, COGITO adapter with death, flash and beep at New Game and each level load, asset swaps, door sound at 0.4 s, and OFL.txt next to Montserrat.
+The pipeline is one path: Spark 1.2 windowed candidates, the checking pass, beats (Area, Puzzle, Attempt, Sub-beat), the cross-player summary, the report. Telemetry volumes, a schema 1 log with pause and perf lines, and the COGITO fork are in place. Committed and pushed 2026-10-28: the beats work and the logger schema (fork `playtest-lens` at `dc8c771`, main `3a090ad` plus the docs commit). Grok's beats review ran 7 rounds; round 7 is PASS (docs/reviews/06-area-beats-grok.md). 102 tests pass, Talos recompute 0 mismatches. The non-blocking grouping limits are in docs/FOLLOWUPS.md: if a COGITO run shows them, replace the fuzzy matching with checker-chosen ids.
 
 ## Next
 
-1. **Sasha judges the Talos report** (runs/check/talos-report.html): the 14 kept, the 21 dropped, and the 6:28 miss. That judgement comes before any tuning. The score in PLAN.md stays reserved for blind notes on held-out sessions.
-2. The cross-player summary on real data, once a second session exists. The step is built; no second recording yet.
-3. Then the quality bar on one recording.
-4. **Thursday:** Sasha plays COGITO at game/ 03ba23f, recording before New Game. Tune idle, walk-back and view-turn numbers on that log.
-5. **Waiting for Sasha:** Game Bar behaviour on the PC; hearing the door sound in the Lobby.
+1. Sasha plays COGITO with telemetry volumes, recording before New Game.
+2. Judgement pass on the first log-zoned report, then tune idle, backtrack and view-turn numbers.
+3. Open-weights mode (Spark Open, Baseten key in the Keychain, or Modal's Shared Endpoint for Muse Spark Open).
 
 ## Open questions for Sasha
 
-None. The view-turn number (5 degrees) stays until Thursday's log, with the idle and walk-back numbers.
-
-Note for the testers' guide (Sasha's words to write): the flash comes when New Game is pressed, so testers start recording before that.
+Answered: the Muse balance and the $150 API credits are one pool, about $23.90 (so every Wonder check draws on it), and Modal credits do pay for Shared Endpoint tokens. Open: the open-weights host and the checker model, in the plan sent to Sasha.
 
 ## Credits used
 
-API: $2.41 of $150 (Spark comparisons and runs, the windowed candidate pass, and 35 checked candidates with transcripts).
+Meta API and Muse Code, one pool: about $23.90 left (Sasha, 2026-10-28). Meta API tracked in runs/costs.jsonl: $13.09 of $150 (Spark passes, three Talos checking runs, transcripts), at 2026-10-28. Modal: about $0.02, paid from credits (billing summary shows Credits -0.02, Billed $0.00). Baseten: not used yet.

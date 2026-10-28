@@ -38,3 +38,13 @@ exports/
 
 # Archives
 *.zip
+
+# Modal agent skill (third-party docs, installed with `modal skills install --claude`)
+.claude/skills/modal/
+
+# Agent and editor local state
+.env.*
+*.pem
+.cursor/
+.codex/
+.opencode/

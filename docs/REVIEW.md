@@ -5,13 +5,13 @@ Proposed by Claude Opus 5.5 in Sasha's claude.ai chat, 2026-10-26; Sasha confirm
 ## When
 
 - **Every task:** the orchestrator reads the whole diff and runs the checks before it commits (AGENTS.md, "Working with the authors").
-- **A milestone,** not every commit: the end of a piece in PLAN.md's days (the Spark test, the add-on, the checking pass, the report page, the summary). A new Claude Sonnet 5.5 subagent reviews it. For the checking pass and the score, the review also checks that no tuning read the held-out notes. The orchestrator tags the reviewed commit `review/NN` so the next round can diff from it.
-- **One UX review by Claude Fable 5.1:** the report page's captures, and the README.
-- **The freeze** (PLAN.md, Tue Nov 3): one new Claude Opus 5.5 subagent on the whole repo. Not the orchestrator's thread: after nine days it's anchored on its own briefs.
+- **A milestone,** not every commit: the end of a piece in PLAN.md's days (the Spark test, the add-on, the checking pass, the report page, the summary). A fresh Grok 4.7 xhigh reviewer reviews it (DeepSeek for Grok-authored work). For the checking pass and the score, the review also checks that no tuning read the held-out notes. The orchestrator tags the reviewed commit `review/NN` so the next round can diff from it.
+- **One UX review of the report page's captures and the README,** by Claude when its limits return (Saturday evening, 2026-10-31), or earlier if Sasha picks another model.
+- **The freeze** (PLAN.md, Tue Nov 3): one fresh reviewer on the whole repo, Claude Opus 5.5 if its limits are back. Not the orchestrator's thread: after nine days it's anchored on its own briefs.
 
 ## The loop
 
-1. **A new reviewer each round,** as a subagent, on a different model than the author (AGENTS.md, "Who does what"). A reviewer resumed from an earlier round tends to recheck its own old findings. Claude reviews are the scarce ones: brief them on the diff and the evidence, not the whole history.
+1. **A new reviewer each round,** as a subagent, on a different model than the author (AGENTS.md, "Who does what"). A reviewer resumed from an earlier round tends to recheck its own old findings. Claude's usage is the scarce one: brief any Claude review on the diff and the evidence, not the whole history.
 2. **The brief stands alone:** the commit, the last reviewed tag, what the milestone must do with Sasha's decisions quoted, and the earlier rounds' findings, so the reviewer checks they stay fixed. It says "Do not call any t3-code tools" and "never run rm" (AGENTS.md, "How to work", says why and when that line can go).
 3. **The report** goes to `docs/reviews/NN-<milestone>-<reviewer>.md`. Its first line names the reviewer, model and harness, and the commit. Then PASS, or NOT PASS with the count of blocking findings. Then the blocking findings, then the nits, each with a file and a concrete failure. Only a reviewer's report says PASS.
 4. **The fix.** Check each finding against the code, fix the real ones, and say in the report file why the rest are dismissed. A new commit needs a new pass.

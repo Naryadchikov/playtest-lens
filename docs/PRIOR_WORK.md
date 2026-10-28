@@ -74,6 +74,15 @@ These licenses ask for a credit or for the copyright notice to stay with the cop
 
 Sasha, T3 Code chat, 2026-10-27: "Yes to all three. Pick the CC0 fire loop yourself, no pick page needed, and credit it in PRIOR_WORK.md." The five files (the CC BY-NC fireplace sound, the two sliding-door sounds and the two Freepik flags, whose licenses were unknown) were replaced or cut on `playtest-lens` in `1a381f1`. See the entries above.
 
+## Telemetry prior work (read, not used)
+
+Research only, 2026-10-28: no code, dependency or asset came from these. They informed the shape of our own add-on and this list is the credit for that.
+
+- etodd/playtest-telemetry-godot (MIT): uploads to a server, so not reusable here; read for event naming.
+- GhostTrail (MIT): 2D and reloads the editor on stop; read for the reload idea.
+- OpenTelemetry's Logs Data Model and the Perfetto Chrome JSON trace format: read as schema references.
+- Godot's `EditorNode3DGizmoPlugin`: the documented path for drawing in the editor viewport, noted for a later editor view.
+
 ## Prepared before building started
 
 - This repo's planning notes, agent rules and skills (`PLAN.md`, `AGENTS.md`, `CLAUDE.md`, `DECISIONS.md`, `STATUS.md`, `README.md`, `docs/`, `.claude/skills/`), drafted on 2026-10-26 around the kickoff. The rules, the review loop and the skills adapt working rules Sasha uses on his other projects: process only, no code or content from them. No code.
@@ -98,3 +107,8 @@ On top of upstream's `676be6d`, in order:
 - `708528e` "Add the UID files Godot 4.7 wrote for the Playtest Lens scripts": nine `.gd.uid` files under `addons/playtest_lens*`.
 - `5d585f9` "Log where the player looks; keep the log free of paths that name a person": `yaw` and `pitch` from the camera on each `position` line, `log_path` in its `user://` form, and the scripted session looking around for 20 s of its stand.
 - `7ad0f20` "Trim the sliding door's open sound to 0.4 s with a fade-out": `addons/cogito/Assets/Audio/sliding_door_open.ogg`, the first 0.4 s of Kenney's `stoneDrag4.ogg` (CC0) with a 0.1 s fade-out, used as `sliding_door.tscn`'s `open_sound`.
+
+## Development tools (not part of the product)
+
+- DeepSeek V4.1 Flash 1017 (DeepSeek, open weights) writes part of the code, served on Modal as a Shared Endpoint and driven by `tools/run-modal-agent.sh`. Modal's agent skill (`modal skills install --claude`) is installed locally and git-ignored. The product itself calls only Meta models (Muse Spark, Voice Transcribe, and Muse Spark Open for the open-weights mode).
+- Grok 4.7 (xAI, through Cursor) reviews code and builds the Godot side and tools. Claude Sonnet 5.5 orchestrates. Every commit names its author models in a `Co-Authored-By:` trailer.

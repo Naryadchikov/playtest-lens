@@ -40,14 +40,14 @@ An AI that plays the game; anything for Unreal; anything from Sasha's other game
 
 ## Who builds what
 
-**Decided** (Sasha's, in chat on 2026-10-26, with Claude's additions; confirmed in DECISIONS.md, 2026-10-26): the split in AGENTS.md, "Who does what", made to spend Muse's plan and the Cursor credits before Claude's usage. Claude Opus orchestrates. Muse Code on Muse Wonder writes most of the code: the analyzer (it may know Meta's current API better than models trained earlier) and the report page. Grok builds the Godot side and the tools. Claude Sonnet reviews. AGENTS.md, "When to switch to more Claude", says when an area moves to Claude. Each task is briefed and recorded in `docs/tasks/`.
+The split changed twice; the current one is in AGENTS.md, "Who does what", with Sasha's quotes in DECISIONS.md (2026-10-26, 2026-10-27, 2026-10-28). Since 2026-10-28: Claude Sonnet orchestrates, DeepSeek V4.1 Flash 1017 on Modal writes the analyzer and report, Grok 4.7 through Cursor reviews and builds the Godot side and tools, Muse Wonder is not called. Each task is briefed and recorded in `docs/tasks/`.
 
 ## Which Meta models the product uses
 
 **Decided** with two changes (Claude's proposal, 2026-10-26; Sasha's answer in DECISIONS.md, 2026-10-26). The orchestrator checks the current model list and prices before the Spark test and reports the ids.
 
 - **Muse Spark 1.3** finds the candidates: the whole session, video and audio in one pass. It's the cheap model for long inputs ($1.25 in, $4.25 out per million tokens). Spark 1.3 or 1.2: the Spark test picks the one that hears the player better (DECISIONS.md, 2026-10-26, question 9).
-- **Muse Wonder** checks each candidate: a 20-second clip, the player's words and the log slice. Short inputs keep its price ($4 in, $20 out) small, and a second model that never sees the first one's reasoning judges the moment on its own. If the Spark test shows Spark checks just as well, the check stays on Spark.
+- **Muse Wonder** (the product's check model so far; Sasha, 2026-10-28, asked not to call Wonder to save the Muse balance for Spark's video work, so the check's model is open: the orchestrator's plan proposes testing Spark on the cached Talos clips) checks each candidate: a 20-second clip, the player's words and the log slice. Short inputs keep its price ($4 in, $20 out) small, and a second model that never sees the first one's reasoning judges the moment on its own. If the Spark test shows Spark checks just as well, the check stays on Spark.
 - **Muse Voice Transcribe:** Sasha: "Voice Transcribe stays, used per candidate: transcribe each 20-second clip, so the report's quotes are what I actually said and the check gets my words as text. The times come from Spark and the clip's place in the video." (It returns no word-level times.)
 - **Muse Spark Open:** the open-weights mode, through Baseten or Modal. Sasha: "Spark Open: hosted only." The hackathon has a bonus prize for the best build on Meta's open models, but this stays first to cut.
 - **Not used for now:** Muse Image, SAM 3.1.
@@ -75,7 +75,7 @@ Sasha's MacBook Pro (M1 Max, 64 GB), kept awake with `caffeinate -dims` while ag
 
 The deadline is Nov 4, 21:00 ET (Thu Nov 5, 03:00 Stockholm). Don't count on the night.
 
-**Reviews** (Decided, [docs/REVIEW.md](docs/REVIEW.md)): a Sonnet review at the end of Tue, Wed, Fri and Sun's pieces, Fable on the report page, and a fresh Opus pass on the whole repo at the freeze.
+**Reviews** (Decided, [docs/REVIEW.md](docs/REVIEW.md); the reviewers changed on 2026-10-27 and 2026-10-28, see DECISIONS.md): a fresh reviewer from another vendor at each milestone, and a fresh pass on the whole repo at the freeze.
 
 **Cut order if late:** the open-weights mode, then the cross-player summary's polish, then the event log. Never cut the checking pass or the score against Sasha's notes.
 
