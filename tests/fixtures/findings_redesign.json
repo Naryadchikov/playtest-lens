@@ -1,0 +1,795 @@
+{
+  "format": 1,
+  "session": {
+    "id": "demo-02",
+    "recording": "player2-lobby.mov",
+    "duration_s": 860.0,
+    "start_flash_s": 2.6,
+    "player": "Player 2",
+    "level": "Lobby",
+    "recorded": "2026-10-29"
+  },
+  "summary": {
+    "verdict": "Players got stuck in 2 places. One of them, the weighted plates, stopped all 3 players.",
+    "lost_s": 285,
+    "counts": {
+      "stuck": 4,
+      "confused": 3,
+      "surprised": 1,
+      "suspected_bug": 1
+    },
+    "kept": 9,
+    "dropped": 3
+  },
+  "route": {
+    "scene": "res://addons/cogito/DemoScenes/COGITO_3_Lobby.tscn",
+    "map": "lobby",
+    "points": [
+      [
+        0.0,
+        1.31,
+        6.81
+      ],
+      [
+        22.05,
+        0.89,
+        4.71
+      ],
+      [
+        44.1,
+        2.59,
+        0.09
+      ],
+      [
+        66.15,
+        3.49,
+        -0.71
+      ],
+      [
+        88.21,
+        2.4,
+        -1.61
+      ],
+      [
+        110.26,
+        3.49,
+        -0.5
+      ],
+      [
+        132.31,
+        2.19,
+        -2.2
+      ],
+      [
+        154.36,
+        0.49,
+        -3.5
+      ],
+      [
+        176.41,
+        -4.0,
+        -6.9
+      ],
+      [
+        198.46,
+        -4.21,
+        -8.2
+      ],
+      [
+        220.51,
+        -4.1,
+        -10.01
+      ],
+      [
+        242.56,
+        -0.49,
+        -13.31
+      ],
+      [
+        264.62,
+        -1.21,
+        -14.9
+      ],
+      [
+        286.67,
+        -2.99,
+        -14.61
+      ],
+      [
+        308.72,
+        -4.0,
+        -12.11
+      ],
+      [
+        330.77,
+        -2.99,
+        -14.9
+      ],
+      [
+        352.82,
+        -0.49,
+        -14.29
+      ],
+      [
+        374.87,
+        -2.09,
+        -11.0
+      ],
+      [
+        396.92,
+        -4.0,
+        -11.71
+      ],
+      [
+        418.97,
+        -4.0,
+        -14.29
+      ],
+      [
+        441.03,
+        -0.81,
+        -14.69
+      ],
+      [
+        463.08,
+        -0.49,
+        -13.31
+      ],
+      [
+        485.13,
+        -0.81,
+        -11.9
+      ],
+      [
+        507.18,
+        -2.99,
+        -10.01
+      ],
+      [
+        529.23,
+        -4.0,
+        -8.2
+      ],
+      [
+        551.28,
+        -4.0,
+        -6.1
+      ],
+      [
+        573.33,
+        -2.51,
+        -1.4
+      ],
+      [
+        595.38,
+        -2.3,
+        1.9
+      ],
+      [
+        617.44,
+        -1.29,
+        5.11
+      ],
+      [
+        639.49,
+        -1.5,
+        8.51
+      ],
+      [
+        661.54,
+        -2.99,
+        9.79
+      ],
+      [
+        683.59,
+        -4.21,
+        10.9
+      ],
+      [
+        705.64,
+        -5.09,
+        10.61
+      ],
+      [
+        727.69,
+        -4.21,
+        11.01
+      ],
+      [
+        749.74,
+        -2.99,
+        10.9
+      ],
+      [
+        771.79,
+        -2.01,
+        13.51
+      ],
+      [
+        793.85,
+        -2.99,
+        13.99
+      ],
+      [
+        815.9,
+        -4.0,
+        13.59
+      ],
+      [
+        837.95,
+        -3.79,
+        13.8
+      ],
+      [
+        860.0,
+        -2.99,
+        14.09
+      ]
+    ],
+    "heat": [
+      {
+        "x": -2.4,
+        "z": -13.31,
+        "r_m": 3.57,
+        "seconds": 330
+      },
+      {
+        "x": 3.49,
+        "z": -0.6,
+        "r_m": 2.1,
+        "seconds": 70
+      },
+      {
+        "x": -3.2,
+        "z": 13.51,
+        "r_m": 1.89,
+        "seconds": 100
+      },
+      {
+        "x": -4.9,
+        "z": 10.8,
+        "r_m": 1.47,
+        "seconds": 40
+      }
+    ]
+  },
+  "markers": [
+    {
+      "t": 115.0,
+      "x": 2.4,
+      "z": 0.51,
+      "moment": "f5"
+    },
+    {
+      "t": 380.0,
+      "x": -2.99,
+      "z": -14.9,
+      "moment": "f1"
+    },
+    {
+      "t": 715.0,
+      "x": -3.9,
+      "z": 10.29,
+      "moment": "f6"
+    }
+  ],
+  "cross_player": [
+    {
+      "place": "North room, Puzzle 2: weighted plates",
+      "kind": "stuck",
+      "of": 3,
+      "players": [
+        {
+          "label": "Player 2",
+          "moments": [
+            "f1",
+            "f2",
+            "f3"
+          ],
+          "worst_t": 85.0,
+          "here": true
+        },
+        {
+          "label": "Player 1",
+          "moments": [],
+          "worst_t": 250.0,
+          "here": false
+        },
+        {
+          "label": "Player 3",
+          "moments": [],
+          "worst_t": 155.0,
+          "here": false
+        }
+      ]
+    },
+    {
+      "place": "South room, Puzzle 3: crate shelf",
+      "kind": "stuck",
+      "of": 3,
+      "players": [
+        {
+          "label": "Player 2",
+          "moments": [
+            "f4"
+          ],
+          "worst_t": 740.0,
+          "here": true
+        },
+        {
+          "label": "Player 3",
+          "moments": [],
+          "worst_t": 110.0,
+          "here": false
+        }
+      ]
+    },
+    {
+      "place": "Hall, Puzzle 1: badge reader",
+      "kind": "confused",
+      "of": 3,
+      "players": [
+        {
+          "label": "Player 2",
+          "moments": [
+            "f5"
+          ],
+          "worst_t": 72.0,
+          "here": true
+        },
+        {
+          "label": "Player 1",
+          "moments": [],
+          "worst_t": 50.0,
+          "here": false
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "f1",
+      "rank": 1,
+      "time_s": 345.0,
+      "end_s": 430.0,
+      "kind": "stuck",
+      "summary": "Player stands on the plates holding the crate and cannot make the door open.",
+      "quote": "I'm on it. Why is nothing happening?",
+      "clip": {
+        "path": "clips/demo-02/f1.mp4",
+        "start_s": 335.0,
+        "end_s": 360.0
+      },
+      "game_state": "Two of three plates held. The third plate is behind the pedestal, out of the player's view.",
+      "sources": [
+        "spark",
+        "event_log"
+      ],
+      "check": {
+        "verdict": "keep",
+        "note": "Eight plate presses in 85 s, door state never changes, camera never turns toward the third plate.",
+        "model": "muse-spark-1.2-contributor",
+        "friction": "blocked",
+        "resolved": "abandoned",
+        "resolved_after_s": null,
+        "area": "north",
+        "puzzle": "plates"
+      },
+      "at": {
+        "x": -4.0,
+        "z": -12.11
+      },
+      "beat": {
+        "area": "North room",
+        "puzzle": "weighted plates",
+        "zone": null,
+        "puzzle_number": 2,
+        "attempt": 2,
+        "attempt_start_s": 330.0,
+        "attempt_end_s": 430.0,
+        "index": 1
+      }
+    },
+    {
+      "id": "f2",
+      "rank": 2,
+      "time_s": 200.0,
+      "end_s": 245.0,
+      "kind": "stuck",
+      "summary": "Player presses two plates in turn and expects the door to open. It does not.",
+      "quote": "Okay, so I need weight on both. Hm.",
+      "clip": {
+        "path": "clips/demo-02/f2.mp4",
+        "start_s": 190.0,
+        "end_s": 255.0
+      },
+      "game_state": "Door locked. Plate 1 lit, plate 2 not lit, plate 3 out of view behind the pedestal.",
+      "sources": [
+        "spark",
+        "event_log"
+      ],
+      "check": {
+        "verdict": "keep",
+        "note": "Two presses, 1.5 laps around the pedestal, then the player leaves to reread the wall note.",
+        "model": "muse-spark-1.2-contributor",
+        "friction": "stuck",
+        "resolved": "abandoned",
+        "resolved_after_s": null,
+        "area": "north",
+        "puzzle": "plates"
+      },
+      "at": {
+        "x": -1.5,
+        "z": -11.5
+      },
+      "beat": {
+        "area": "North room",
+        "puzzle": "weighted plates",
+        "zone": null,
+        "puzzle_number": 2,
+        "attempt": 1,
+        "attempt_start_s": 190.0,
+        "attempt_end_s": 260.0,
+        "index": 2
+      }
+    },
+    {
+      "id": "f3",
+      "rank": 3,
+      "time_s": 530.0,
+      "end_s": 570.0,
+      "kind": "stuck",
+      "summary": "Player tries the crate on plate 1 again, then walks the room edge looking for something new.",
+      "quote": "It has to be the crate, right? The crate.",
+      "clip": {
+        "path": "clips/demo-02/f3.mp4",
+        "start_s": 525.0,
+        "end_s": 550.0
+      },
+      "game_state": "Plate 1 and plate 2 held. The player has not yet seen plate 3.",
+      "sources": [
+        "spark",
+        "event_log"
+      ],
+      "check": {
+        "verdict": "keep",
+        "note": "Repeats the attempt 2 approach, then explores. Finds plate 3 at 9:30.",
+        "model": "muse-spark-1.2-contributor",
+        "friction": "stuck",
+        "resolved": "solved",
+        "resolved_after_s": 75,
+        "area": "north",
+        "puzzle": "plates"
+      },
+      "at": {
+        "x": -4.0,
+        "z": -14.29
+      },
+      "beat": {
+        "area": "North room",
+        "puzzle": "weighted plates",
+        "zone": null,
+        "puzzle_number": 2,
+        "attempt": 3,
+        "attempt_start_s": 520.0,
+        "attempt_end_s": 605.0,
+        "index": 3
+      }
+    },
+    {
+      "id": "f4",
+      "rank": 4,
+      "time_s": 740.0,
+      "end_s": 780.0,
+      "kind": "stuck",
+      "summary": "Player searches the shelves for a crate that is behind the locked cage.",
+      "quote": "There's no crate. There has to be a crate.",
+      "clip": {
+        "path": "clips/demo-02/f4.mp4",
+        "start_s": 735.0,
+        "end_s": 760.0
+      },
+      "game_state": "The cage opens after the dial is set. The code is on a wall plate behind the player's start point.",
+      "sources": [
+        "spark",
+        "event_log"
+      ],
+      "check": {
+        "verdict": "keep",
+        "note": "Player sets the dial to a wrong code twice, then searches four shelves.",
+        "model": "muse-spark-1.2-contributor",
+        "friction": "blocked",
+        "resolved": "abandoned",
+        "resolved_after_s": null,
+        "area": "south",
+        "puzzle": "shelf"
+      },
+      "at": {
+        "x": -1.8,
+        "z": 12.1
+      },
+      "beat": {
+        "area": "South room",
+        "puzzle": "crate shelf",
+        "zone": null,
+        "puzzle_number": 3,
+        "attempt": 1,
+        "attempt_start_s": 660.0,
+        "attempt_end_s": 800.0,
+        "index": 4
+      }
+    },
+    {
+      "id": "f5",
+      "rank": 5,
+      "time_s": 72.0,
+      "end_s": 100.0,
+      "kind": "confused",
+      "summary": "Player walks past the badge reader twice before using it.",
+      "quote": "Is that a screen or a button?",
+      "clip": {
+        "path": "clips/demo-02/f5.mp4",
+        "start_s": 70.0,
+        "end_s": 95.0
+      },
+      "game_state": "Reader is lit but shows no prompt until the player is within 1 m.",
+      "sources": [
+        "spark",
+        "event_log"
+      ],
+      "check": {
+        "verdict": "keep",
+        "note": "Two passes within 1.5 m before the first use.",
+        "model": "muse-spark-1.2-contributor",
+        "friction": "learning",
+        "resolved": "solved",
+        "resolved_after_s": 28,
+        "area": "hall",
+        "puzzle": "badge"
+      },
+      "at": {
+        "x": 3.2,
+        "z": -1.69
+      },
+      "beat": {
+        "area": "Hall",
+        "puzzle": "badge reader",
+        "zone": null,
+        "puzzle_number": 1,
+        "attempt": 1,
+        "attempt_start_s": 65.0,
+        "attempt_end_s": 160.0,
+        "index": 5
+      }
+    },
+    {
+      "id": "f6",
+      "rank": 6,
+      "time_s": 670.0,
+      "end_s": 710.0,
+      "kind": "confused",
+      "summary": "Player tries three inventory keys on the shelf lock before noticing the number dial.",
+      "quote": "Is it one of these keys, or a code?",
+      "clip": {
+        "path": "clips/demo-02/f6.mp4",
+        "start_s": 665.0,
+        "end_s": 690.0
+      },
+      "game_state": "Shelf lock shows a four-digit dial. Keys in the inventory cannot be used on it.",
+      "sources": [
+        "spark",
+        "event_log"
+      ],
+      "check": {
+        "verdict": "keep",
+        "note": "Three failed use attempts. The lock gives no feedback that keys are the wrong item.",
+        "model": "muse-spark-1.2-contributor",
+        "friction": "stuck",
+        "resolved": "solved",
+        "resolved_after_s": 40,
+        "area": "south",
+        "puzzle": "shelf"
+      },
+      "at": {
+        "x": -5.3,
+        "z": 10.8
+      },
+      "beat": {
+        "area": "South room",
+        "puzzle": "crate shelf",
+        "zone": null,
+        "puzzle_number": 3,
+        "attempt": 1,
+        "attempt_start_s": 660.0,
+        "attempt_end_s": 800.0,
+        "index": 6
+      }
+    },
+    {
+      "id": "f7",
+      "rank": 7,
+      "time_s": 575.0,
+      "end_s": 582.0,
+      "kind": "suspected_bug",
+      "summary": "Plate 3 flickers on and off while the crate rests on its edge.",
+      "quote": null,
+      "clip": {
+        "path": "clips/demo-02/f7.mp4",
+        "start_s": 570.0,
+        "end_s": 590.0
+      },
+      "game_state": "Crate half on plate 3. Plate state toggles 6 times in 7 s.",
+      "sources": [
+        "spark",
+        "event_log"
+      ],
+      "check": {
+        "verdict": "keep",
+        "note": "Event log shows plate_3 pressed and released repeatedly with no player input.",
+        "model": "muse-spark-1.2-contributor",
+        "friction": "stuck",
+        "resolved": "solved",
+        "resolved_after_s": 30,
+        "area": "north",
+        "puzzle": "plates"
+      },
+      "at": {
+        "x": -0.49,
+        "z": -13.31
+      },
+      "beat": {
+        "area": "North room",
+        "puzzle": "weighted plates",
+        "zone": null,
+        "puzzle_number": 2,
+        "attempt": 3,
+        "attempt_start_s": 520.0,
+        "attempt_end_s": 605.0,
+        "index": 7
+      }
+    },
+    {
+      "id": "f8",
+      "rank": 8,
+      "time_s": 125.0,
+      "end_s": 132.0,
+      "kind": "surprised",
+      "summary": "Player flinches when the door opens at the same moment the reader beeps.",
+      "quote": "Whoa, okay.",
+      "clip": {
+        "path": "clips/demo-02/f8.mp4",
+        "start_s": 120.0,
+        "end_s": 140.0
+      },
+      "game_state": "Door opens 0.2 s after the beep, with a loud slide sound.",
+      "sources": [
+        "spark",
+        "event_log"
+      ],
+      "check": {
+        "verdict": "keep",
+        "note": "Brief startle, play continues at once.",
+        "model": "muse-spark-1.2-contributor",
+        "friction": "learning",
+        "resolved": "solved",
+        "resolved_after_s": 7,
+        "area": "hall",
+        "puzzle": "badge"
+      },
+      "at": {
+        "x": 4.5,
+        "z": -0.1
+      },
+      "beat": {
+        "area": "Hall",
+        "puzzle": "badge reader",
+        "zone": null,
+        "puzzle_number": 1,
+        "attempt": 1,
+        "attempt_start_s": 65.0,
+        "attempt_end_s": 160.0,
+        "index": 8
+      }
+    },
+    {
+      "id": "f9",
+      "rank": 9,
+      "time_s": 192.0,
+      "end_s": 199.0,
+      "kind": "confused",
+      "summary": "Player stops in the doorway and looks around for 7 seconds before moving in.",
+      "quote": "What am I looking at?",
+      "clip": {
+        "path": "clips/demo-02/f9.mp4",
+        "start_s": 187.0,
+        "end_s": 207.0
+      },
+      "game_state": "Player enters the room. The pedestal hums. No objective text is shown.",
+      "sources": [
+        "spark",
+        "event_log"
+      ],
+      "check": {
+        "verdict": "keep",
+        "note": "One pause at the doorway, then normal movement. First visit to the room.",
+        "model": "muse-spark-1.2-contributor",
+        "friction": "learning",
+        "resolved": "solved",
+        "resolved_after_s": 7,
+        "area": "north",
+        "puzzle": "plates"
+      },
+      "at": {
+        "x": -4.1,
+        "z": -10.01
+      },
+      "beat": {
+        "area": "North room",
+        "puzzle": "weighted plates",
+        "zone": null,
+        "puzzle_number": 2,
+        "attempt": 1,
+        "attempt_start_s": 190.0,
+        "attempt_end_s": 260.0,
+        "index": 9
+      }
+    },
+    {
+      "id": "d1",
+      "rank": null,
+      "time_s": 40.0,
+      "end_s": null,
+      "kind": "surprised",
+      "summary": "Player flinches at a loading hitch.",
+      "quote": null,
+      "clip": null,
+      "game_state": null,
+      "sources": [
+        "spark"
+      ],
+      "check": {
+        "verdict": "drop",
+        "note": "the hitch is in the recording, not in the game's event log",
+        "model": "muse-spark-1.2-contributor"
+      }
+    },
+    {
+      "id": "d2",
+      "rank": null,
+      "time_s": 270.0,
+      "end_s": null,
+      "kind": "confused",
+      "summary": "Player looks at the ceiling.",
+      "quote": null,
+      "clip": null,
+      "game_state": null,
+      "sources": [
+        "spark"
+      ],
+      "check": {
+        "verdict": "drop",
+        "note": "looking at the lighting, no pause in play",
+        "model": "muse-spark-1.2-contributor"
+      }
+    },
+    {
+      "id": "d3",
+      "rank": null,
+      "time_s": 650.0,
+      "end_s": null,
+      "kind": "stuck",
+      "summary": "Player stops on the stairs for 4 s.",
+      "quote": null,
+      "clip": null,
+      "game_state": null,
+      "sources": [
+        "spark"
+      ],
+      "check": {
+        "verdict": "drop",
+        "note": "reading the objective text, no failed attempt found",
+        "model": "muse-spark-1.2-contributor"
+      }
+    }
+  ]
+}

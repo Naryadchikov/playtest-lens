@@ -1,15 +1,23 @@
 import copy
 import html
 import json
+import re
 from pathlib import Path
 
+import pytest
+
+from analyzer import findings as findings_module
+from report import render
 from report.render import render_html
 
-SAMPLE = Path(__file__).parent / "fixtures" / "findings_sample.json"
+FIXTURES = Path(__file__).parent / "fixtures"
+REDESIGN = FIXTURES / "findings_redesign.json"
+SAMPLE = FIXTURES / "findings_sample.json"
+SAMPLE_B = FIXTURES / "findings_sample_b.json"
 
 
-def _sample_data():
-    return json.loads(SAMPLE.read_text(encoding="utf-8"))
+def _data(path):
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _mss(seconds):
@@ -17,116 +25,228 @@ def _mss(seconds):
     return f"{total // 60}:{total % 60:02d}"
 
 
-def test_page_shows_every_finding_as_in_file():
-    data = _sample_data()
-    page = render_html(data)
-    for finding in data["findings"]:
+def _map_px(meta, x, z):
+    px = (x - meta["world_min_x"]) / (
+        meta["world_max_x"] - meta["world_min_x"]
+    ) * meta["px_width"]
+    py = (z - meta["world_min_z"]) / (
+        meta["world_max_z"] - meta["world_min_z"]
+    ) * meta["px_height"]
+    return px, py
+
+
+def _card(page, rank):
+    match = re.search(
+        rf'<article class="card [^"]+" id="m{rank}">(.*?)</article>',
+        page,
+        re.DOTALL,
+    )
+    assert match, f"card m{rank} not found"
+    return match.group(1)
+
+
+@pytest.fixture()
+def redesign():
+    return _data(REDESIGN)
+
+
+def test_redesign_fixture_loads():
+    data = findings_module.load(REDESIGN)
+    assert data["session"]["player"] == "Player 2"
+    assert len(data["route"]["points"]) == 40
+
+
+def test_page_shows_every_kept_finding_summary_quote_and_time(redesign):
+    page = render_html(redesign)
+    for finding in redesign["findings"]:
+        if finding["check"]["verdict"] != "keep":
+            continue
         assert html.escape(finding["summary"]) in page
         if finding["quote"] is not None:
             assert html.escape(finding["quote"]) in page
         assert _mss(finding["time_s"]) in page
 
 
-def test_page_escapes_script_in_quote():
-    data = _sample_data()
-    data["findings"][0]["quote"] = "<script>alert(1)</script>"
-    page = render_html(data)
-    assert "<script>alert(1)</script>" not in page
-    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in page
+def test_sections_follow_the_mockup_order(redesign):
+    page = render_html(redesign)
+    assert re.findall(r'<h2 id="([^"]+)"', page) == [
+        "glance",
+        "across",
+        "where",
+        "moments",
+        "dropped",
+    ]
 
 
-def test_dropped_findings_only_under_dropped():
-    data = _sample_data()
-    page = render_html(data)
-    kept_part, dropped_part = page.split("<h2>Dropped</h2>")
-    for finding in data["findings"]:
-        summary = html.escape(finding["summary"])
-        if finding["check"]["verdict"] == "drop":
-            assert summary not in kept_part
-            assert summary in dropped_part
-        else:
-            assert summary in kept_part
-            assert summary not in dropped_part
+def test_groups_and_cards_follow_beat_and_rank(redesign):
+    page = render_html(redesign)
+    assert re.findall(r'<article class="card [^"]+" id="m(\d+)"', page) == [
+        "9", "2", "1", "3", "7", "6", "4", "5", "8"
+    ]
+    assert re.findall(
+        r"<summary>([^<]*)<span class=\"note\">", page
+    ) == [
+        "North room, Puzzle 2: weighted plates",
+        "South room, Puzzle 3: crate shelf",
+        "Hall, Puzzle 1: badge reader",
+    ]
+    # Only the puzzle that holds the lowest rank is open.
+    assert page.count('class="puzzle" open') == 1
+    opened = page.index('class="puzzle" open')
+    assert "North room, Puzzle 2: weighted plates" in page[opened:opened + 400]
 
 
-def test_kept_findings_in_rank_order():
-    data = _sample_data()
-    page = render_html(data)
-    kept = sorted(
-        (f for f in data["findings"] if f["check"]["verdict"] == "keep"),
-        key=lambda f: f["rank"],
+@pytest.mark.parametrize("path", [SAMPLE, SAMPLE_B])
+def test_missing_optional_fields_hide_their_elements(path):
+    page = render_html(_data(path))
+    assert 'id="where"' not in page
+    assert 'class="tiles"' not in page
+    assert "Across players" not in page
+    assert "data:image/png" not in page
+    assert 'id="pin-' not in page
+    assert 'class="verdict"' not in page
+    assert "The moments" in page
+
+
+def test_every_string_from_the_file_is_escaped(redesign):
+    payload = "<script>alert(1)</script>"
+    redesign["session"]["player"] = payload
+    redesign["summary"]["verdict"] = payload
+    redesign["cross_player"][0]["place"] = payload
+    redesign["findings"][0]["summary"] = payload
+    redesign["findings"][0]["quote"] = payload
+    page = render_html(redesign)
+    assert "<script>" not in page
+    assert page.count(html.escape(payload)) >= 5
+
+
+def test_route_and_pin_pixels_match_the_map_json(redesign):
+    page = render_html(redesign)
+    meta = json.loads(
+        (Path(render.MAPS_DIR) / "lobby.json").read_text(encoding="utf-8")
     )
-    positions = [page.index(html.escape(f["summary"])) for f in kept]
-    assert positions == sorted(positions)
+    for point in (redesign["route"]["points"][0], redesign["route"]["points"][10]):
+        px, py = _map_px(meta, point[1], point[2])
+        assert f"{px:.1f},{py:.1f}" in page
+
+    finding = next(f for f in redesign["findings"] if f["id"] == "f1")
+    px, py = _map_px(meta, finding["at"]["x"], finding["at"]["z"])
+    assert re.search(
+        rf'id="pin-m1"[^>]*transform="translate\({px:.1f} {py:.1f}\)"', page
+    )
 
 
-def test_beat_header_names_area_puzzle_attempt_and_span():
-    data = _sample_data()
-    kept = [f for f in data["findings"] if f["check"]["verdict"] == "keep"]
-    first = copy.deepcopy(kept[0])
-    second = copy.deepcopy(kept[0])
-    for finding, rank, time_s, summary in [
-        (first, 1, 444.0, "First fan moment."),
-        (second, 2, 502.0, "Second fan moment."),
-    ]:
-        finding["rank"] = rank
-        finding["time_s"] = time_s
-        finding["summary"] = summary
-        finding["clip"] = None
-        finding["beat"] = {
-            "area": "Yellow Puzzle Area",
-            "puzzle": "fan and blue barrier",
-            "puzzle_number": 1,
-            "attempt": 1,
-            "attempt_start_s": 444.0,
-            "attempt_end_s": 502.0,
-            "index": rank,
-        }
-    data["findings"] = [first, second]
-    page = render_html(data)
-    assert 'class="beat"' in page
-    assert "Yellow Puzzle Area · Puzzle 1: fan and blue barrier · Attempt 1 · 7:24–8:22" in page
-    assert page.count('class="beat"') == 1
+@pytest.mark.parametrize(
+    "friction, level, tag, unplanned",
+    [
+        ("learning", 1, "planned challenge?", False),
+        ("stuck", 2, "unplanned", True),
+        ("blocked", 3, "unplanned", True),
+    ],
+)
+def test_friction_drives_the_meter_and_tag(redesign, friction, level, tag, unplanned):
+    finding = next(f for f in redesign["findings"] if f["id"] == "f1")
+    finding["check"]["friction"] = friction
+    finding["check"]["resolved"] = "unknown"
+    page = render_html(redesign)
+    card = _card(page, 1)
+    assert card.count('class="on"') == level
+    css = "intent unplanned" if unplanned else "intent"
+    assert f'<span class="{css}">{html.escape(tag)}</span>' in card
 
 
-def test_beat_headers_never_pull_a_later_moment_forward():
-    data = _sample_data()
-    kept = [f for f in data["findings"] if f["check"]["verdict"] == "keep"]
-    rows = []
-    for rank, (time_s, puzzle, summary) in enumerate(
-        [
-            (10.0, "Door", "Door first."),
-            (20.0, "Fan", "Fan middle."),
-            (30.0, "Door", "Door last."),
-        ],
-        start=1,
-    ):
-        finding = copy.deepcopy(kept[0])
-        finding["rank"] = rank
-        finding["time_s"] = time_s
-        finding["summary"] = summary
-        finding["clip"] = None
-        finding["beat"] = {
-            "area": "Lab",
-            "puzzle": puzzle,
-            "puzzle_number": 1,
-            "attempt": 1,
-            "attempt_start_s": time_s,
-            "attempt_end_s": time_s,
-            "index": rank,
-        }
-        rows.append(finding)
-    data["findings"] = rows
-    page = render_html(data)
-    positions = [page.index(s) for s in ("Door first.", "Fan middle.", "Door last.")]
-    assert positions == sorted(positions)
+@pytest.mark.parametrize(
+    "resolved, after, text, css",
+    [
+        ("solved", 28, "Resolved after 0:28", "status done"),
+        ("solved", None, "Resolved", "status done"),
+        ("abandoned", None, "Abandoned", "status open"),
+    ],
+)
+def test_resolved_drives_the_status(redesign, resolved, after, text, css):
+    finding = next(f for f in redesign["findings"] if f["id"] == "f1")
+    finding["check"]["resolved"] = resolved
+    finding["check"]["resolved_after_s"] = after
+    page = render_html(redesign)
+    card = _card(page, 1)
+    assert f'<span class="{css}">{text}</span>' in card
 
 
-def test_page_has_video_only_when_clip_present():
-    data = _sample_data()
-    page = render_html(data)
-    for finding in data["findings"]:
-        if finding["clip"] is not None:
-            assert f'src="{html.escape(finding["clip"]["path"], quote=True)}"' in page
-    # f3 and f5 have no clip, so the page holds exactly the four clip paths.
-    assert page.count("<video") == 4
+def test_unknown_resolved_shows_no_status(redesign):
+    finding = next(f for f in redesign["findings"] if f["id"] == "f1")
+    finding["check"]["resolved"] = "unknown"
+    page = render_html(redesign)
+    assert 'class="status' not in _card(page, 1)
+
+
+def test_unexpected_friction_shows_its_text_and_no_meter(redesign):
+    finding = next(f for f in redesign["findings"] if f["id"] == "f1")
+    finding["check"]["friction"] = "odd"
+    finding["check"]["resolved"] = "unknown"
+    page = render_html(redesign)
+    card = _card(page, 1)
+    assert '<span class="intent">odd</span>' in card
+    assert 'class="meter"' not in card
+
+
+def test_page_has_no_javascript(redesign):
+    page = render_html(redesign)
+    assert "<script" not in page.lower()
+    assert "javascript:" not in page.lower()
+
+
+def test_missing_map_hides_the_map_section_and_warns_once(redesign, capsys):
+    redesign["route"]["map"] = "no-such-map"
+    page = render_html(redesign)
+    assert 'id="where"' not in page
+    assert 'href="#pin-m1"' not in page
+    assert '<span class="num-pin">1</span>' in page
+    err = capsys.readouterr().err
+    assert err.count("\n") == 1
+    assert "no-such-map" in err
+
+
+def test_f9_marker_without_a_kept_moment_has_no_link(redesign):
+    for marker in redesign["markers"]:
+        marker["moment"] = None
+    page = render_html(redesign)
+    assert '<g class="pin f9" id="pin-f1"' in page
+    assert 'class="pin f9" id="pin-f1" href=' not in page
+    assert 'class="f9line"' not in page
+
+
+def test_pin_list_lists_only_pinned_findings_in_rank_order(redesign):
+    page = render_html(redesign)
+    pinned = [
+        f for f in redesign["findings"]
+        if f["check"]["verdict"] == "keep" and f.get("at") is not None
+    ]
+    pinlist = page.split('<ol class="pinlist">')[1].split("</ol>")[0]
+    assert re.findall(r'<span class="num">(\d+)</span>', pinlist) == [
+        str(f["rank"]) for f in pinned
+    ]
+
+    for finding in redesign["findings"]:
+        if finding["id"] == "f5":
+            del finding["at"]
+    page = render_html(redesign)
+    assert 'id="pin-m5"' not in page
+    assert '<article class="card confused" id="m5">' in page
+    pinlist = page.split('<ol class="pinlist">')[1].split("</ol>")[0]
+    assert '<span class="num">5</span>' not in pinlist
+
+
+def test_clips_render_only_for_kept_findings(redesign):
+    page = render_html(redesign)
+    kept_with_clip = [
+        f for f in redesign["findings"]
+        if f["check"]["verdict"] == "keep" and f["clip"] is not None
+    ]
+    assert page.count("<video") == len(kept_with_clip)
+    for finding in kept_with_clip:
+        assert f'src="{html.escape(finding["clip"]["path"], quote=True)}"' in page
+
+
+def test_missing_quote_shows_the_label(redesign):
+    page = render_html(redesign)
+    assert '<p class="quote none">No spoken comment.</p>' in _card(page, 7)
