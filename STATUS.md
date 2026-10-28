@@ -10,7 +10,7 @@ Going public is the last step: docs/PUBLIC_CHECKLIST.md.
 
 ## Where things stand (2026-10-28, evening)
 
-The pipeline on main is one path: Spark 1.2 windowed candidates, the checking pass, beats, the cross-player summary, the report. Report redesign merged at `e33c046` (Grok review round 2 PASS). Fork `playtest-lens` at `b0a52cf`. Main is `020917a`, 2 commits ahead of origin (the 23b and 23c briefs only), not pushed.
+The pipeline on main is one path: Spark 1.2 windowed candidates, the checking pass, beats, the cross-player summary, the report. Main is `4003563`, in sync with origin. Fork `playtest-lens` is `290cba9`, checked out in `game/`. Sasha places volumes and records on Windows (`docs/COGITO_VOLUMES.md`). The analyzer stays on the Mac.
 
 ## In flight
 
@@ -25,9 +25,9 @@ The pipeline on main is one path: Spark 1.2 windowed candidates, the checking pa
 
 ## Next
 
-1. Sasha places volumes and records the Mac session (`docs/COGITO_VOLUMES.md`). The analyzer on main can enrich that log.
-2. Judgement pass on the first log-zoned report, then tune idle, backtrack and view-turn numbers.
-3. Windows build test with OBS, when the Mac session is in.
+1. Sasha on Windows: clone `playtest-lens`, place volumes, record with OBS, push the two scenes, copy the video and the log back (`docs/COGITO_VOLUMES.md`).
+2. Pull that commit on the Mac, point `game/` at it, run the volume report, then the analyzer.
+3. Judgement pass on the first log-zoned report, then tune idle, backtrack and view-turn numbers. The export test can be the same Windows machine after the volumes are saved.
 
 ## Open questions for Sasha
 

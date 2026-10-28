@@ -41,7 +41,7 @@ The arrangement from 2026-10-28 (Sasha's words are quoted in [DECISIONS.md](DECI
 | Grok bot on its own VM | Sasha's bot, briefed by prompts Sasha pastes | Parallel work on files nobody else touches, such as the Godot telemetry tool. It has no recordings, no Keychain and no secrets |
 | Code reviewer | Grok 4.7 xhigh, a fresh reviewer every round | Reviews DeepSeek, Claude and Muse authored work. Grok-authored work gets DeepSeek (or Claude when Sasha says so) |
 | Meta credits | The $23.90 pool (Meta API and Muse Code share it) | Kept for the product's video and audio processing only (Sasha, 2026-10-28). No agent work is billed to it, and Muse Wonder is not called |
-| Sasha's Windows machine | Optional | May join the process later if needed (Sasha, 2026-10-28). He records there with OBS, not Game Bar |
+| Sasha's Windows machine | His volume placement, play session and recording | OBS, not Game Bar (Sasha, 2026-10-28). Steps in docs/COGITO_VOLUMES.md. Agents on the Mac still use `/Applications/Godot.app` |
 | Open-weights mode | Muse Spark Open `meta-models/muse-spark-open-1026` on Baseten (OpenAI-compatible, `https://inference.baseten.co/v1`) | A separate mode for the open-weights prize; billed to Baseten's credits, not to the Meta pool. Only `tools/run-baseten.sh` reads `BASETEN_API_KEY` |
 | Screenshots, recordings, UI | Claude, until Muse or another model is approved | Judges captures and the report page |
 | Sasha | | Decides; judges the findings, the report and the video; plays the build |
