@@ -23,7 +23,7 @@ Sasha decides what gets built, every word a user reads, the look, the prompts' g
 
 - Muse Code runs on Sasha's Muse Code sign-in (his plan), never on the API key. Never read, print or copy its credential files (`~/.config/muse/`).
 - **Keep the API key out of every agent's environment.** A `META_API_KEY` in Muse Code's environment takes priority over the sign-in, and would bill Muse's work to the $150 API credits. The key lives only in the macOS Keychain (service `META_API_KEY`). `tools/run-analyzer.sh` reads it from there for the analyzer's own process and nothing else; never export it in a shell profile or with `launchctl`.
-- **Modal and Baseten keys follow the same rule as the Meta key:** the Modal proxy token lives in the Keychain (service `MODAL_PROXY_TOKEN`) and the Baseten key in service `BASETEN_API_KEY`. Only `tools/run-modal-agent.sh` and the open-weights client read them, each for its own process. Never print, log, write or export them, and never put one in a URL.
+- **Modal and Baseten keys follow the same rule as the Meta key:** the Modal proxy token lives in the Keychain (service `MODAL_PROXY_TOKEN`) and the Baseten key in service `BASETEN_API_KEY`. Only `tools/run-modal-agent.sh` and `tools/run-baseten.sh` read them, each for its own process. Never print, log, write or export them, and never put one in a URL.
 - The analyzer calls the Meta Model API from Python. If the key isn't in the Keychain, stop and tell Sasha; never work around it, and never borrow a token from Muse Code's files.
 - Never print, log or write a key or token anywhere, and never put one in a URL.
 - Every model call goes through one client module. It caches each reply in `runs/cache/` by a hash of the request, so a rerun on the same input costs nothing, and appends one line to `runs/costs.jsonl`: time, model, input and output tokens, cost if returned, and what the call was for. Log Muse Code's usage there too when it's reported. Both are git-ignored.
@@ -35,13 +35,14 @@ The arrangement from 2026-10-28 (Sasha's words are quoted in [DECISIONS.md](DECI
 
 | Who | Model and harness | What |
 |---|---|---|
-| The orchestrator | Claude Sonnet 5.5, Claude Code in T3 Code (about $13 of usage left on 2026-10-28; more Claude limits return Saturday evening, 2026-10-31) | Plans, briefs, starts and follows the others, reads verdicts and evidence, keeps STATUS.md and DECISIONS.md, fixes small things (about 20 lines), brings Sasha results and questions |
+| The orchestrator | Claude Sonnet 5.5, Claude Code in T3 Code (about $10 of usage left on 2026-10-28; more Claude limits return Saturday evening, 2026-10-31) | Plans, briefs, starts and follows the others, reads verdicts and evidence, keeps STATUS.md and DECISIONS.md, fixes small things (about 20 lines), brings Sasha results and questions |
 | Main author | DeepSeek V4.1 Flash 1017 on a Modal Shared Endpoint, run through `tools/run-modal-agent.sh` (Claude Code CLI pointed at Modal) | Analyzer, report page and their tests |
 | Second author | Grok 4.7 (xhigh, fast) through Cursor, via T3 Code orchestration | Godot side, tools, scoped parallel tasks |
 | Grok bot on its own VM | Sasha's bot, briefed by prompts Sasha pastes | Parallel work on files nobody else touches, such as the Godot telemetry tool. It has no recordings, no Keychain and no secrets |
 | Code reviewer | Grok 4.7 xhigh, a fresh reviewer every round | Reviews DeepSeek, Claude and Muse authored work. Grok-authored work gets DeepSeek (or Claude when Sasha says so) |
 | Meta credits | The $23.90 pool (Meta API and Muse Code share it) | Kept for the product's video and audio processing only (Sasha, 2026-10-28). No agent work is billed to it, and Muse Wonder is not called |
-| Sasha's Windows machine | Optional | May join the process later if needed (Sasha, 2026-10-28) |
+| Sasha's Windows machine | Optional | May join the process later if needed (Sasha, 2026-10-28). He records there with OBS, not Game Bar |
+| Open-weights mode | Muse Spark Open `meta-models/muse-spark-open-1026` on Baseten (OpenAI-compatible, `https://inference.baseten.co/v1`) | A separate mode for the open-weights prize; billed to Baseten's credits, not to the Meta pool. Only `tools/run-baseten.sh` reads `BASETEN_API_KEY` |
 | Screenshots, recordings, UI | Claude, until Muse or another model is approved | Judges captures and the report page |
 | Sasha | | Decides; judges the findings, the report and the video; plays the build |
 
