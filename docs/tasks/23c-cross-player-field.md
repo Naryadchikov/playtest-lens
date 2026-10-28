@@ -37,3 +37,7 @@ Read first: `analyzer/summary.py`, `analyzer/findings.py` (the `cross_player` ch
 ## Done means and report
 
 Tests pass, CLI works, the page shows the section from the written file. Report in at most 15 lines: files, commands with exit codes, evidence paths, what you did not check, and any inconsistency you found in this brief (say so, do not silently change it).
+
+## What came back (2026-10-28)
+
+DeepSeek finished before Claude's limit cut the orchestrator off. No orchestrator edit to the code. The backup orchestrator reran `pytest -q` with the macOS `say` clip deselected: 147 passed. Evidence: `runs/redesign/page-cross.html`. A browser check showed "Across players", "2 of 2 players were confused here.", and the chip link to `#m1`. Fresh Grok review: PASS, no blocking findings and no nits (`docs/reviews/10-cross-player-grok.md`). Merged on main.
