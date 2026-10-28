@@ -112,3 +112,5 @@ On top of upstream's `676be6d`, in order:
 
 - DeepSeek V4.1 Flash 1017 (DeepSeek, open weights) writes part of the code, served on Modal as a Shared Endpoint and driven by `tools/run-modal-agent.sh`. Modal's agent skill (`modal skills install --claude`) is installed locally and git-ignored. The product itself calls only Meta models (Muse Spark, Voice Transcribe, and Muse Spark Open for the open-weights mode).
 - Grok 4.7 (xAI, through Cursor) reviews code and builds the Godot side and tools. Claude Sonnet 5.5 orchestrates. Every commit names its author models in a `Co-Authored-By:` trailer.
+
+The top-down maps in `report/maps/` and the fork's `maps/` are renders of COGITO's demo scenes (Lobby and Laboratory) made by our `tools/map_export.gd`, so their geometry is COGITO's (MIT, credited above); the tool and the pictures' framing are ours.

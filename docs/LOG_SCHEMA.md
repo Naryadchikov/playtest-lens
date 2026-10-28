@@ -8,7 +8,7 @@ Every line has `t` (number) and `event` (string). While the player is inside a t
 |---|---|---|
 | `session_start` | `schema` (1), `session_id`, `wall_time`, `godot_version`, `game_name`, `game_version`, `os`, `renderer`, `log_path` | First line. A `schema` newer than 1 is rejected by the analyzer, not read. |
 | `session_end` | `reason` (`quit`) | Last line. May be missing after a crash. |
-| `sync_flash` | `reason`, sometimes `scene` | The white flash and beep that line the log up with the video. |
+| `sync_flash` | `reason`, `duration_s`, `beep_hz`, sometimes `scene` | The white flash and beep that line the log up with the video. |
 | `scene` | `scene` | The current scene changed. |
 | `position` | `x`, `y`, `z`, sometimes `yaw`, `pitch` | Player position every 0.5 s, with view direction when a camera is found. |
 | `input` | `action`, `pressed` | An input action went down or up. Listening only. |

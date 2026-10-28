@@ -95,3 +95,9 @@ Generate two logs yourself with the existing headless tests (one good, one you c
 5. Where the branch is pushed, or the bundle/patch path and size.
 6. Blockers or questions for Sasha, numbered, with your recommendation for each.
 7. What you did not check.
+
+## What came back
+
+The bot did packages A to D on branch `bot/work` of the fork (commits aee94ef, c10c2d0, 95b8704, eab665d), pushed nothing else, and reported with evidence (its `BOT_WORKLOG.md` is in the fork). Highlights: `where` on marker lines is the telemetry test's own scaffolding, so the logger is unchanged there; the logger writes no perf line until the session is 2 s old (a test checks it); `tools/map_export.gd` renders a top-down PNG plus JSON for the Lobby (1334 x 2048 px) and the Laboratory (2048 x 2016 px) with software rendering under Xvfb and the player start lands on a floor in both; a headless Windows export (62 MB zip, no home path inside, never run); the Windows log path is `%APPDATA%\Godot\app_userdata\Cogito\playtest_lens\<UTC time>.jsonl`; `tools/validate_log.py` with a test, caught three hand-made corruptions on the right lines.
+
+Review: GLM 5.3 on Modal (a different vendor from Grok), fresh, 2026-10-28: PASS, no blockers (docs/reviews/07-bot-work-glm.md). The orchestrator fast-forwarded `playtest-lens` to the bot's commits, ran the six headless Godot tests (all exit 0) and the validator test on this Mac, fixed the one review note (the validator accepted NaN and infinity; commit b0a52cf), added the two `sync_flash` fields to docs/LOG_SCHEMA.md, and copied the maps to `report/maps/`.
