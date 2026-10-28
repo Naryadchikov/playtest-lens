@@ -21,3 +21,8 @@ One list for things found but not fixed: a pre-existing review finding, a case t
 - `sample_frames` on a clip under 1 second: ffmpeg writes no frame and the process exits with the ffmpeg error instead of the intended ValueError, so a last window under 1 s aborts a run. Real windows are 20 s and 2 minutes; left as is.
 - `_frame_plan` never reaches the 4 s spacing the brief gave for 2-minute windows: Baseten allows 8 images per request, so spacing is duration / 8 (15 s for a 2-minute window).
 - Tests do not cover tiny or odd frame sizes, a marker in the middle of a reply, or which fields change the cache key.
+
+## Report page redesign (task 23 review nits, 2026-10-28)
+
+- The page still derives a few labels from the file's own lists: "N of M" in Across players (`len(players)`), "N moments" on a player chip and in a puzzle note, the span `(1:25)` on a card (`end_s - time_s`), the dropped count and the dropped list order (sorted by time). When the analyzer writes these in task 23b (`cross_player` counts, per-finding span, dropped order), make the page copy them.
+- Without `session.level`, the map's alt text and title say "the level". Hide or reword when the level is missing.
