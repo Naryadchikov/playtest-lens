@@ -1,0 +1,71 @@
+{"event": "session_start", "schema": 1, "t": 0.0, "game_name": "Cogito"}
+{"event": "sync_flash", "reason": "new_game", "duration_s": 0.25, "beep_hz": 1000, "t": 1.0}
+{"event": "scene", "scene": "res://addons/cogito/DemoScenes/COGITO_3_Lobby.tscn", "t": 1.1}
+{"event": "position", "t": 1.5, "x": 0.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 2.0, "x": 2.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 2.5, "x": 4.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 3.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 3.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 4.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 4.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 5.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 5.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 6.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 6.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 7.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 7.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 8.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 8.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 9.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 9.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 10.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 10.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 11.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 11.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 12.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 12.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 13.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 13.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 14.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 14.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 15.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 15.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 16.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 16.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 17.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 17.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 18.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 18.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 19.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 19.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 20.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 20.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 21.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 21.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 22.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 22.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 23.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 23.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "pause", "t": 24.0}
+{"event": "position", "t": 24.5, "x": 100.0, "y": 0.8, "z": 100.0}
+{"event": "position", "t": 25.0, "x": 100.0, "y": 0.8, "z": 100.0}
+{"event": "resume", "t": 30.0}
+{"event": "position", "t": 30.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 31.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "marker", "t": 31.0}
+{"event": "position", "t": 31.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 32.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 32.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 33.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 33.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 34.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 34.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 35.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 35.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 36.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 36.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 37.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "marker", "t": 37.0}
+{"event": "position", "t": 37.5, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "position", "t": 38.0, "x": 6.0, "y": 0.8, "z": 0.0}
+{"event": "session_end", "reason": "quit", "t": 38.5}

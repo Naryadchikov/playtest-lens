@@ -22,6 +22,12 @@ One list for things found but not fixed: a pre-existing review finding, a case t
 - `_frame_plan` never reaches the 4 s spacing the brief gave for 2-minute windows: Baseten allows 8 images per request, so spacing is duration / 8 (15 s for a 2-minute window).
 - Tests do not cover tiny or odd frame sizes, a marker in the middle of a reply, or which fields change the cache key.
 
+## Spatial fields (task 23b, 2026-10-28)
+
+- The report draws one map per report: task 23b picks the scene with the most time with position samples, and positions in every other scene are ignored for the route, the pins and the F9 markers. A session that visits two mapped levels loses one of them, and an unmapped scene that holds the most time hides the map section even when another scene has a map. From task 23b (DeepSeek V4.1 Flash), 2026-10-28.
+- A live check still writes every finding with `end_s` null (`analyzer/check.py`, pre-existing, outside the 23b diff). `lost_s` is then 0, because the spatial module only sums spans that have an `end_s`. The fixture files already carry `end_s`. Grok review note, 2026-10-28.
+- A pin can sit outside the map picture when the logged position is outside the map's world box. On the lobby fixture the map ends at world x 10 and one sample is at x 17.86. Grok review note, 2026-10-28.
+
 ## Report page redesign (task 23 review nits, 2026-10-28)
 
 - The page still derives a few labels from the file's own lists: "N of M" in Across players (`len(players)`), "N moments" on a player chip and in a puzzle note, the span `(1:25)` on a card (`end_s - time_s`), the dropped count and the dropped list order (sorted by time). When the analyzer writes these in task 23b (`cross_player` counts, per-finding span, dropped order), make the page copy them.

@@ -15,11 +15,9 @@ The pipeline on main is one path: Spark 1.2 windowed candidates, the checking pa
 ## In flight
 
 - Task 23c is merged: each findings file gets its Across players block. Grok review PASS, no nits (`docs/reviews/10-cross-player-grok.md`). Tests: 147 passed, 1 deselected (`test_extract_audio_from_say_clip`, unrelated, fails inside the sandbox).
-- Task 23b is still uncommitted in `.worktrees/ds-23b`. Tests there: 159 passed, 1 deselected. A fresh Grok review is still running. Not merged.
-- The previous orchestrator then changed the verdict template so one kept finding reads "1 moment worth a look: 1 stuck." The author had kept "1 moments" verbatim. Tests match the new sentence. Wording and heat thresholds stay proposals.
-- Fresh Grok reviews of both diffs are running. Not merged. Reports will be `docs/reviews/09-spatial-fields-grok.md` and `docs/reviews/10-cross-player-grok.md`.
-- Grok bot package 2 (docs/tasks/24-grok-bot-2.md): still with Sasha's bot. Not checked this turn.
-- Sasha, when he is ready: telemetry volumes (docs/COGITO_VOLUMES.md), then the Mac play session, then the Windows build with OBS.
+- Task 23b is merged: route, heat, pins, markers and the verdict come from the log. Grok review PASS, no nits (`docs/reviews/09-spatial-fields-grok.md`). Tests: 159 passed, 1 deselected. Two notes are in `docs/FOLLOWUPS.md`: a live check still leaves `end_s` empty so `lost_s` is 0, and a pin can fall outside the map picture.
+- The verdict template says "1 moment" for one finding and "moments" for more. The author had kept "1 moments" verbatim. The previous orchestrator changed it. Wording and heat thresholds stay proposals.
+- Grok bot package 2 is on the fork at `290cba9` (GLM PASS): annotated maps and `tools/volume_report.gd`. Sasha can place volumes from `docs/COGITO_VOLUMES.md`.
 
 ## Remind Sasha
 
@@ -27,9 +25,9 @@ The pipeline on main is one path: Spark 1.2 windowed candidates, the checking pa
 
 ## Next
 
-1. Read the two Grok reviews, then commit what passes.
-2. Sasha plays COGITO with telemetry volumes, recording before New Game.
-3. Judgement pass on the first log-zoned report, then tune idle, backtrack and view-turn numbers.
+1. Sasha places volumes and records the Mac session (`docs/COGITO_VOLUMES.md`). The analyzer on main can enrich that log.
+2. Judgement pass on the first log-zoned report, then tune idle, backtrack and view-turn numbers.
+3. Windows build test with OBS, when the Mac session is in.
 
 ## Open questions for Sasha
 

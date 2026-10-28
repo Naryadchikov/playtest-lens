@@ -25,6 +25,7 @@ from analyzer import client as client_module  # noqa: E402
 from analyzer import beats as beats_module  # noqa: E402
 from analyzer import findings as findings_module  # noqa: E402
 from analyzer import log_candidates  # noqa: E402
+from analyzer import spatial  # noqa: E402
 from tools.video import cut_clip, extract_audio  # noqa: E402
 
 PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "check.md"
@@ -319,6 +320,10 @@ def main(argv=None) -> int:
         },
         "findings": findings,
     }
+    if events:
+        # The route, heat, pins, markers and summary come from the log
+        # only, after beats: one path, no model call.
+        spatial.enrich(data, events, args.video_flash_s)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
     # Prove the file the report will read is in the one format.
