@@ -6,6 +6,9 @@ Log times map to video time through the first sync_flash, whose video
 time the caller supplies (tools/video.py's find_start_flash).
 Headless sync_flash stamps are approximate (about one frame late, and
 no frame was drawn); windowed stamps mark the drawn frame.
+Paused time is not idle time: pause and resume lines close stretches
+and the position lines between them are ignored. The log schema is
+version 1 (docs/LOG_SCHEMA.md); a newer schema is rejected, not read.
 """
 
 import json
@@ -58,6 +61,10 @@ def load_log(path):
                     raise ValueError(f"line {number}: {field} must be a number")
         if kind == "scene" and not isinstance(event.get("scene"), str):
             raise ValueError(f"line {number}: scene must be a string")
+        if kind == "session_start" and "schema" in event:
+            schema = event["schema"]
+            if not isinstance(schema, int) or isinstance(schema, bool) or schema != 1:
+                raise ValueError(f"line {number}: unsupported log schema {schema!r}")
         events.append(event)
     return events
 
@@ -163,9 +170,20 @@ def _idle_candidates(events, offset):
             cursor = end
         emit(cursor, len(run) - 1, "looking_around", steps)
 
+    paused = False
     for event in events:
         kind = event["event"]
-        if kind == "position":
+        if kind == "pause":
+            close_run()
+            run = []
+            paused = True
+        elif kind == "resume":
+            close_run()
+            run = []
+            paused = False
+        elif kind == "position":
+            if paused:
+                continue
             if run and event["t"] - run[-1]["t"] > IDLE_MAX_GAP_S:
                 close_run()
                 run = []
@@ -196,12 +214,21 @@ def _backtrack_candidates(events, offset):
             history.append(event)
             max_away.append(0.0)
 
+    paused = False
     for event in events:
         kind = event["event"]
+        if kind == "pause":
+            paused = True
+            reset()
+            continue
+        if kind == "resume":
+            paused = False
+            reset()
+            continue
         if kind in ("scene", "death", "session_end"):
             reset()
             continue
-        if kind != "position":
+        if kind != "position" or paused:
             continue
         for index, earlier in enumerate(history):
             max_away[index] = max(max_away[index], _distance(event, earlier))

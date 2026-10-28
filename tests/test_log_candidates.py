@@ -112,6 +112,54 @@ def test_no_position_lines_gives_no_idle_or_backtrack(tmp_path):
     assert _kinds(candidates) == ["death"]
 
 
+def test_pause_is_not_idle_time():
+    events = [{"t": 0.0, "event": "sync_flash"}]
+    for step in range(6):
+        events.append({
+            "t": 1.0 + step, "event": "position",
+            "x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "pitch": 0.0,
+        })
+    events.append({"t": 7.0, "event": "pause"})
+    for step in range(30):
+        events.append({
+            "t": 8.0 + step, "event": "position",
+            "x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "pitch": 0.0,
+        })
+    events.append({"t": 38.0, "event": "resume"})
+    for step in range(6):
+        events.append({
+            "t": 39.0 + step, "event": "position",
+            "x": 0.0, "y": 0.0, "z": 0.0, "yaw": 0.0, "pitch": 0.0,
+        })
+    candidates = find_candidates(events, 0.0)
+    assert [c for c in candidates if c["kind"] in ("idle", "looking_around")] == []
+
+
+def test_paused_motion_is_not_a_backtrack():
+    events = [
+        {"t": 0.0, "event": "sync_flash"},
+        {"t": 1.0, "event": "position", "x": 0.0, "y": 0.0, "z": 0.0},
+        {"t": 2.0, "event": "pause"},
+        {"t": 2.5, "event": "position", "x": 0.0, "y": 0.0, "z": 0.0},
+        {"t": 3.0, "event": "position", "x": 6.0, "y": 0.0, "z": 0.0},
+        {"t": 9.0, "event": "position", "x": 0.0, "y": 0.0, "z": 0.0},
+        {"t": 10.0, "event": "resume"},
+        {"t": 11.0, "event": "position", "x": 0.0, "y": 0.0, "z": 0.0},
+    ]
+    candidates = find_candidates(events, 0.0)
+    assert [c for c in candidates if c["kind"] == "backtrack"] == []
+
+
+def test_unsupported_schema_is_rejected(tmp_path):
+    path = tmp_path / "log.jsonl"
+    path.write_text(
+        _line(t=0.0, event="session_start", schema=99) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="unsupported log schema"):
+        load_log(path)
+
+
 def test_input_breaks_an_idle_stretch():
     events = [
         {"t": 0.0, "event": "sync_flash"},

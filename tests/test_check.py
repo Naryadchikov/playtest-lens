@@ -21,6 +21,9 @@ def test_parse_check_accepts_fixture_and_rejects_bad_verdict():
     reply = json.loads(FIXTURE.read_text(encoding="utf-8"))
     parsed = parse_check(reply["output_text"])
     assert parsed["verdict"] == "keep"
+    assert parsed["area"] == "temple entrance"
+    with pytest.raises(ValueError, match="invalid area"):
+        parse_check('{"verdict": "keep", "kind": "confused", "friction": "learning", "resolved": "unknown", "note": "x", "summary": "y", "quote": null, "game_state": null, "puzzle": null, "area": []}')
     with pytest.raises(ValueError, match="invalid verdict"):
         parse_check('{"verdict": "maybe", "note": "x", "summary": "y", "quote": null, "game_state": null}')
 
@@ -29,7 +32,7 @@ def test_run_checks_keeps_and_drops_into_valid_findings(tmp_path):
     replies = {
         "c502.0.mp4": json.loads(FIXTURE.read_text(encoding="utf-8")),
         "c853.0.mp4": {
-            "output_text": '{"verdict": "drop", "kind": "surprised", "friction": "learning", "resolved": "unknown", "note": "A game voice line, the player says nothing.", "summary": "Elohim speaks.", "quote": null, "game_state": "Voice line playing.", "puzzle": null}'
+            "output_text": '{"verdict": "drop", "kind": "surprised", "friction": "learning", "resolved": "unknown", "note": "A game voice line, the player says nothing.", "summary": "Elohim speaks.", "quote": null, "game_state": "Voice line playing.", "puzzle": null, "area": null}'
         },
     }
 

@@ -43,6 +43,17 @@ def _finding(fid, game_state, summary="x"):
             "check": {"verdict": "keep"}}
 
 
+def test_summary_groups_by_beat_when_game_state_wording_differs():
+    first = _finding("f1", "Cube behind a blue energy barrier.")
+    first["beat"] = {"area": "Lab", "puzzle": "Door", "attempt": 1}
+    second = _finding("f1", "A locked door in the laboratory.")
+    second["beat"] = {"area": "Lab", "puzzle": "Door", "attempt": 2}
+    summary = summarize([_session("s1", [first]), _session("s2", [second])])
+    shared = [group for group in summary["groups"] if group["shared"]]
+    assert len(shared) == 1
+    assert shared[0]["session_count"] == 2
+
+
 def test_summary_never_groups_a_finding_without_a_place():
     first = _session("s1", [_finding("f1", "Fictional lab door is locked")])
     second = _session("s2", [_finding("f1", None, summary="Fictional lab door is locked")])

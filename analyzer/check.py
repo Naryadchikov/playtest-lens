@@ -67,11 +67,15 @@ def parse_check(text: str):
         raise ValueError("Checker reply has an invalid game_state.")
     if "puzzle" not in data or not (data["puzzle"] is None or isinstance(data["puzzle"], str)):
         raise ValueError("Checker reply has an invalid puzzle.")
+    if "area" not in data or not (data["area"] is None or isinstance(data["area"], str)):
+        raise ValueError("Checker reply has an invalid area.")
     return data
 
 
-# Fill the check prompt for one candidate.
-def build_prompt(template: str, candidate, transcript: str, log_slice: str) -> str:
+# Fill the check prompt for one candidate. The outline names the
+# session's other candidates: it is only there so area and puzzle
+# labels stay stable across clips, never as verdict evidence.
+def build_prompt(template: str, candidate, transcript: str, log_slice: str, outline: str = "") -> str:
     return template.format(
         time_s=candidate["time_s"],
         kind=candidate["kind"],
@@ -79,7 +83,19 @@ def build_prompt(template: str, candidate, transcript: str, log_slice: str) -> s
         quote=candidate.get("quote") or "null",
         transcript=transcript.strip() or "(nothing transcribed)",
         log_slice=log_slice.strip() or "(no event log for this session)",
+        outline=outline.strip() or "(no session outline)",
     )
+
+
+# One line per candidate, for the check prompt's outline section.
+def session_outline(candidates) -> str:
+    lines = []
+    for candidate in candidates:
+        total = int(candidate["time_s"])
+        lines.append(
+            f"- {total // 60}:{total % 60:02d} {candidate['kind']}: {candidate['reason']}"
+        )
+    return "\n".join(lines)
 
 
 # Clip path as stored in findings.json: relative to the findings
@@ -165,11 +181,12 @@ def verified_quote(quote, transcript):
 def run_checks(candidates, *, model, clip_for, transcript_for, call_for, template, slice_for=None, duration_s=None):
     findings = []
     kept = 0
+    outline = session_outline(candidates)
     for index, candidate in enumerate(candidates, start=1):
         clip_path, clip_start, clip_end = clip_for(candidate)
         transcript = transcript_for(clip_path)
         log_slice = slice_for(candidate, clip_start, clip_end) if slice_for else ""
-        prompt = build_prompt(template, candidate, transcript, log_slice)
+        prompt = build_prompt(template, candidate, transcript, log_slice, outline)
         reply = call_for(clip_path, prompt)
         verdict = parse_check(client_module.extract_text(reply))
         if verdict["verdict"] == "keep":
@@ -189,7 +206,7 @@ def run_checks(candidates, *, model, clip_for, transcript_for, call_for, templat
                 "clip": {"path": str(clip_path), "start_s": clip_start, "end_s": clip_end},
                 "game_state": verdict["game_state"],
                 "sources": [candidate.get("_source", "spark")],
-                "check": {"verdict": verdict["verdict"], "note": verdict["note"], "model": model, "friction": verdict["friction"], "resolved": verdict["resolved"], "puzzle": verdict["puzzle"]},
+                "check": {"verdict": verdict["verdict"], "note": verdict["note"], "model": model, "friction": verdict["friction"], "resolved": verdict["resolved"], "puzzle": verdict["puzzle"], "area": verdict["area"]},
             }
         )
     return findings

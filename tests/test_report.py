@@ -1,3 +1,4 @@
+import copy
 import html
 import json
 from pathlib import Path
@@ -56,6 +57,68 @@ def test_kept_findings_in_rank_order():
         key=lambda f: f["rank"],
     )
     positions = [page.index(html.escape(f["summary"])) for f in kept]
+    assert positions == sorted(positions)
+
+
+def test_beat_header_names_area_puzzle_attempt_and_span():
+    data = _sample_data()
+    kept = [f for f in data["findings"] if f["check"]["verdict"] == "keep"]
+    first = copy.deepcopy(kept[0])
+    second = copy.deepcopy(kept[0])
+    for finding, rank, time_s, summary in [
+        (first, 1, 444.0, "First fan moment."),
+        (second, 2, 502.0, "Second fan moment."),
+    ]:
+        finding["rank"] = rank
+        finding["time_s"] = time_s
+        finding["summary"] = summary
+        finding["clip"] = None
+        finding["beat"] = {
+            "area": "Yellow Puzzle Area",
+            "puzzle": "fan and blue barrier",
+            "puzzle_number": 1,
+            "attempt": 1,
+            "attempt_start_s": 444.0,
+            "attempt_end_s": 502.0,
+            "index": rank,
+        }
+    data["findings"] = [first, second]
+    page = render_html(data)
+    assert 'class="beat"' in page
+    assert "Yellow Puzzle Area · Puzzle 1: fan and blue barrier · Attempt 1 · 7:24–8:22" in page
+    assert page.count('class="beat"') == 1
+
+
+def test_beat_headers_never_pull_a_later_moment_forward():
+    data = _sample_data()
+    kept = [f for f in data["findings"] if f["check"]["verdict"] == "keep"]
+    rows = []
+    for rank, (time_s, puzzle, summary) in enumerate(
+        [
+            (10.0, "Door", "Door first."),
+            (20.0, "Fan", "Fan middle."),
+            (30.0, "Door", "Door last."),
+        ],
+        start=1,
+    ):
+        finding = copy.deepcopy(kept[0])
+        finding["rank"] = rank
+        finding["time_s"] = time_s
+        finding["summary"] = summary
+        finding["clip"] = None
+        finding["beat"] = {
+            "area": "Lab",
+            "puzzle": puzzle,
+            "puzzle_number": 1,
+            "attempt": 1,
+            "attempt_start_s": time_s,
+            "attempt_end_s": time_s,
+            "index": rank,
+        }
+        rows.append(finding)
+    data["findings"] = rows
+    page = render_html(data)
+    positions = [page.index(s) for s in ("Door first.", "Fan middle.", "Door last.")]
     assert positions == sorted(positions)
 
 

@@ -61,6 +61,7 @@ def render_html(data):
         "body { font-family: sans-serif; margin: 2em auto; max-width: 44em; padding: 0 1em; }",
         ".finding { border-top: 1px solid #ccc; padding: 1em 0; }",
         ".meta { color: #555; }",
+        ".beat { background: #ececec; padding: 0.6em 0.8em; margin: 1.4em 0 0.4em; }",
         "blockquote { margin: 0.5em 0; padding-left: 1em; border-left: 3px solid #ccc; }",
         "video { max-width: 100%; }",
         "</style>",
@@ -70,15 +71,41 @@ def render_html(data):
         f'<p class="meta">{_esc(session["recording"])}</p>',
         "<h2>Findings</h2>",
     ]
-    current_beat = None
+    # Headers follow the file's rank order: a header opens when the
+    # beat changes, and never pulls a later moment forward.
+    current_key = None
     for finding in kept:
         beat = finding.get("beat")
         if beat:
-            key = (beat.get("puzzle"), beat.get("zone"), beat.get("attempt"))
-            if key != current_beat:
-                current_beat = key
-                place = beat.get("zone") or beat.get("puzzle") or "Beat"
-                parts.append(f"<h3>{_esc(place)} · Attempt {_esc(beat.get('attempt'))}</h3>")
+            key = (
+                beat.get("area"),
+                beat.get("puzzle"),
+                beat.get("zone"),
+                beat.get("puzzle_number"),
+                beat.get("attempt"),
+                beat.get("attempt_start_s"),
+                beat.get("attempt_end_s"),
+            )
+            if key != current_key:
+                current_key = key
+                area = beat.get("area") or beat.get("zone") or beat.get("puzzle") or "Beat"
+                puzzle = beat.get("puzzle")
+                start_s = beat.get("attempt_start_s")
+                end_s = beat.get("attempt_end_s")
+                if start_s is None:
+                    start_s = finding["time_s"]
+                if end_s is None:
+                    end_s = finding["time_s"]
+                label = _esc(area)
+                if puzzle and puzzle != area:
+                    if beat.get("puzzle_number"):
+                        label += f" · Puzzle {_esc(beat['puzzle_number'])}: {_esc(puzzle)}"
+                    else:
+                        label += f" · {_esc(puzzle)}"
+                elif puzzle and beat.get("puzzle_number"):
+                    label += f" · Puzzle {_esc(beat['puzzle_number'])}"
+                label += f" · Attempt {_esc(beat.get('attempt'))} · {_esc(_mss(start_s))}–{_esc(_mss(end_s))}"
+                parts.append(f'<h2 class="beat">{label}</h2>')
         parts.append(_render_finding(finding))
     parts.append("<h2>Dropped</h2>")
     parts.extend(_render_finding(f) for f in dropped)

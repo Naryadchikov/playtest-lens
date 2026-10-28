@@ -2,10 +2,10 @@
 
 Reads findings.json files through analyzer/findings.py (the one
 format), keeps only verdict keep, and groups moments that share a
-place: same kind and same game_state text, normalised. A group seen
-in two or more sessions is a shared moment ("3 of 4 players stuck at
-the lab door"). No model call: grouping is text equality today, and
-anything fuzzier belongs to the checker, not here.
+place: same kind, and the same place text (the finding's beat Area
+and Puzzle when it has a beat, else its game_state), normalised. A
+group seen in two or more sessions is a shared moment ("3 of 4
+players stuck at the lab door"). No model call.
 
 Run as: .venv/bin/python -m analyzer.summary <findings.json> [<findings.json> ...]
     [-o <summary.json>]
@@ -24,10 +24,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from analyzer import findings as findings_module  # noqa: E402
 
 
-# Group key from game_state only. A finding with no usable place
-# text gets a unique key (its session and id), so it never groups.
+# Group key from the finding's beat when it has one (the pipeline's
+# Area and Puzzle), else from game_state. A finding with no usable
+# place text gets a unique key (its session and id), so never groups.
 def _place_key(finding, session_id: str) -> str:
-    text = finding.get("game_state") or ""
+    beat = finding.get("beat") or {}
+    text = " ".join(
+        part for part in (beat.get("area"), beat.get("puzzle")) if part
+    ) or finding.get("game_state") or ""
     normalised = re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
     if not normalised:
         return f"unique:{session_id}:{finding['id']}"
