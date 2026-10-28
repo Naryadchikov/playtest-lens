@@ -65,4 +65,6 @@ response = client.chat.completions.create(
 
 ## What came back
 
-(Filled in by the orchestrator after the run.)
+DeepSeek, second run (the first ran out of its 30 turns on exploring and changed nothing; the orchestrator did the Baseten probes and the rerun had 90 turns). `meta-models/` ids route to Baseten in `analyzer/client.py`, frames only, with `sample_frames` in `tools/video.py`; 110 tests passed. Baseten takes at most 8 images per request, and the reasoning counts against `max_tokens` (4096 works, 1500 returned an empty answer). Price $1.25 in, $4.25 out per million (baseten.co/pricing). The live proof ran the checking pass through the open model on one Talos clip with Voice Transcribe stubbed: one kept finding, $0.026 for two charged calls.
+
+Grok 4.7 review: PASS, no blockers. Orchestrator changes (commit 39cbb63): an empty answer now raises and is not cached (its tokens are still costed); `tools/run-baseten.sh` also exports the Meta key when it is in the Keychain, because the check transcribes each clip with Voice Transcribe; contributor prices ($0.10 in, $0.20 out, from Meta's pricing page); one test. Non-blocking notes in docs/FOLLOWUPS.md. Not yet done: the side-by-side run of the open model and the hosted pass on the Talos clips.
