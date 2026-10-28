@@ -7,10 +7,11 @@ a pin list needs. Section and card order come from the file's times
 and beat fields: sections by their start, cards by time, ties by rank.
 
 One small inline script drives the map's time control. It only shows
-or hides route points, arrows, pins, markers and the heat layer by the
-times the file holds (written into data-t attributes), and moves a dot
-to an existing route point. It never makes a finding, a time, a
-position or a count. Without script the page shows the whole map.
+or hides route points, arrows, pins and markers, and dims cards and pin
+rows, by the times the file holds (written into data-t attributes), and
+moves a dot to an existing route point. It never makes a finding, a
+time, a position or a count. Without script the page shows the whole
+route. The heat map view is a CSS switch (:has), so it needs no script.
 
 The look follows docs/design/report-mockup.html. All page wording lives
 in LABELS, so changing a string never means touching the markup.
@@ -119,27 +120,45 @@ LABELS = {
         "pin": "Moment {rank}, {kind}, {time}",
     },
     "map": {
-        "alt": "Top-down plan of the {level} level. The player's route, a heat layer where they lingered, and numbered pins are drawn on top.",
+        "alt": "Top-down plan of the {level} level. The timeline view draws the player's route and numbered pins on top; the heat map view shows where the player spent time.",
         "title": "Route and pins on the {level} map",
         "level": "level",
         "marker": "F9 marker at {time}",
         "figcaption": "Pins are numbered by rank; the list beside the map gives each pin's kind and time.",
-        "legend": [
-            ("<svg viewBox=\"0 0 28 20\" aria-hidden=\"true\"><path d=\"M3 10H25\" stroke=\"#dbe7ff\" stroke-width=\"3\"/><path d=\"M18 5L26 10L18 15z\" fill=\"#fff\"/></svg>", "Route, arrows point the way walked (start circle to end circle)"),
-            ("<svg viewBox=\"0 0 28 20\" aria-hidden=\"true\"><circle cx=\"14\" cy=\"10\" r=\"8\" fill=\"#ff6b3d\" fill-opacity=\".6\" stroke=\"#ffb199\" stroke-dasharray=\"3 2\"/></svg>", "Lingered or looped, dashed ring with time spent"),
-            ("<svg viewBox=\"0 0 28 20\" aria-hidden=\"true\"><polygon points=\"14,2 22,6 22,14 14,18 6,14 6,6\" fill=\"#0b1020\" stroke=\"#fff\" stroke-dasharray=\"3 2\"/></svg>", "F9: the player flagged confusion"),
-        ],
+        "legend": {
+            "route": ("<svg viewBox=\"0 0 28 20\" aria-hidden=\"true\"><path d=\"M3 10H25\" stroke=\"#dbe7ff\" stroke-width=\"3\"/><path d=\"M18 5L26 10L18 15z\" fill=\"#fff\"/></svg>", "Route, arrows point the way walked (start circle to end circle)"),
+            "f9": ("<svg viewBox=\"0 0 28 20\" aria-hidden=\"true\"><polygon points=\"14,2 22,6 22,14 14,18 6,14 6,6\" fill=\"#0b1020\" stroke=\"#fff\" stroke-dasharray=\"3 2\"/></svg>", "F9: the player flagged confusion"),
+        },
         "legend_title": "Map legend and pin list",
     },
     # Proposals (Claude Opus 5.5 plan, task 25, 2026-10-28), not Sasha's wording.
-    # "heat" is the toggle's label (a proposal by Claude Sonnet 5.5, 2026-10-28).
+    # "view", "trail", "readout_window", "span_note" and "show_all" are
+    # proposals by Claude Opus 5.5 (Cursor, task 26, 2026-10-28). The
+    # window lengths come from Sasha's "10 sec, 15, 30, etc." (Cursor
+    # chat, 2026-10-28); 60 is the brief's.
     "timeline": {
-        "heat": "Heat, whole session",
+        "view": "Map view",
+        "view_trail": "Timeline",
+        "view_heat": "Heat map",
         "play": "Play",
         "pause": "Pause",
         "slider": "Time in the recording",
         "readout": "{time} of {duration}",
+        "readout_window": "{start}-{time} of {duration}",
+        "trail": "Trail",
+        "trail_all": "From start",
+        "trail_last": "{n} s",
+        "windows": (10, 15, 30, 60),
         "legend": "Where the player is at the slider's time",
+        "span_note": "Moments in {span} are lit. The rest are dimmed.",
+        "show_all": "Show all moments",
+    },
+    # Proposals by Claude Opus 5.5 (Cursor, task 26, 2026-10-28), not Sasha's wording.
+    "heat": {
+        "title": "Time spent, whole session",
+        "low": "Less",
+        "high": "More",
+        "note": "Each number is the time spent at that spot. The route and pins are in the timeline view.",
     },
     "dropped": {
         "note": "{n} candidates the check did not keep",
@@ -196,7 +215,7 @@ h4 { font-size: var(--fs-b); margin: var(--s4) 0 var(--s2); color: var(--ink2); 
 .k-bug { --c: var(--k-bug); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 
 /* at a glance */
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--s3); }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s3); }
 .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: var(--s3) var(--s4); }
 .tile .n { font-size: var(--fs-xl); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .tile .l { display: flex; align-items: center; gap: var(--s2); color: var(--ink2); font-size: var(--fs-s); margin-top: var(--s1); }
@@ -218,14 +237,37 @@ a.chip:hover { border-color: var(--accent); }
 .map { position: relative; margin: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #0a0d14; }
 .map img, .map svg { display: block; width: 100%; height: auto; }
 .map svg { position: absolute; inset: 0; height: 100%; }
-.timeline { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); margin-top: var(--s2); }
+.maphead { display: flex; justify-content: flex-end; margin-bottom: var(--s2); }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 6px; background: var(--sunk); }
+.seg label { position: relative; padding: 2px var(--s3); border-radius: 4px; font-size: var(--fs-s); font-weight: 600; color: var(--ink2); white-space: nowrap; cursor: pointer; }
+.seg input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.seg label:has(input:checked) { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
+.seg label:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 1px; }
+.timeline { display: grid; gap: var(--s2); margin-top: var(--s2); }
 .timeline[hidden], [data-needs-script][hidden] { display: none; }
+.tl-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); }
 .timeline button { font: inherit; font-size: var(--fs-s); font-weight: 600; min-width: 5em; padding: var(--s1) var(--s3); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: pointer; }
 .timeline input[type=range] { flex: 1 1 8em; min-width: 0; accent-color: var(--accent); }
-.timeline label { font-size: var(--fs-s); color: var(--ink2); white-space: nowrap; }
-.timeline output { font-size: var(--fs-s); color: var(--ink2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.timeline output, .tl-label { font-size: var(--fs-s); color: var(--ink2); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .later { display: none; }
-.pinlist .dim { opacity: .4; }
+.pinlist .dim, .card.dim { opacity: .4; }
+details.puzzle.quiet > summary { opacity: .5; }
+
+/* heat map view: the plan muted, the whole-session heat on top, nothing else */
+.map .heat, .legend-heat { display: none; }
+.where:has(.view-heat:checked) .map .heat { display: inline; }
+.where:has(.view-heat:checked) .legend-heat { display: block; }
+.where:has(.view-heat:checked) :is(.trail, .legend-trail, .timeline) { display: none; }
+.where:has(.view-heat:checked) .map img { filter: grayscale(1) brightness(.5); }
+.heat .halo { font-size: 30px; }
+.legend-h { font-weight: 600; color: var(--ink); margin: 0 0 var(--s2); }
+.ramp { height: 12px; border-radius: 3px; }
+.ramp-ends { display: flex; justify-content: space-between; color: var(--ink2); margin: var(--s1) 0 var(--s3); }
+.legend .kinds { flex-wrap: wrap; gap: var(--s1) var(--s3); }
+.legend .kinds span { display: inline-flex; align-items: center; gap: var(--s1); }
+.span-note { position: sticky; top: var(--s2); z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); margin: 0 0 var(--s3); padding: var(--s2) var(--s3); border: 1px solid var(--accent); border-radius: 6px; background: var(--accent-tint); font-size: var(--fs-s); }
+.span-note[hidden] { display: none; }
+.span-note button { font: inherit; font-weight: 600; padding: 0 var(--s2); border: 1px solid var(--accent); border-radius: 4px; background: var(--surface); color: var(--accent); cursor: pointer; }
 .now { pointer-events: none; }
 .pin { cursor: pointer; --pf: #ff8a5c; }
 .pin.confused { --pf: #f2c14e; } .pin.surprised { --pf: #4fd1c5; } .pin.bug { --pf: #ff7aa8; }
@@ -283,18 +325,47 @@ details.puzzle > summary .note { font-weight: 400; margin-left: var(--s2); }
 .clip.video { display: block; background: none; }
 .clip.video video { display: block; width: 100%; height: auto; border-radius: 4px; }
 .dropped li { margin-bottom: var(--s2); }
-@media (max-width: 760px) { .where { grid-template-columns: 1fr; } .tile.wide { grid-column: auto; } }
-@media (prefers-reduced-motion: no-preference) { .pin .shape, a.chip { transition: stroke-width .15s, border-color .15s; } html { scroll-behavior: smooth; } }
+@media (max-width: 760px) { .where { grid-template-columns: 1fr; } .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: no-preference) { .pin .shape, a.chip { transition: stroke-width .15s, border-color .15s; } .card, .pinlist li { transition: opacity .2s; } html { scroll-behavior: smooth; } }
 @media print {
   body { background: #fff; color: #000; } main { max-width: none; padding: 0; }
   .card, .group, .tile { break-inside: avoid; } .clip, .to-map { display: none; }
   .map { max-width: 300px; }
-  .timeline, [data-needs-script] { display: none; }
+  .timeline, .maphead, .span-note, [data-needs-script] { display: none; }
 }
 """
 
-SVG_DEFS = """<defs>
-          <radialGradient id="heat"><stop offset="0" stop-color="#ff6b3d" stop-opacity=".8"/><stop offset=".6" stop-color="#ff6b3d" stop-opacity=".4"/><stop offset="1" stop-color="#ff6b3d" stop-opacity="0"/></radialGradient>
+# The heat map's color scale, cool and sparse to hot, as on public
+# shooter heatmaps. One list feeds the SVG filter and the legend's bar.
+HEAT_RAMP = ("#2b59ff", "#18c1e6", "#3ddc84", "#f5d327", "#fb7a1c", "#e8231f")
+HEAT_ALPHA = (0, .5, .65, .78, .86, .92)
+
+
+def _ramp_table(channel):
+    return " ".join(
+        f"{int(color[1 + 2 * channel:3 + 2 * channel], 16) / 255:.3f}"
+        for color in HEAT_RAMP
+    )
+
+
+# Heat spots are drawn as white blobs whose opacity is their weight; the
+# filter turns that opacity into the color scale.
+HEAT_DEFS = (
+    '<radialGradient id="heat-blob"><stop offset="0" stop-color="#fff"/>'
+    '<stop offset=".4" stop-color="#fff" stop-opacity=".85"/>'
+    '<stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>'
+    '<filter id="heat-ramp" color-interpolation-filters="sRGB">'
+    '<feColorMatrix type="matrix" values="0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0"/>'
+    "<feComponentTransfer>"
+    f'<feFuncR type="table" tableValues="{_ramp_table(0)}"/>'
+    f'<feFuncG type="table" tableValues="{_ramp_table(1)}"/>'
+    f'<feFuncB type="table" tableValues="{_ramp_table(2)}"/>'
+    f'<feFuncA type="table" tableValues="{" ".join(str(a) for a in HEAT_ALPHA)}"/>'
+    "</feComponentTransfer></filter>"
+)
+
+SVG_DEFS = f"""<defs>
+          {HEAT_DEFS}
           <symbol id="sh-stuck" overflow="visible"><rect x="-30" y="-30" width="60" height="60" rx="6"/></symbol>
           <symbol id="sh-confused" overflow="visible"><circle r="34"/></symbol>
           <symbol id="sh-surprised" overflow="visible"><polygon points="0,-44 44,0 0,44 -44,0"/></symbol>
@@ -505,21 +576,29 @@ def _render_heat(route, meta):
     if not route["heat"]:
         return []
     scale = _px_per_m(meta)
-    parts = ['<g class="heat" aria-hidden="true">']
+    top = max(spot["seconds"] for spot in route["heat"]) or 1
+    blobs = []
+    labels = []
     for spot in route["heat"]:
         cx, cy = world_to_px(meta, spot["x"], spot["z"])
         radius = spot["r_m"] * scale
-        parts.append(
-            f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{radius:.1f}" fill="url(#heat)"/>'
-            f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{radius:.1f}" fill="none" '
-            'stroke="#ffb199" stroke-width="5" stroke-dasharray="14 10"/>'
+        weight = 0.35 + 0.65 * spot["seconds"] / top
+        blobs.append(
+            f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{radius:.1f}" '
+            f'fill="url(#heat-blob)" fill-opacity="{weight:.2f}"/>'
         )
-        parts.append(
-            f'<text class="halo" x="{cx:.1f}" y="{cy - radius - 15:.1f}">'
+        labels.append(
+            f'<text class="halo" x="{cx:.1f}" y="{cy + 11:.1f}">'
             f'{_mss(spot["seconds"])}</text>'
         )
-    parts.append("</g>")
-    return parts
+    return [
+        '<g class="heat" aria-hidden="true">',
+        '<g filter="url(#heat-ramp)">',
+        *blobs,
+        "</g>",
+        *labels,
+        "</g>",
+    ]
 
 
 def _route_pixels(route, meta):
@@ -574,9 +653,12 @@ def _render_route(route, meta):
         'style="font-size:34px" dx="-70">end</text></g>'
     )
     parts.append("</g>")
-    # The player's place at the slider's time: the script moves it to a route point.
-    parts.append('<circle class="now later" r="22" fill="#3d5afe" stroke="#fff" stroke-width="7"/>')
     return parts
+
+
+# The player's place at the slider's time: the script moves it to a
+# route point. Drawn last so pins never cover it.
+NOW_DOT = '<circle class="now later" r="22" fill="#3d5afe" stroke="#fff" stroke-width="7"/>'
 
 
 def _render_pins(pinned, meta):
@@ -623,75 +705,126 @@ def _render_markers(markers, meta, id_to_rank):
     return parts
 
 
-def _render_legend(timeline):
-    items = []
-    for graphic, text in LABELS["map"]["legend"]:
-        items.append(f"<li>{graphic}{_e(text)}</li>")
+def _render_legend(timeline, has_markers):
+    legend = LABELS["map"]["legend"]
+    items = [f'<li>{legend["route"][0]}{_e(legend["route"][1])}</li>']
     if timeline:
         items.append(
             '<li data-needs-script hidden><svg viewBox="0 0 28 20" aria-hidden="true">'
             '<circle cx="14" cy="10" r="6" fill="#3d5afe" stroke="#fff" stroke-width="2"/></svg>'
             f'{_e(LABELS["timeline"]["legend"])}</li>'
         )
-    for kind in KIND_ORDER:
-        info = _kind(kind)
-        items.append(
-            f'<li><span class="k k-{info["class"]}"></span>{_e(info["label"])}</li>'
-        )
+    if has_markers:
+        items.append(f'<li>{legend["f9"][0]}{_e(legend["f9"][1])}</li>')
+    kinds = "".join(
+        f'<span><span class="k k-{_kind(kind)["class"]}"></span>{_e(_kind(kind)["label"])}</span>'
+        for kind in KIND_ORDER
+    )
+    items.append(f'<li class="kinds">{kinds}</li>')
     return items
+
+
+def _render_heat_legend():
+    words = LABELS["heat"]
+    stops = ", ".join(HEAT_RAMP)
+    return (
+        '<div class="legend-heat">'
+        f'<p class="legend-h">{_e(words["title"])}</p>'
+        f'<div class="ramp" style="background:linear-gradient(90deg, {stops})" aria-hidden="true"></div>'
+        f'<div class="ramp-ends"><span>{_e(words["low"])}</span><span>{_e(words["high"])}</span></div>'
+        f'<p class="note">{_e(words["note"])}</p>'
+        "</div>"
+    )
+
+
+# The map's view switch. It works by CSS alone (:has), so a reader
+# without script can still open the heat map.
+def _render_views():
+    words = LABELS["timeline"]
+    return (
+        '<div class="maphead">'
+        f'<div class="seg views" role="radiogroup" aria-label="{_e(words["view"])}">'
+        '<label><input type="radio" name="view" value="trail" checked> '
+        f'{_e(words["view_trail"])}</label>'
+        '<label><input type="radio" name="view" value="heat" class="view-heat"> '
+        f'{_e(words["view_heat"])}</label>'
+        "</div></div>"
+    )
 
 
 # The time control's markup. It is hidden until the script runs, so a
 # reader without script, or a print, sees the whole map and no dead
 # controls. Wording reaches the script through data- attributes.
-def _render_timeline(duration_s, has_heat):
+def _render_timeline(duration_s):
     words = LABELS["timeline"]
     total = int(duration_s)
+    lengths = [
+        '<label><input type="radio" name="trail" value="0" checked> '
+        f'{_e(words["trail_all"])}</label>'
+    ] + [
+        f'<label><input type="radio" name="trail" value="{n}"> '
+        f'{_e(words["trail_last"].format(n=n))}</label>'
+        for n in words["windows"]
+    ]
     return (
         f'<div class="timeline" hidden data-needs-script data-play="{_e(words["play"])}" '
-        f'data-pause="{_e(words["pause"])}" data-readout="{_e(words["readout"])}">'
+        f'data-pause="{_e(words["pause"])}" data-readout="{_e(words["readout"])}" '
+        f'data-readout-window="{_e(words["readout_window"])}">'
+        '<div class="tl-row">'
         f'<button type="button">{_e(words["play"])}</button>'
         f'<input type="range" min="0" max="{total}" step="1" value="{total}" '
         f'aria-label="{_e(words["slider"])}">'
         f'<output>{_e(words["readout"].format(time=_mss(total), duration=_mss(total)))}</output>'
-        + (
-            f'<label class="heat-toggle"><input type="checkbox" class="heat-on"> '
-            f'{_e(words["heat"])}</label>'
-            if has_heat
-            else ""
-        )
-        + "</div>"
+        "</div>"
+        '<div class="tl-row">'
+        f'<span class="tl-label" id="trail-label">{_e(words["trail"])}</span>'
+        f'<div class="seg" role="radiogroup" aria-labelledby="trail-label">{"".join(lengths)}</div>'
+        "</div></div>"
     )
 
 
-# Show or hide by the file's times, move the dot to a route point. No
-# wording, no computing of findings, times, positions or counts.
+# Shown by the script while a time is selected; says which span is lit.
+def _render_span_note():
+    words = LABELS["timeline"]
+    return (
+        f'<p class="span-note" hidden data-text="{_e(words["span_note"])}">'
+        f'<span></span><button type="button">{_e(words["show_all"])}</button></p>'
+    )
+
+
+# Show or hide by the file's times, move the dot to a route point, dim
+# cards and pin rows outside the lit span. No wording, no computing of
+# findings, times, positions or counts.
 SCRIPT = """
 (function () {
   var box = document.querySelector(".timeline");
   var map = document.getElementById("map");
   if (!box || !map) return;
   var SPEED = 10;
+  var each = function (list, fn) { Array.prototype.forEach.call(list, fn); };
   var slider = box.querySelector("input[type=range]");
-  var heatBox = box.querySelector(".heat-on");
   var button = box.querySelector("button");
   var readout = box.querySelector("output");
+  var heatView = document.querySelector(".view-heat");
+  var note = document.querySelector(".span-note");
   var now = map.querySelector(".now");
-  var heat = map.querySelector(".heat");
   var max = Number(slider.max);
   var routes = Array.prototype.map.call(map.querySelectorAll("polyline[data-t]"), function (el) {
     return { el: el, pts: el.getAttribute("points").split(" "), t: el.getAttribute("data-t").split(" ").map(Number) };
   });
-  var timed = map.querySelectorAll("[data-t]:not(polyline)");
+  var timed = map.querySelectorAll(".trail [data-t]:not(polyline)");
   var listed = document.querySelectorAll(".pinlist [data-t]");
-  var current = max, playing = false, last = 0;
+  var cards = document.querySelectorAll(".card[data-t]");
+  var groups = document.querySelectorAll("details.puzzle");
+  var current = max, span = 0, playing = false, last = 0;
   function mss(s) { s = Math.floor(s); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
-  function reached(times, t) { var n = 0; while (n < times.length && times[n] <= t) n++; return n; }
+  function count(times, t) { var n = 0; while (n < times.length && times[n] <= t) n++; return n; }
   function show(t) {
+    var lo = span > 0 ? t - span : -Infinity;
     var n = 0;
     routes.forEach(function (r) {
-      n = reached(r.t, t);
-      r.el.setAttribute("points", r.pts.slice(0, n).join(" "));
+      n = count(r.t, t);
+      r.el.setAttribute("points", r.pts.slice(count(r.t, lo), n).join(" "));
     });
     if (now) {
       now.classList.toggle("later", n === 0);
@@ -701,11 +834,24 @@ SCRIPT = """
         now.setAttribute("cy", xy[1]);
       }
     }
-    Array.prototype.forEach.call(timed, function (el) { el.classList.toggle("later", Number(el.getAttribute("data-t")) > t); });
-    Array.prototype.forEach.call(listed, function (el) { el.classList.toggle("dim", Number(el.getAttribute("data-t")) > t); });
-    var text = box.getAttribute("data-readout").replace("{time}", mss(t)).replace("{duration}", mss(max));
+    function inside(el) { var at = Number(el.getAttribute("data-t")); return at > lo && at <= t; }
+    each(timed, function (el) { el.classList.toggle("later", !inside(el)); });
+    each(listed, function (el) { el.classList.toggle("dim", !inside(el)); });
+    var lit = !(heatView && heatView.checked) && (span > 0 || t < max);
+    each(cards, function (el) {
+      var end = Number(el.getAttribute("data-end") || el.getAttribute("data-t"));
+      el.classList.toggle("dim", lit && !(Number(el.getAttribute("data-t")) <= t && end > lo));
+    });
+    each(groups, function (el) { el.classList.toggle("quiet", lit && !el.querySelector(".card:not(.dim)")); });
+    var from = mss(Math.max(0, lo));
+    var text = box.getAttribute(span > 0 ? "data-readout-window" : "data-readout")
+      .replace("{start}", from).replace("{time}", mss(t)).replace("{duration}", mss(max));
     readout.textContent = text;
     slider.setAttribute("aria-valuetext", text);
+    if (note) {
+      note.hidden = !lit;
+      note.querySelector("span").textContent = note.getAttribute("data-text").replace("{span}", from + "-" + mss(t));
+    }
   }
   function setPlaying(on) {
     playing = on;
@@ -731,11 +877,22 @@ SCRIPT = """
     current = Number(slider.value);
     show(current);
   });
-  // The heat is the whole session's sum, never part of the slider's view.
-  function showHeat() { if (heat) heat.classList.toggle("later", !(heatBox && heatBox.checked)); }
-  if (heatBox) heatBox.addEventListener("change", showHeat);
-  showHeat();
-  Array.prototype.forEach.call(document.querySelectorAll("[data-needs-script]"), function (el) { el.removeAttribute("hidden"); });
+  each(box.querySelectorAll("input[name=trail]"), function (el) {
+    el.addEventListener("change", function () { span = Number(el.value); show(current); });
+  });
+  // The heat map is its own view: it stops play and lights every card.
+  each(document.querySelectorAll("input[name=view]"), function (el) {
+    el.addEventListener("change", function () { setPlaying(false); show(current); });
+  });
+  if (note) note.querySelector("button").addEventListener("click", function () {
+    setPlaying(false);
+    current = max;
+    slider.value = max;
+    span = 0;
+    box.querySelector("input[name=trail][value='0']").checked = true;
+    show(current);
+  });
+  each(document.querySelectorAll("[data-needs-script]"), function (el) { el.removeAttribute("hidden"); });
   show(current);
 })();
 """
@@ -755,14 +912,20 @@ def _render_map_section(data, map_state, pinned, markers, id_to_rank, timeline):
         f'<h2 id="where">{LABELS["sections"]["where"]}</h2>',
         '<div class="where">',
         '<div class="mapcol">',
+    ]
+    has_heat = bool(route["heat"])
+    if has_heat:
+        parts.append(_render_views())
+    parts.extend([
         f'<figure class="map" id="map">',
         f'<img src="{data_uri}" width="{width}" height="{height}" alt="{alt}">',
         f'<svg viewBox="0 0 {width} {height}" aria-labelledby="map-title">',
         f'<title id="map-title">{title}</title>',
         SVG_DEFS,
-        "<!-- heat layer: one blob per place the player lingered, plus a dashed ring so it is not color alone -->",
-    ]
+        "<!-- heat map view only: whole-session time spent, a label on each spot so it is not color alone -->",
+    ])
     parts.extend(_render_heat(route, meta))
+    parts.append('<g class="trail">')
     parts.append("<!-- route: casing plus line, arrows show direction, S and E mark start and end -->")
     parts.extend(_render_route(route, meta))
     parts.append("<!-- kept findings, numbered by rank -->")
@@ -770,6 +933,9 @@ def _render_map_section(data, map_state, pinned, markers, id_to_rank, timeline):
     if markers:
         parts.append("<!-- F9 markers: the player pressed F9 to flag confusion -->")
         parts.extend(_render_markers(markers, meta, id_to_rank))
+    if timeline:
+        parts.append(NOW_DOT)
+    parts.append("</g>")
     parts.append("</svg>")
     parts.append(
         '<figcaption class="sr-only" style="position:absolute;left:-9999px">'
@@ -777,13 +943,16 @@ def _render_map_section(data, map_state, pinned, markers, id_to_rank, timeline):
     )
     parts.append("</figure>")
     if timeline:
-        parts.append(_render_timeline(data["session"]["duration_s"], bool(route["heat"])))
+        parts.append(_render_timeline(data["session"]["duration_s"]))
     parts.append("</div>")
 
     parts.append(
         f'<aside class="legend" aria-label="{_e(LABELS["map"]["legend_title"])}">'
     )
-    parts.append(f'<ul>{"".join(_render_legend(timeline))}</ul>')
+    if has_heat:
+        parts.append(_render_heat_legend())
+    parts.append('<div class="legend-trail">')
+    parts.append(f'<ul>{"".join(_render_legend(timeline, bool(markers)))}</ul>')
     parts.append('<ol class="pinlist">')
     for finding in pinned:
         info = _kind(finding["kind"])
@@ -793,7 +962,7 @@ def _render_map_section(data, map_state, pinned, markers, id_to_rank, timeline):
             f'<span class="k k-{info["class"]}"></span>{_e(_pin_title(finding))}'
             f'<time>{_mss(finding["time_s"])}</time></a></li>'
         )
-    parts.extend(["</ol>", "</aside>", "</div>", "</section>"])
+    parts.extend(["</ol>", "</div>", "</aside>", "</div>", "</section>"])
     return parts
 
 
@@ -851,7 +1020,12 @@ def _render_card(finding, markers_by_moment, pins_available):
     info = _kind(finding["kind"])
     rank = finding["rank"]
     check = finding["check"]
-    parts = [f'<article class="card {info["class"]}" id="m{rank}">']
+    end = finding.get("end_s")
+    end_attr = f' data-end="{end}"' if end is not None else ""
+    parts = [
+        f'<article class="card {info["class"]}" id="m{rank}" '
+        f'data-t="{finding["time_s"]}"{end_attr}>'
+    ]
 
     head = []
     if pins_available and finding.get("at") is not None:
@@ -1158,6 +1332,8 @@ def render_html(data, maps_dir=None):
             f'<p class="sub">{_e(LABELS["moments"]["sub"])}</p>',
         ]
     )
+    if timeline:
+        parts.append(_render_span_note())
     parts.extend(_render_groups(kept, markers_by_moment, pins_available))
     parts.append("</section>")
 

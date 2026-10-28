@@ -308,7 +308,7 @@ def test_enriched_file_loads_and_renders(tmp_path):
     page = render_html(data)
     assert 'id="where"' in page
     assert 'class="tiles"' in page
-    assert 'fill="url(#heat)"' in page
+    assert 'fill="url(#heat-blob)"' in page
     assert "<polyline" in page
     assert 'id="pin-m1"' in page
     assert "3 moments worth a look: 1 stuck, 1 confused, 1 surprised." in page

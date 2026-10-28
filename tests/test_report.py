@@ -37,7 +37,7 @@ def _map_px(meta, x, z):
 
 def _card(page, rank):
     match = re.search(
-        rf'<article class="card [^"]+" id="m{rank}">(.*?)</article>',
+        rf'<article class="card [^"]+" id="m{rank}"[^>]*>(.*?)</article>',
         page,
         re.DOTALL,
     )
@@ -287,24 +287,79 @@ def test_timeline_controls_are_hidden_until_the_script_runs(redesign):
     assert 'data-play="Play"' in page and 'data-pause="Pause"' in page
 
 
-def test_heat_is_not_on_the_slider_and_has_its_own_toggle(redesign):
+def test_heat_is_its_own_view_and_hides_the_trail(redesign):
     page = render_html(redesign)
-    # The no-script view keeps the heat; the script hides it until the toggle is on.
-    assert '<g class="heat" aria-hidden="true">' in page
-    assert '<input type="checkbox" class="heat-on">' in page
-    assert "Heat, whole session" in page
-    script = page[page.index("<script>"):page.index("</script>")]
-    assert "t < max" not in script
-    assert 'heatBox.checked' in script
-    # A route with no heat has no toggle.
+    # A view switch, timeline checked by default, heat map by CSS alone.
+    assert '<input type="radio" name="view" value="trail" checked>' in page
+    assert '<input type="radio" name="view" value="heat" class="view-heat">' in page
+    assert "> Timeline</label>" in page and "> Heat map</label>" in page
+    assert ".where:has(.view-heat:checked) :is(.trail, .legend-trail, .timeline) { display: none; }" in page
+    assert ".map .heat, .legend-heat { display: none; }" in page
+    # Heat sits outside the trail group; route, pins and markers inside it.
+    svg = page[page.index("<svg viewBox"):page.index("</svg>")]
+    heat_at = svg.index('<g class="heat"')
+    trail_at = svg.index('<g class="trail">')
+    assert heat_at < trail_at
+    trail = svg[trail_at:]
+    assert "<polyline" in trail and 'id="pin-m1"' in trail and 'id="pin-f1"' in trail
+    assert 'class="now' in trail
+    assert "<polyline" not in svg[heat_at:trail_at]
+    assert 'class="pin' not in svg[heat_at:trail_at]
+    # One blob per spot, drawn through the color scale, labeled with its time.
+    heat = svg[heat_at:trail_at]
+    assert heat.count('fill="url(#heat-blob)"') == len(redesign["route"]["heat"])
+    assert '<g filter="url(#heat-ramp)">' in heat
+    for spot in redesign["route"]["heat"]:
+        assert f'>{_mss(spot["seconds"])}</text>' in heat
+    assert 'class="legend-heat"' in page and "Time spent, whole session" in page
+    # A route with no heat has no switch and no heat legend.
     redesign["route"]["heat"] = []
-    assert 'class="heat-on"' not in render_html(redesign)
+    page = render_html(redesign)
+    assert 'name="view"' not in page
+    assert 'class="legend-heat"' not in page
+    assert '<g class="heat"' not in page
+
+
+def test_trail_offers_from_start_and_the_window_lengths(redesign):
+    page = render_html(redesign)
+    box = page[page.index('<div class="timeline"'):]
+    box = box[:box.index('<aside')]
+    values = re.findall(r'<input type="radio" name="trail" value="(\d+)"', box)
+    assert values == ["0", "10", "15", "30", "60"]
+    assert '<input type="radio" name="trail" value="0" checked>' in box
+    assert 'data-readout-window="{start}-{time} of {duration}"' in box
+    script = page[page.index("<script>"):page.index("</script>")]
+    assert "t - span" in script
+
+
+def test_cards_carry_their_times_for_dimming(redesign):
+    page = render_html(redesign)
+    for finding in redesign["findings"]:
+        if finding["check"]["verdict"] != "keep":
+            continue
+        tag = re.search(rf'<article class="card [^"]+" id="m{finding["rank"]}"[^>]*>', page).group(0)
+        assert f'data-t="{finding["time_s"]}"' in tag
+        if finding.get("end_s") is not None:
+            assert f'data-end="{finding["end_s"]}"' in tag
+        else:
+            assert "data-end" not in tag
+    # Dimmed, never removed: the span note starts hidden and resets the view.
+    assert '<p class="span-note" hidden data-text="Moments in {span} are lit. The rest are dimmed.">' in page
+    assert ">Show all moments</button>" in page
+    assert ".card.dim { opacity: .4; }" in page
+
+
+def test_f9_legend_only_when_the_file_has_markers(redesign):
+    assert "F9: the player flagged confusion" in render_html(redesign)
+    redesign["markers"] = []
+    assert "F9: the player flagged confusion" not in render_html(redesign)
 
 
 @pytest.mark.parametrize("path", [SAMPLE, SAMPLE_B])
 def test_pages_with_no_map_have_no_timeline_and_no_script(path):
     page = render_html(_data(path))
     assert 'class="timeline"' not in page
+    assert 'class="span-note"' not in page
     assert "<script" not in page.lower()
 
 
@@ -344,7 +399,7 @@ def test_pin_list_lists_only_pinned_findings_in_rank_order(redesign):
             del finding["at"]
     page = render_html(redesign)
     assert 'id="pin-m5"' not in page
-    assert '<article class="card confused" id="m5">' in page
+    assert '<article class="card confused" id="m5" ' in page
     pinlist = page.split('<ol class="pinlist">')[1].split("</ol>")[0]
     assert '<span class="num">5</span>' not in pinlist
 

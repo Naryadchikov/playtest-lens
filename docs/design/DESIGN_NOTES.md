@@ -46,3 +46,6 @@ Page rules: a missing optional field hides its element, never a placeholder. No 
 
 ## Rules
 No em dashes or spaced en dashes. Escape every string. Respect `prefers-color-scheme` and `prefers-reduced-motion`. The mockup's print styles are brief; keep them.
+
+## Adapted from Anthropic's frontend-design skill (2026-10-28)
+Sasha asked for it to be loaded and adapted. Proposal by Claude Opus 5.5 (Cursor); the tokens, kind shapes, system fonts and "never color alone" above stay. Taken from it: spend the boldness in one place (the map), show one thing at a time (timeline or heat map, never both), dim what is outside the selected span instead of hiding it, motion only to answer an action (a short opacity change), sentence case and plain action names ("Show all moments"). Not taken: a display typeface, a new palette, a hero.
