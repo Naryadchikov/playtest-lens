@@ -64,3 +64,7 @@ The tests pass; the page for the fixture contains the same sections as the mocku
 ## After
 
 The orchestrator reads the diff, commits it with the author trailer, and starts a Grok review. Task 23b (not this task): the analyzer computes the new fields from the session log (route points, heat spots, `at`, markers, `summary`, `cross_player`) and the checker adds `resolved_after_s`; that touches the checker prompt and goes through the change-analyzer skill, so Sasha is asked first.
+
+## What came back
+
+DeepSeek rebuilt `report/render.py` (about 1000 lines, labels in one `LABELS` table) and added the optional-field checks to `analyzer/findings.py`, a fictional fixture `tests/fixtures/findings_redesign.json` and tests (141 passed). Six places where the notes and the brief disagreed were reported and the brief won. Grok review round 1: NOT PASS, 3 blocking (an unescaped `session.id`, a stored time of 0 treated as missing, cards sorted by time instead of rank). The orchestrator fixed them (about 25 lines plus tests) and round 2 passed (docs/reviews/08-report-redesign-grok-round2.md). Merged as e33c046. Not checked by anyone: the page in a browser (no screenshot yet), dark mode, print. The fixture page renders to `runs/redesign/page.html`.

@@ -15,7 +15,7 @@ The pipeline is one path: Spark 1.2 windowed candidates, the checking pass, beat
 ## In flight (2026-10-28, evening)
 
 - Done and pushed: Baseten open-weights backend (task 21, Grok PASS), the Grok bot's Godot work (task 22, GLM PASS; fork `playtest-lens` at `b0a52cf`), contributor Spark as the default, tester guide log path.
-- DeepSeek on task 23 (docs/tasks/23-report-redesign.md): the report page rebuilt from the Sonnet mockup (docs/design/), render only, in `.worktrees/ds-23`. Then a fresh Grok review. Task 23b (the analyzer computes route, heat, pins, summary, cross-player from the log) is next and needs Sasha's yes.
+- Done: report page redesign (task 23), merged e33c046 after Grok review round 2 PASS. Fictional fixture page: `runs/redesign/page.html` (git-ignored). Nobody has looked at it in a browser yet: Sasha judges the look. Task 23b (the analyzer computes route, heat, pins, summary, cross-player from the log) is next and needs Sasha's yes.
 - Grok bot, package 2 (docs/tasks/24-grok-bot-2.md): scene inventory and volume report, pasted by Sasha, in progress on the bot's VM.
 - Sasha, in a few hours: telemetry volumes in COGITO (docs/COGITO_VOLUMES.md), then the Mac play session with recording (steps in the same file), then the Windows build test with OBS.
 
