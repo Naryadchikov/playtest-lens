@@ -29,11 +29,13 @@ BASETEN_BASE_URL = "https://inference.baseten.co/v1"
 DEFAULT_CACHE_DIR = Path("runs/cache")
 DEFAULT_COSTS_PATH = Path("runs/costs.jsonl")
 
-# USD per million tokens: (input, output). Meta prices from the brief;
-# the open-weights row is Baseten's public Model APIs table (baseten.co/pricing).
+# USD per million tokens: (input, output). Meta prices from the brief and
+# dev.meta.ai/docs/pricing-rate-limits (the contributor rows); the open-weights
+# row is Baseten's public Model APIs table (baseten.co/pricing).
 PRICES = {
     "muse-spark-1.3": (1.25, 4.25),
     "muse-spark-1.2": (1.25, 4.25),
+    "muse-spark-1.2-contributor": (0.10, 0.20),
     "muse-wonder-1.0": (4.00, 20.00),
     "meta-models/muse-spark-open-1026": (1.25, 4.25),
 }
@@ -340,6 +342,15 @@ def _call_open_model(
             max_tokens=OPEN_MAX_TOKENS,
         )
         reply = _open_reply_to_dict(response)
+
+    # The reasoning can use the whole token budget and leave no answer: the
+    # tokens were billed, so log them, but never cache a reply with no text.
+    if not reply["output_text"].strip():
+        _append_cost_line(costs_path, model=model, reply=reply, purpose=purpose)
+        raise ValueError(
+            "The open model returned no answer text "
+            f"(finish_reason {reply.get('finish_reason')!r}): its reasoning may have used the whole token budget."
+        )
 
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_file.write_text(json.dumps(reply, indent=2), encoding="utf-8")

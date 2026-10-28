@@ -250,3 +250,13 @@ def test_sample_frames_caps_a_long_clip_at_eight(tmp_path):
     assert len(frames) == 8
     width, height = _jpeg_size(frames[0])
     assert (width, height) == (320, 240)
+
+
+def test_open_reply_without_answer_text_fails_and_is_not_cached(tmp_path, frames):
+    empty = json.loads(json.dumps(CHAT_PAYLOAD))
+    empty["choices"][0]["message"]["content"] = ""
+    empty["choices"][0]["finish_reason"] = "length"
+    with pytest.raises(ValueError, match="no answer text"):
+        _call(tmp_path, FakeOpenClient(FakeCompletions(empty)))
+    assert not list((tmp_path / "cache").glob("*.json"))
+    assert len((tmp_path / "costs.jsonl").read_text().splitlines()) == 1

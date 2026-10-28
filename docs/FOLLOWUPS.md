@@ -15,3 +15,9 @@ One list for things found but not fixed: a pre-existing review finding, a case t
 - The telemetry test's `marker` lines carry an extra `where` field while docs/LOG_SCHEMA.md says `marker` has no fields: align the doc or the test. The first `perf` line reads fps 1.0 because Godot's counter is not warm: skip or flag it. From Sasha's Grok bot retest of the logger, 2026-10-28.
 - Beats grouping limits, all non-blocking: a dropped unsolved moment updates an area's recency (`analyzer/beats.py`, `assign_beats`); overlapping zones resolve to the earliest start and an unclosed zone matches every later time; after a gap over 180 s an attempt's end stays on its first moment; a later unzoned "East Lab Wing" folds into a zone named "East Lab"; rooms that share one word ("North Hall", "South Hall") keep an identical generic label as Attempt 2 of the older room; within 300 s an identical fan, hexahedron, jammer or keypad label fuzzy-joins across rooms with no shared words. If a COGITO run shows these, replace the fuzzy matching with checker-chosen ids. From Grok review round 7, 2026-10-28.
 
+
+## Open-weights backend (task 21 review, Grok, 2026-10-28)
+
+- `sample_frames` on a clip under 1 second: ffmpeg writes no frame and the process exits with the ffmpeg error instead of the intended ValueError, so a last window under 1 s aborts a run. Real windows are 20 s and 2 minutes; left as is.
+- `_frame_plan` never reaches the 4 s spacing the brief gave for 2-minute windows: Baseten allows 8 images per request, so spacing is duration / 8 (15 s for a 2-minute window).
+- Tests do not cover tiny or odd frame sizes, a marker in the middle of a reply, or which fields change the cache key.
