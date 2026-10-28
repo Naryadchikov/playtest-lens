@@ -23,8 +23,10 @@ def _esc(value):
 
 def _render_finding(finding):
     parts = ['<article class="finding">']
+    friction = finding["check"].get("friction")
+    kind_label = finding["kind"] + (f" · {friction}" if friction else "")
     parts.append(
-        f'<p class="meta">{_esc(_mss(finding["time_s"]))} · {_esc(finding["kind"])}</p>'
+        f'<p class="meta">{_esc(_mss(finding["time_s"]))} · {_esc(kind_label)}</p>'
     )
     parts.append(f"<h3>{_esc(finding['summary'])}</h3>")
     if finding["quote"] is not None:
@@ -68,7 +70,16 @@ def render_html(data):
         f'<p class="meta">{_esc(session["recording"])}</p>',
         "<h2>Findings</h2>",
     ]
-    parts.extend(_render_finding(f) for f in kept)
+    current_beat = None
+    for finding in kept:
+        beat = finding.get("beat")
+        if beat:
+            key = (beat.get("puzzle"), beat.get("zone"), beat.get("attempt"))
+            if key != current_beat:
+                current_beat = key
+                place = beat.get("zone") or beat.get("puzzle") or "Beat"
+                parts.append(f"<h3>{_esc(place)} · Attempt {_esc(beat.get('attempt'))}</h3>")
+        parts.append(_render_finding(finding))
     parts.append("<h2>Dropped</h2>")
     parts.extend(_render_finding(f) for f in dropped)
     parts.extend(["</body>", "</html>", ""])

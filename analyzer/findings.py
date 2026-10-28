@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 
 FORMAT_VERSION = 1
-KINDS = ("confused", "stuck", "surprised")
+KINDS = ("confused", "stuck", "surprised", "suspected_bug")
 VERDICTS = ("keep", "drop")
 
 

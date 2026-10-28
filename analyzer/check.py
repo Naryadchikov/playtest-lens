@@ -22,6 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from analyzer import client as client_module  # noqa: E402
+from analyzer import beats as beats_module  # noqa: E402
 from analyzer import findings as findings_module  # noqa: E402
 from analyzer import log_candidates  # noqa: E402
 from tools.video import cut_clip, extract_audio  # noqa: E402
@@ -48,6 +49,12 @@ def parse_check(text: str):
         raise ValueError("Checker reply JSON must be an object.")
     if data.get("verdict") not in ("keep", "drop"):
         raise ValueError(f"Checker reply has an invalid verdict: {data.get('verdict')!r}.")
+    if data.get("kind") not in ("confused", "stuck", "surprised", "suspected_bug"):
+        raise ValueError(f"Checker reply has an invalid kind: {data.get('kind')!r}.")
+    if data.get("friction") not in ("learning", "stuck", "blocked"):
+        raise ValueError(f"Checker reply has an invalid friction: {data.get('friction')!r}.")
+    if data.get("resolved") not in ("solved", "abandoned", "unknown"):
+        raise ValueError(f"Checker reply has an invalid resolved: {data.get('resolved')!r}.")
     if not isinstance(data.get("note"), str) or not data["note"].strip():
         raise ValueError("Checker reply has no note.")
     if not isinstance(data.get("summary"), str) or not data["summary"].strip():
@@ -58,6 +65,8 @@ def parse_check(text: str):
         data["game_state"] is None or isinstance(data["game_state"], str)
     ):
         raise ValueError("Checker reply has an invalid game_state.")
+    if "puzzle" not in data or not (data["puzzle"] is None or isinstance(data["puzzle"], str)):
+        raise ValueError("Checker reply has an invalid puzzle.")
     return data
 
 
@@ -174,13 +183,13 @@ def run_checks(candidates, *, model, clip_for, transcript_for, call_for, templat
                 "rank": rank,
                 "time_s": clamp_time(candidate["time_s"], duration_s),
                 "end_s": None,
-                "kind": candidate["kind"],
+                "kind": verdict["kind"],
                 "summary": verdict["summary"],
                 "quote": verified_quote(verdict["quote"], transcript),
                 "clip": {"path": str(clip_path), "start_s": clip_start, "end_s": clip_end},
                 "game_state": verdict["game_state"],
                 "sources": [candidate.get("_source", "spark")],
-                "check": {"verdict": verdict["verdict"], "note": verdict["note"], "model": model},
+                "check": {"verdict": verdict["verdict"], "note": verdict["note"], "model": model, "friction": verdict["friction"], "resolved": verdict["resolved"], "puzzle": verdict["puzzle"]},
             }
         )
     return findings
@@ -277,6 +286,8 @@ def main(argv=None) -> int:
         duration_s=duration_s,
     )
 
+    zones = beats_module.zone_intervals(events, args.video_flash_s) if events else []
+    beats_module.assign_beats(findings, zones=zones)
     for finding in findings:
         if finding["clip"] is not None:
             finding["clip"]["path"] = store_clip_path(finding["clip"]["path"], out_path)

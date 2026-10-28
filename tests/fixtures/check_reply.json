@@ -1,6 +1,9 @@
 {
   "id": "resp_check_fixture",
   "model": "muse-wonder-1.0",
-  "output_text": "{\"verdict\": \"keep\", \"note\": \"Player retries the barrier twice and says it will not open.\", \"summary\": \"Player cannot get through the blue barrier.\", \"quote\": \"I can't take it from here\", \"game_state\": \"Cube behind a blue energy barrier.\"}",
-  "usage": {"input_tokens": 100, "output_tokens": 50}
+  "output_text": "{\"verdict\": \"keep\", \"note\": \"Player retries the barrier twice and says it will not open.\", \"summary\": \"Player cannot get through the blue barrier.\", \"quote\": \"I can't take it from here\", \"game_state\": \"Cube behind a blue energy barrier.\", \"kind\": \"stuck\", \"friction\": \"stuck\", \"resolved\": \"unknown\", \"puzzle\": \"blue barrier\"}",
+  "usage": {
+    "input_tokens": 100,
+    "output_tokens": 50
+  }
 }

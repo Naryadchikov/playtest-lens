@@ -29,7 +29,7 @@ def test_run_checks_keeps_and_drops_into_valid_findings(tmp_path):
     replies = {
         "c502.0.mp4": json.loads(FIXTURE.read_text(encoding="utf-8")),
         "c853.0.mp4": {
-            "output_text": '{"verdict": "drop", "note": "A game voice line, the player says nothing.", "summary": "Elohim speaks.", "quote": null, "game_state": "Voice line playing."}'
+            "output_text": '{"verdict": "drop", "kind": "surprised", "friction": "learning", "resolved": "unknown", "note": "A game voice line, the player says nothing.", "summary": "Elohim speaks.", "quote": null, "game_state": "Voice line playing.", "puzzle": null}'
         },
     }
 
