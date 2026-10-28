@@ -107,6 +107,7 @@ On top of upstream's `676be6d`, in order:
 - `708528e` "Add the UID files Godot 4.7 wrote for the Playtest Lens scripts": nine `.gd.uid` files under `addons/playtest_lens*`.
 - `5d585f9` "Log where the player looks; keep the log free of paths that name a person": `yaw` and `pitch` from the camera on each `position` line, `log_path` in its `user://` form, and the scripted session looking around for 20 s of its stand.
 - `7ad0f20` "Trim the sliding door's open sound to 0.4 s with a fade-out": `addons/cogito/Assets/Audio/sliding_door_open.ogg`, the first 0.4 s of Kenney's `stoneDrag4.ogg` (CC0) with a 0.1 s fade-out, used as `sliding_door.tscn`'s `open_sound`.
+- `b0b3647` "Unhook telemetry volumes after the old level is already freed": the logger no longer keeps the volume node. COGITO frees the old scene before the next one is current, and reading the stored node aborted the load.
 
 ## Development tools (not part of the product)
 
