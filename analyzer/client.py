@@ -43,9 +43,9 @@ PRICES = {
 TRANSCRIBE_MODEL = "muse-voice-transcribe-1.0"
 TRANSCRIBE_USD_PER_HOUR = 0.18
 
-# The model's reasoning counts against max_tokens. On a check clip 400 and
-# 1500 both came back with the reasoning alone, so leave room for the answer.
-OPEN_MAX_TOKENS = 4096
+# The model's reasoning counts against max_tokens. 4096 was used up
+# before the answer on a 2-minute window, so leave more room.
+OPEN_MAX_TOKENS = 8192
 
 MISSING_KEY_MESSAGE = (
     "META_API_KEY is not set. Run via tools/run-analyzer.sh, "

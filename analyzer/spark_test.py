@@ -114,12 +114,11 @@ def _moments_for_cut(recording, prompt, model, start, seconds, tmp_dir, stem):
         call_prompt = (
             "What the player said in this clip:\n"
             + (spoken.strip() or "(nothing transcribed)")
-            + f"\n\nThis clip starts at {start:g} seconds into the recording. "
-            "Each frame is labeled with its time in the recording. "
-            "time_s in your answer is seconds from the start of the whole recording.\n\n"
+            + "\n\nEach frame is labeled with seconds from the start of this clip. "
+            "time_s in your answer is seconds from the start of this clip, not the whole recording.\n\n"
             + prompt
         )
-        clip_start = start
+        clip_start = 0.0
     try:
         reply = client_module.call_model(
             model=model,
@@ -131,7 +130,7 @@ def _moments_for_cut(recording, prompt, model, start, seconds, tmp_dir, stem):
     except SystemExit:
         raise
     except Exception as exc:
-        raise ValueError(f"Model call failed: {exc}") from exc
+        raise ValueError(f"Model call failed at {start:g}s: {exc}") from exc
     raw_text = client_module.extract_text(reply)
     try:
         moments = to_recording_time(parse_moments(raw_text), start)
