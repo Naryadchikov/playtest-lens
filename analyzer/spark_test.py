@@ -14,7 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from analyzer import client as client_module  # noqa: E402
-from tools.video import convert_video, probe_duration  # noqa: E402
+from tools.video import convert_video, extract_audio, probe_duration  # noqa: E402
 
 KINDS = ("confused", "stuck", "surprised")
 PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "spark_test.md"
@@ -102,12 +102,31 @@ def _moments_for_cut(recording, prompt, model, start, seconds, tmp_dir, stem):
     converted = convert_video(
         recording, Path(tmp_dir) / f"converted-{start:g}.mp4", start=start, seconds=seconds
     )
+    call_prompt = prompt
+    clip_start = None
+    # Open weights sees stills and no soundtrack. The words, and frame
+    # times, are what turn an empty list into moments.
+    if str(model).startswith("meta-models/"):
+        wav = extract_audio(converted, Path(tmp_dir) / f"audio-{start:g}.wav")
+        spoken = client_module.transcribe(
+            wav, purpose=f"spark_test:{recording.name}"
+        ).get("transcript") or ""
+        call_prompt = (
+            "What the player said in this clip:\n"
+            + (spoken.strip() or "(nothing transcribed)")
+            + f"\n\nThis clip starts at {start:g} seconds into the recording. "
+            "Each frame is labeled with its time in the recording. "
+            "time_s in your answer is seconds from the start of the whole recording.\n\n"
+            + prompt
+        )
+        clip_start = start
     try:
         reply = client_module.call_model(
             model=model,
-            prompt=prompt,
+            prompt=call_prompt,
             video_path=converted,
             purpose=f"spark_test:{recording.name}",
+            clip_start_s=clip_start,
         )
     except SystemExit:
         raise

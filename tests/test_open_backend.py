@@ -126,6 +126,25 @@ def test_open_request_shape(tmp_path, frames):
     assert not any(part.get("type") == "input_audio" for part in content)
 
 
+def test_open_request_labels_frames_when_the_clip_has_a_start(tmp_path, frames, monkeypatch):
+    monkeypatch.setattr(client, "probe_duration", lambda path: 20.0)
+    fake = FakeOpenClient()
+    client.call_model(
+        model=OPEN_MODEL,
+        prompt=PROMPT,
+        video_path=_video(tmp_path),
+        purpose="spark_test:clip.mp4",
+        cache_dir=tmp_path / "cache",
+        costs_path=tmp_path / "costs.jsonl",
+        client=fake,
+        clip_start_s=28.0,
+    )
+    content = fake.completions.calls[0]["messages"][0]["content"]
+    labels = [part["text"] for part in content if part.get("type") == "text" and part["text"].startswith("frame at")]
+    assert labels[0] == "frame at 28.0 s"
+    assert labels[1].startswith("frame at ")
+
+
 def test_open_reply_feeds_extract_text_and_usage(tmp_path, frames):
     reply = _call(tmp_path, FakeOpenClient())
     assert reply["output_text"] == json.dumps(VERDICT)

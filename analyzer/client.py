@@ -21,7 +21,7 @@ from pathlib import Path
 
 import httpx2
 
-from tools.video import sample_frames
+from tools.video import _frame_plan, probe_duration, sample_frames
 
 BASE_URL = "https://api.meta.ai/v1"
 OPEN_WEIGHTS_PREFIX = "meta-models/"
@@ -262,6 +262,7 @@ def call_model(
     costs_path=DEFAULT_COSTS_PATH,
     client=None,
     api_key=None,
+    clip_start_s=None,
 ) -> dict:
     cache_dir = Path(cache_dir)
     costs_path = Path(costs_path)
@@ -276,6 +277,7 @@ def call_model(
             costs_path=costs_path,
             client=client,
             api_key=api_key,
+            clip_start_s=clip_start_s,
         )
     content_hash = file_content_hash(video_path)
     request = {
@@ -311,7 +313,8 @@ def call_model(
 
 # Frames and prompt to one Baseten chat call, cached by the frame hashes.
 def _call_open_model(
-    *, model, prompt, video_path, purpose, cache_dir, costs_path, client, api_key
+    *, model, prompt, video_path, purpose, cache_dir, costs_path, client, api_key,
+    clip_start_s=None,
 ) -> dict:
     with tempfile.TemporaryDirectory(prefix="open-frames-") as tmp:
         frames = sample_frames(video_path, tmp)
@@ -320,6 +323,7 @@ def _call_open_model(
             "prompt": prompt,
             "frames": [file_content_hash(frame) for frame in frames],
             "max_tokens": OPEN_MAX_TOKENS,
+            "clip_start_s": clip_start_s,
         }
         canonical = json.dumps(
             request, sort_keys=True, separators=(",", ":"), ensure_ascii=False
@@ -331,10 +335,23 @@ def _call_open_model(
 
         if client is None:
             client = _make_open_client(api_key)
-        content = [
-            {"type": "image_url", "image_url": {"url": _image_data_url(frame)}}
-            for frame in frames
-        ]
+        # Silent stills with no clock made the model obey "reply []".
+        # A clip start labels each frame in recording time.
+        interval = None
+        if clip_start_s is not None:
+            duration = probe_duration(video_path)
+            if duration:
+                interval, _max_frames = _frame_plan(duration)
+        content = []
+        for index, frame in enumerate(frames):
+            if interval is not None:
+                content.append({
+                    "type": "text",
+                    "text": f"frame at {clip_start_s + index * interval:.1f} s",
+                })
+            content.append(
+                {"type": "image_url", "image_url": {"url": _image_data_url(frame)}}
+            )
         content.append({"type": "text", "text": prompt})
         response = client.chat.completions.create(
             model=model,
