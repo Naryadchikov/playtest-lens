@@ -73,6 +73,16 @@ def build_prompt(template: str, candidate, transcript: str, log_slice: str) -> s
     )
 
 
+# Clip path as stored in findings.json: relative to the findings
+# file, so the report page next to it finds the clip.
+def store_clip_path(clip_path, findings_path) -> str:
+    clip_path = Path(clip_path)
+    try:
+        return clip_path.relative_to(Path(findings_path).parent).as_posix()
+    except ValueError:
+        return clip_path.name
+
+
 # Round a time for the findings file without passing the duration.
 def clamp_time(value, duration_s):
     rounded = round(float(value), 2)
@@ -266,6 +276,10 @@ def main(argv=None) -> int:
         slice_for=slice_for,
         duration_s=duration_s,
     )
+
+    for finding in findings:
+        if finding["clip"] is not None:
+            finding["clip"]["path"] = store_clip_path(finding["clip"]["path"], out_path)
 
     data = {
         "format": 1,

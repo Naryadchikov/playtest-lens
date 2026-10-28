@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from analyzer import findings as findings_module
-from analyzer.check import build_prompt, clamp_time, log_slice_text, merge_candidates, parse_check, run_checks, verified_quote
+from analyzer.check import build_prompt, clamp_time, log_slice_text, merge_candidates, parse_check, run_checks, store_clip_path, verified_quote
 
 FIXTURE = Path(__file__).parent / "fixtures" / "check_reply.json"
 TEMPLATE = (Path(__file__).parent.parent / "analyzer" / "prompts" / "check.md").read_text(
@@ -67,6 +67,13 @@ def test_run_checks_keeps_and_drops_into_valid_findings(tmp_path):
         encoding="utf-8",
     )
     assert findings_module.load(path)["findings"][0]["quote"] == "I can't take it from here"
+
+
+def test_store_clip_path_is_relative_to_findings_dir():
+    stored = store_clip_path(
+        Path("runs/check/talos-clips/c00052.00.mp4"), Path("runs/check/talos-findings.json")
+    )
+    assert stored == "talos-clips/c00052.00.mp4"
 
 
 def test_merge_candidates_maps_log_kinds_and_dedupes_near_spark():
