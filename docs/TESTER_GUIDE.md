@@ -20,5 +20,7 @@ Stop when you finish the task, or after 15 minutes, whichever comes first.
 
 ## After
 
-1. Stop the recording.
-2. Send the video file and the file `playtest_log.jsonl` (its location: __WHERE THE BUILD WRITES IT__) the way Sasha asked you to.
+1. Quit the game from its menu (this finishes the log), then stop the recording.
+2. Send the video file and the newest log file the way Sasha asked you to. The log files are named with the date and time and end in `.jsonl`:
+   - Windows: paste `%APPDATA%\Godot\app_userdata\Cogito\playtest_lens` into the address bar of a File Explorer window and press Enter.
+   - Mac: in Finder, choose Go, Go to Folder, and paste `~/Library/Application Support/Godot/app_userdata/Cogito/playtest_lens`.
