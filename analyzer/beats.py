@@ -10,11 +10,26 @@ Grouping is deterministic, no model call. With an event log, zone
 intervals from telemetry volumes (zone_enter and zone_exit) bound the
 Attempts. Without a log, a sustained stretch of activity in another
 Puzzle, or a gap over ATTEMPT_GAP_S, ends an Attempt.
+
+With a log, only a volume whose puzzle line is set is a Puzzle (Sasha,
+2026-10-28: "we should stop treating everything as puzzle"). A moment
+in a volume with an empty puzzle line, or outside every volume, is an
+Area visit: its beat has area, zone and the visit's span, and puzzle,
+puzzle_number and attempt are null. Without a log nothing changes.
+
+`python -m analyzer.beats` re-runs this step alone on a findings file.
 """
 
 from __future__ import annotations
 
+import argparse
+import json
 import re
+import sys
+from pathlib import Path
+
+from analyzer import findings as findings_module
+from analyzer import log_candidates
 
 # Proposal (Muse Wonder, orchestrator, 2026-10-28), not Sasha's number:
 # a longer silence than this, in the same place, reads as a new visit.
@@ -36,19 +51,22 @@ def zone_intervals(events, video_flash_s):
     if first_flash is None:
         return []
     offset = video_flash_s - float(first_flash["t"])
+    # Keyed by name and puzzle line: two boxes with one name and
+    # different puzzle lines overlap in real scenes.
     open_zones = {}
     intervals = []
     for event in events:
         video_t = round(float(event["t"]) + offset, 2)
+        key = (event.get("zone", ""), event.get("puzzle", ""))
         if event.get("event") == "zone_enter":
-            open_zones[event.get("zone", "")] = {
+            open_zones[key] = {
                 "zone": event.get("zone", ""),
                 "puzzle": event.get("puzzle", ""),
                 "start_s": video_t,
                 "end_s": None,
             }
         elif event.get("event") == "zone_exit":
-            zone = open_zones.pop(event.get("zone", ""), None)
+            zone = open_zones.pop(key, None)
             if zone is not None:
                 zone["end_s"] = video_t
                 intervals.append(zone)
@@ -434,7 +452,10 @@ def assign_beats(findings, zones=None):
                     departed.add(other_id)
 
     # Attempts and puzzles are numbered as shown, in time order: a
-    # visit with no kept finding takes no number.
+    # visit with no kept finding takes no number. With a log, only a
+    # moment inside a volume with a puzzle line is a Puzzle moment;
+    # every other kept moment is an Area visit with no puzzle number
+    # and no attempt, and takes no number from the puzzles.
     shown_attempts = {}
     shown_counts = {}
     for segment in segments:
@@ -443,19 +464,65 @@ def assign_beats(findings, zones=None):
         for finding in segment["findings"]:
             if finding["check"]["verdict"] != "keep":
                 continue
-            if id(occurrence) not in shown_attempts:
-                shown_counts[id(state)] = shown_counts.get(id(state), 0) + 1
-                shown_attempts[id(occurrence)] = shown_counts[id(state)]
-            occurrence["count"] += 1
             zone = _zone_at(zones, finding["time_s"]) if zones else None
+            is_puzzle = not zones or (zone is not None and bool(zone["puzzle"]))
+            number = attempt = puzzle = None
+            if is_puzzle:
+                if id(occurrence) not in shown_attempts:
+                    shown_counts[id(state)] = shown_counts.get(id(state), 0) + 1
+                    shown_attempts[id(occurrence)] = shown_counts[id(state)]
+                puzzle = state["label"]
+                number = _number_for(state)
+                attempt = shown_attempts[id(occurrence)]
+            occurrence["count"] += 1
             finding["beat"] = {
                 "area": state["area"],
-                "puzzle": state["label"],
+                "puzzle": puzzle,
                 "zone": (zone["zone"] or None) if zone is not None else None,
-                "puzzle_number": _number_for(state),
-                "attempt": shown_attempts[id(occurrence)],
+                "puzzle_number": number,
+                "attempt": attempt,
                 "attempt_start_s": occurrence["start_s"],
                 "attempt_end_s": occurrence["end_s"],
                 "index": occurrence["count"],
             }
     return findings
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Re-run the beats step on a findings file, from a session log. No model call."
+    )
+    parser.add_argument("findings", help="findings JSON to regroup")
+    parser.add_argument("--log", required=True, help="session event log (JSONL)")
+    parser.add_argument(
+        "--video-flash-s",
+        type=float,
+        required=True,
+        help="video time of the first sync_flash",
+    )
+    parser.add_argument("-o", "--out", default=None, help="output path (required, never the input)")
+    args = parser.parse_args(argv)
+
+    if not args.out:
+        print("-o is required: this tool never overwrites its input file.", file=sys.stderr)
+        return 1
+    out_path = Path(args.out)
+    if out_path.resolve() == Path(args.findings).resolve():
+        print("-o must differ from the input file: this tool never overwrites its input.", file=sys.stderr)
+        return 1
+
+    data = findings_module.load(args.findings)
+    events = log_candidates.load_log(args.log)
+    zones = zone_intervals(events, args.video_flash_s) if events else []
+    assign_beats(data["findings"], zones=zones)
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    # Prove the regrouped file is still in the one format.
+    findings_module.load(out_path)
+    print(out_path)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

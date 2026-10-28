@@ -78,22 +78,54 @@ def test_sections_follow_the_mockup_order(redesign):
     ]
 
 
-def test_groups_and_cards_follow_beat_and_rank(redesign):
+def test_sections_and_cards_run_in_time_order(redesign):
     page = render_html(redesign)
     assert re.findall(r'<article class="card [^"]+" id="m(\d+)"', page) == [
-        "2", "9", "1", "3", "7", "4", "6", "5", "8"
+        "5", "8", "9", "2", "1", "3", "7", "6", "4"
     ]
     assert re.findall(
         r"<summary>([^<]*)<span class=\"note\">", page
     ) == [
+        "Hall, Puzzle 1: badge reader",
         "North room, Puzzle 2: weighted plates",
         "South room, Puzzle 3: crate shelf",
-        "Hall, Puzzle 1: badge reader",
     ]
-    # Only the puzzle that holds the lowest rank is open.
+    # Only the section that holds the lowest rank (1) is open.
     assert page.count('class="puzzle" open') == 1
     opened = page.index('class="puzzle" open')
     assert "North room, Puzzle 2: weighted plates" in page[opened:opened + 400]
+
+
+def _as_area_visit(finding, start_s, end_s):
+    finding["beat"].update(
+        puzzle=None, puzzle_number=None, attempt=None,
+        attempt_start_s=start_s, attempt_end_s=end_s,
+    )
+
+
+def test_a_beat_without_a_puzzle_renders_the_area_alone(redesign):
+    # Two visits to one area, in file order the later one first.
+    for finding in redesign["findings"]:
+        if finding["id"] == "f4":
+            _as_area_visit(finding, 740.0, 780.0)
+        if finding["id"] == "f6":
+            _as_area_visit(finding, 660.0, 710.0)
+    page = render_html(redesign)
+    titles = re.findall(r"<summary>([^<]*)<span class=\"note\">", page)
+    assert titles == [
+        "Hall, Puzzle 1: badge reader",
+        "North room, Puzzle 2: weighted plates",
+        "South room",
+        "South room",
+    ]
+    notes = re.findall(r'<summary>South room<span class="note">([^<]*)</span>', page)
+    assert notes == ["1 moment, 11:00-11:50", "1 moment, 12:20-13:00"]
+    south = page[page.index("<summary>South room"):]
+    assert "Puzzle" not in south.split("</details>")[0]
+    assert "Attempt" not in south
+    assert 'id="pin-m6"' in page
+    pinlist = page.split('<ol class="pinlist">')[1].split("</ol>")[0]
+    assert "crate shelf" not in pinlist
 
 
 @pytest.mark.parametrize("path", [SAMPLE, SAMPLE_B])
@@ -117,7 +149,9 @@ def test_every_string_from_the_file_is_escaped(redesign):
     redesign["findings"][0]["summary"] = payload
     redesign["findings"][0]["quote"] = payload
     page = render_html(redesign)
-    assert "<script>" not in page
+    # The page's own script is the only one.
+    assert "<script>alert(1)" not in page
+    assert page.count("<script") == 1
     assert page.count(html.escape(payload)) >= 7
 
 
@@ -200,10 +234,78 @@ def test_unexpected_friction_shows_its_text_and_no_meter(redesign):
     assert 'class="meter"' not in card
 
 
-def test_page_has_no_javascript(redesign):
+def test_page_has_one_inline_script_and_no_network(redesign):
     page = render_html(redesign)
+    lowered = page.lower()
+    assert lowered.count("<script") == 1
+    assert "src=" not in re.sub(r'<img src="data:[^"]*"|<video[^>]*>', "", page)
+    assert "javascript:" not in lowered
+    assert "eval(" not in page
+    assert "innerHTML" not in page
+    script = page[page.index("<script>"):page.index("</script>")]
+    assert "http" not in script
+
+
+def _route_times(redesign):
+    return [point[0] for point in redesign["route"]["points"]]
+
+
+def test_map_elements_carry_the_times_from_the_file(redesign):
+    page = render_html(redesign)
+    times = _route_times(redesign)
+    stamps = " ".join(str(t) for t in times)
+    polylines = re.findall(r'<polyline data-t="([^"]*)"[^>]*points="([^"]*)"', page)
+    assert len(polylines) == 2
+    for data_t, points in polylines:
+        assert data_t == stamps
+        # The no-script view keeps the whole route.
+        assert len(points.split(" ")) == len(times)
+    for finding in redesign["findings"]:
+        if finding["check"]["verdict"] == "keep":
+            assert re.search(
+                rf'id="pin-m{finding["rank"]}"[^>]*data-t="{finding["time_s"]}"', page
+            )
+    for index, marker in enumerate(redesign["markers"], start=1):
+        assert re.search(rf'id="pin-f{index}"[^>]*data-t="{marker["t"]}"', page)
+    arrow_times = re.findall(r'<path data-t="([^"]*)" d="M-16', page)
+    assert arrow_times
+    assert all(float(t) in times for t in arrow_times)
+    assert page.count(f'<g data-t="{times[-1]}">') == 1
+    pinlist = page.split('<ol class="pinlist">')[1].split("</ol>")[0]
+    assert len(re.findall(r'<li data-t="', pinlist)) == len(
+        [f for f in redesign["findings"] if f["check"]["verdict"] == "keep" and f.get("at")]
+    )
+
+
+def test_timeline_controls_are_hidden_until_the_script_runs(redesign):
+    page = render_html(redesign)
+    box = re.search(r'<div class="timeline"[^>]*>', page).group(0)
+    assert " hidden" in box
+    duration = int(redesign["session"]["duration_s"])
+    assert f'min="0" max="{duration}" step="1" value="{duration}"' in page
+    assert 'aria-label="Time in the recording"' in page
+    assert 'data-play="Play"' in page and 'data-pause="Pause"' in page
+
+
+def test_heat_is_not_on_the_slider_and_has_its_own_toggle(redesign):
+    page = render_html(redesign)
+    # The no-script view keeps the heat; the script hides it until the toggle is on.
+    assert '<g class="heat" aria-hidden="true">' in page
+    assert '<input type="checkbox" class="heat-on">' in page
+    assert "Heat, whole session" in page
+    script = page[page.index("<script>"):page.index("</script>")]
+    assert "t < max" not in script
+    assert 'heatBox.checked' in script
+    # A route with no heat has no toggle.
+    redesign["route"]["heat"] = []
+    assert 'class="heat-on"' not in render_html(redesign)
+
+
+@pytest.mark.parametrize("path", [SAMPLE, SAMPLE_B])
+def test_pages_with_no_map_have_no_timeline_and_no_script(path):
+    page = render_html(_data(path))
+    assert 'class="timeline"' not in page
     assert "<script" not in page.lower()
-    assert "javascript:" not in page.lower()
 
 
 def test_missing_map_hides_the_map_section_and_warns_once(redesign, capsys):

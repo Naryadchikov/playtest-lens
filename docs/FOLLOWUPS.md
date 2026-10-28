@@ -33,3 +33,9 @@ One list for things found but not fixed: a pre-existing review finding, a case t
 
 - The page still derives a few labels from the file's own lists: "N of M" in Across players (`len(players)`), "N moments" on a player chip and in a puzzle note, the span `(1:25)` on a card (`end_s - time_s`), the dropped count and the dropped list order (sorted by time). When the analyzer writes these in task 23b (`cross_player` counts, per-finding span, dropped order), make the page copy them.
 - Without `session.level`, the map's alt text and title say "the level". Hide or reword when the level is missing.
+
+## Lobby report fixes (task 25, 2026-10-28)
+
+- Neighbouring sections with one area name (two "CEO Office" sections at 3:18 and 3:52) could merge on the page. Left as two. From task 25, 2026-10-28.
+- A "recent trail only" option on the map timeline (show only the last N seconds of route) if the growing route still overlaps. Sasha's call on N. From task 25, 2026-10-28.
+- Unzoned moments in a zoned session still take the checker's free area wording ("Central Office - Meeting Room Hunt", "Office Complex"), and the fuzzy matching can file a later moment under an older wording (rank 20 at 8:22, the crash, lands in the paper hunt). From task 25, 2026-10-28.

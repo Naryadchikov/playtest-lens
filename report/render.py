@@ -3,8 +3,14 @@
 The page only renders what the file holds. It computes nothing beyond
 formatting seconds as m:ss, converting a route or pin world point to
 image pixels with the map's JSON, and the structural counts a group or
-a pin list needs. Group order and card order come from the file's
-rank and beat fields.
+a pin list needs. Section and card order come from the file's times
+and beat fields: sections by their start, cards by time, ties by rank.
+
+One small inline script drives the map's time control. It only shows
+or hides route points, arrows, pins, markers and the heat layer by the
+times the file holds (written into data-t attributes), and moves a dot
+to an existing route point. It never makes a finding, a time, a
+position or a count. Without script the page shows the whole map.
 
 The look follows docs/design/report-mockup.html. All page wording lives
 in LABELS, so changing a string never means touching the markup.
@@ -97,7 +103,8 @@ LABELS = {
         "note": "Chips in the accent outline are this page's player. Others come from their own reports.",
     },
     "moments": {
-        "sub": "Grouped by area, puzzle and attempt. The worst puzzle is open. Time is from the recording's start flash.",
+        # Proposal (Claude Sonnet 5.5, 2026-10-28, from the task 25 plan), not Sasha's wording.
+        "sub": "In time order. A room with a puzzle line groups its attempts. Time is from the recording's start flash.",
         "fallback": "Moments",
         "attempt": "Attempt {n} ({start}-{end})",
         "attempt_note": "{attempts}, {moments}, {span}",
@@ -123,6 +130,16 @@ LABELS = {
             ("<svg viewBox=\"0 0 28 20\" aria-hidden=\"true\"><polygon points=\"14,2 22,6 22,14 14,18 6,14 6,6\" fill=\"#0b1020\" stroke=\"#fff\" stroke-dasharray=\"3 2\"/></svg>", "F9: the player flagged confusion"),
         ],
         "legend_title": "Map legend and pin list",
+    },
+    # Proposals (Claude Opus 5.5 plan, task 25, 2026-10-28), not Sasha's wording.
+    # "heat" is the toggle's label (a proposal by Claude Sonnet 5.5, 2026-10-28).
+    "timeline": {
+        "heat": "Heat, whole session",
+        "play": "Play",
+        "pause": "Pause",
+        "slider": "Time in the recording",
+        "readout": "{time} of {duration}",
+        "legend": "Where the player is at the slider's time",
     },
     "dropped": {
         "note": "{n} candidates the check did not keep",
@@ -157,7 +174,7 @@ STYLE = """
 body { margin: 0; background: var(--bg); color: var(--ink); font: var(--fs-b)/1.5 var(--font); }
 main { max-width: 1040px; margin: 0 auto; padding: var(--s5) var(--s4) var(--s6); }
 a { color: var(--accent); }
-a:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+a:focus-visible, summary:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 h1 { font-size: var(--fs-xl); line-height: 1.2; margin: 0 0 var(--s2); }
 h2 { font-size: var(--fs-l); margin: var(--s6) 0 var(--s3); }
 h3 { font-size: var(--fs-m); margin: 0 0 var(--s1); }
@@ -197,9 +214,19 @@ a.chip:hover { border-color: var(--accent); }
 
 /* map */
 .where { display: grid; grid-template-columns: minmax(0, 480px) 1fr; gap: var(--s5); align-items: start; }
+.mapcol { min-width: 0; }
 .map { position: relative; margin: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #0a0d14; }
 .map img, .map svg { display: block; width: 100%; height: auto; }
 .map svg { position: absolute; inset: 0; height: 100%; }
+.timeline { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); margin-top: var(--s2); }
+.timeline[hidden], [data-needs-script][hidden] { display: none; }
+.timeline button { font: inherit; font-size: var(--fs-s); font-weight: 600; min-width: 5em; padding: var(--s1) var(--s3); border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.timeline input[type=range] { flex: 1 1 8em; min-width: 0; accent-color: var(--accent); }
+.timeline label { font-size: var(--fs-s); color: var(--ink2); white-space: nowrap; }
+.timeline output { font-size: var(--fs-s); color: var(--ink2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.later { display: none; }
+.pinlist .dim { opacity: .4; }
+.now { pointer-events: none; }
 .pin { cursor: pointer; --pf: #ff8a5c; }
 .pin.confused { --pf: #f2c14e; } .pin.surprised { --pf: #4fd1c5; } .pin.bug { --pf: #ff7aa8; }
 .pin .shape { fill: var(--pf); stroke: #fff; stroke-width: 6; }
@@ -262,6 +289,7 @@ details.puzzle > summary .note { font-weight: 400; margin-left: var(--s2); }
   body { background: #fff; color: #000; } main { max-width: none; padding: 0; }
   .card, .group, .tile { break-inside: avoid; } .clip, .to-map { display: none; }
   .map { max-width: 300px; }
+  .timeline, [data-needs-script] { display: none; }
 }
 """
 
@@ -338,13 +366,14 @@ def _kind(kind):
 
 def _pin_title(finding):
     beat = finding.get("beat") or {}
-    puzzle = beat.get("puzzle") or beat.get("area")
-    if not puzzle:
+    # A beat with no puzzle line is an area visit: the area alone.
+    title = beat.get("puzzle") or beat.get("area")
+    if not title:
         return LABELS["moments"]["fallback"]
     attempt = beat.get("attempt")
     if isinstance(attempt, int) and attempt > 1:
-        return f"{puzzle}, attempt {attempt}"
-    return puzzle
+        return f"{title}, attempt {attempt}"
+    return title
 
 
 def _render_header(data):
@@ -476,7 +505,7 @@ def _render_heat(route, meta):
     if not route["heat"]:
         return []
     scale = _px_per_m(meta)
-    parts = ['<g aria-hidden="true">']
+    parts = ['<g class="heat" aria-hidden="true">']
     for spot in route["heat"]:
         cx, cy = world_to_px(meta, spot["x"], spot["z"])
         radius = spot["r_m"] * scale
@@ -497,7 +526,7 @@ def _route_pixels(route, meta):
     return [world_to_px(meta, point[1], point[2]) for point in route["points"]]
 
 
-def _render_arrows(pixels):
+def _render_arrows(pixels, times):
     arrows = []
     for index in range(4, len(pixels), 4):
         x0, y0 = pixels[index - 1]
@@ -506,7 +535,7 @@ def _render_arrows(pixels):
             continue
         angle = math.degrees(math.atan2(y1 - y0, x1 - x0))
         arrows.append(
-            f'<path d="M-16,-12L16,0L-16,12z" '
+            f'<path data-t="{times[index]}" d="M-16,-12L16,0L-16,12z" '
             f'transform="translate({x1:.1f} {y1:.1f}) rotate({angle:.0f}) scale(1.3)"/>'
         )
     return arrows
@@ -517,14 +546,16 @@ def _render_route(route, meta):
     if len(pixels) < 2:
         return []
     points = " ".join(f"{x:.1f},{y:.1f}" for x, y in pixels)
+    times = [point[0] for point in route["points"]]
+    stamps = " ".join(str(t) for t in times)
     start_x, start_y = pixels[0]
     end_x, end_y = pixels[-1]
     parts = [
         '<g aria-hidden="true" fill="none" stroke-linejoin="round" stroke-linecap="round">',
-        f'<polyline stroke="#0a0d14" stroke-width="16" points="{points}"/>',
-        f'<polyline stroke="#dbe7ff" stroke-width="7" points="{points}"/>',
+        f'<polyline data-t="{stamps}" stroke="#0a0d14" stroke-width="16" points="{points}"/>',
+        f'<polyline data-t="{stamps}" stroke="#dbe7ff" stroke-width="7" points="{points}"/>',
     ]
-    arrows = _render_arrows(pixels)
+    arrows = _render_arrows(pixels, times)
     if arrows:
         parts.append(
             '<g fill="#fff" stroke="#0a0d14" stroke-width="4">'
@@ -534,14 +565,17 @@ def _render_route(route, meta):
     parts.append(
         f'<circle cx="{start_x:.1f}" cy="{start_y:.1f}" r="24" fill="#fff" '
         'stroke="#0a0d14" stroke-width="6"/>'
-        f'<circle cx="{end_x:.1f}" cy="{end_y:.1f}" r="24" fill="#0a0d14" '
-        'stroke="#fff" stroke-width="6"/>'
         f'<text x="{start_x:.1f}" y="{start_y + 58:.1f}" class="halo" '
         'style="font-size:34px">start</text>'
+        f'<g data-t="{times[-1]}">'
+        f'<circle cx="{end_x:.1f}" cy="{end_y:.1f}" r="24" fill="#0a0d14" '
+        'stroke="#fff" stroke-width="6"/>'
         f'<text x="{end_x:.1f}" y="{end_y + 68:.1f}" class="halo" '
-        'style="font-size:34px" dx="-70">end</text>'
+        'style="font-size:34px" dx="-70">end</text></g>'
     )
     parts.append("</g>")
+    # The player's place at the slider's time: the script moves it to a route point.
+    parts.append('<circle class="now later" r="22" fill="#3d5afe" stroke="#fff" stroke-width="7"/>')
     return parts
 
 
@@ -557,6 +591,7 @@ def _render_pins(pinned, meta):
         text_y = 22 if info["class"] == "bug" else 13
         parts.append(
             f'<a class="pin {info["class"]}" id="pin-m{rank}" href="#m{rank}" '
+            f'data-t="{finding["time_s"]}" '
             f'aria-label="{_e(label)}" transform="translate({x:.1f} {y:.1f})">'
             f'<use href="#{info["shape"]}" class="shape"/>'
             f'<text y="{text_y}">{rank}</text></a>'
@@ -575,22 +610,29 @@ def _render_markers(markers, meta, id_to_rank):
         if target is not None:
             parts.append(
                 f'<a class="pin f9" id="pin-f{index}" href="#m{target}" '
+                f'data-t="{marker["t"]}" '
                 f'aria-label="{_e(label)}" transform="{transform}">'
                 '<use href="#sh-f9" class="shape"/><text y="10">F9</text></a>'
             )
         else:
             parts.append(
-                f'<g class="pin f9" id="pin-f{index}" '
+                f'<g class="pin f9" id="pin-f{index}" data-t="{marker["t"]}" '
                 f'aria-label="{_e(label)}" transform="{transform}">'
                 '<use href="#sh-f9" class="shape"/><text y="10">F9</text></g>'
             )
     return parts
 
 
-def _render_legend():
+def _render_legend(timeline):
     items = []
     for graphic, text in LABELS["map"]["legend"]:
         items.append(f"<li>{graphic}{_e(text)}</li>")
+    if timeline:
+        items.append(
+            '<li data-needs-script hidden><svg viewBox="0 0 28 20" aria-hidden="true">'
+            '<circle cx="14" cy="10" r="6" fill="#3d5afe" stroke="#fff" stroke-width="2"/></svg>'
+            f'{_e(LABELS["timeline"]["legend"])}</li>'
+        )
     for kind in KIND_ORDER:
         info = _kind(kind)
         items.append(
@@ -599,7 +641,107 @@ def _render_legend():
     return items
 
 
-def _render_map_section(data, map_state, pinned, markers, id_to_rank):
+# The time control's markup. It is hidden until the script runs, so a
+# reader without script, or a print, sees the whole map and no dead
+# controls. Wording reaches the script through data- attributes.
+def _render_timeline(duration_s, has_heat):
+    words = LABELS["timeline"]
+    total = int(duration_s)
+    return (
+        f'<div class="timeline" hidden data-needs-script data-play="{_e(words["play"])}" '
+        f'data-pause="{_e(words["pause"])}" data-readout="{_e(words["readout"])}">'
+        f'<button type="button">{_e(words["play"])}</button>'
+        f'<input type="range" min="0" max="{total}" step="1" value="{total}" '
+        f'aria-label="{_e(words["slider"])}">'
+        f'<output>{_e(words["readout"].format(time=_mss(total), duration=_mss(total)))}</output>'
+        + (
+            f'<label class="heat-toggle"><input type="checkbox" class="heat-on"> '
+            f'{_e(words["heat"])}</label>'
+            if has_heat
+            else ""
+        )
+        + "</div>"
+    )
+
+
+# Show or hide by the file's times, move the dot to a route point. No
+# wording, no computing of findings, times, positions or counts.
+SCRIPT = """
+(function () {
+  var box = document.querySelector(".timeline");
+  var map = document.getElementById("map");
+  if (!box || !map) return;
+  var SPEED = 10;
+  var slider = box.querySelector("input[type=range]");
+  var heatBox = box.querySelector(".heat-on");
+  var button = box.querySelector("button");
+  var readout = box.querySelector("output");
+  var now = map.querySelector(".now");
+  var heat = map.querySelector(".heat");
+  var max = Number(slider.max);
+  var routes = Array.prototype.map.call(map.querySelectorAll("polyline[data-t]"), function (el) {
+    return { el: el, pts: el.getAttribute("points").split(" "), t: el.getAttribute("data-t").split(" ").map(Number) };
+  });
+  var timed = map.querySelectorAll("[data-t]:not(polyline)");
+  var listed = document.querySelectorAll(".pinlist [data-t]");
+  var current = max, playing = false, last = 0;
+  function mss(s) { s = Math.floor(s); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
+  function reached(times, t) { var n = 0; while (n < times.length && times[n] <= t) n++; return n; }
+  function show(t) {
+    var n = 0;
+    routes.forEach(function (r) {
+      n = reached(r.t, t);
+      r.el.setAttribute("points", r.pts.slice(0, n).join(" "));
+    });
+    if (now) {
+      now.classList.toggle("later", n === 0);
+      if (n > 0) {
+        var xy = routes[0].pts[n - 1].split(",");
+        now.setAttribute("cx", xy[0]);
+        now.setAttribute("cy", xy[1]);
+      }
+    }
+    Array.prototype.forEach.call(timed, function (el) { el.classList.toggle("later", Number(el.getAttribute("data-t")) > t); });
+    Array.prototype.forEach.call(listed, function (el) { el.classList.toggle("dim", Number(el.getAttribute("data-t")) > t); });
+    var text = box.getAttribute("data-readout").replace("{time}", mss(t)).replace("{duration}", mss(max));
+    readout.textContent = text;
+    slider.setAttribute("aria-valuetext", text);
+  }
+  function setPlaying(on) {
+    playing = on;
+    button.textContent = box.getAttribute(on ? "data-pause" : "data-play");
+  }
+  function tick(stamp) {
+    if (!playing) return;
+    current = Math.min(max, current + SPEED * (stamp - last) / 1000);
+    last = stamp;
+    slider.value = Math.floor(current);
+    show(current);
+    if (current >= max) setPlaying(false); else requestAnimationFrame(tick);
+  }
+  button.addEventListener("click", function () {
+    if (playing) { setPlaying(false); return; }
+    if (current >= max) current = 0;
+    setPlaying(true);
+    last = performance.now();
+    requestAnimationFrame(tick);
+  });
+  slider.addEventListener("input", function () {
+    setPlaying(false);
+    current = Number(slider.value);
+    show(current);
+  });
+  // The heat is the whole session's sum, never part of the slider's view.
+  function showHeat() { if (heat) heat.classList.toggle("later", !(heatBox && heatBox.checked)); }
+  if (heatBox) heatBox.addEventListener("change", showHeat);
+  showHeat();
+  Array.prototype.forEach.call(document.querySelectorAll("[data-needs-script]"), function (el) { el.removeAttribute("hidden"); });
+  show(current);
+})();
+"""
+
+
+def _render_map_section(data, map_state, pinned, markers, id_to_rank, timeline):
     route = data["route"]
     meta, data_uri = map_state
     width = meta["px_width"]
@@ -612,6 +754,7 @@ def _render_map_section(data, map_state, pinned, markers, id_to_rank):
         '<section aria-labelledby="where">',
         f'<h2 id="where">{LABELS["sections"]["where"]}</h2>',
         '<div class="where">',
+        '<div class="mapcol">',
         f'<figure class="map" id="map">',
         f'<img src="{data_uri}" width="{width}" height="{height}" alt="{alt}">',
         f'<svg viewBox="0 0 {width} {height}" aria-labelledby="map-title">',
@@ -633,17 +776,20 @@ def _render_map_section(data, map_state, pinned, markers, id_to_rank):
         f'{_e(LABELS["map"]["figcaption"])}</figcaption>'
     )
     parts.append("</figure>")
+    if timeline:
+        parts.append(_render_timeline(data["session"]["duration_s"], bool(route["heat"])))
+    parts.append("</div>")
 
     parts.append(
         f'<aside class="legend" aria-label="{_e(LABELS["map"]["legend_title"])}">'
     )
-    parts.append(f'<ul>{"".join(_render_legend())}</ul>')
+    parts.append(f'<ul>{"".join(_render_legend(timeline))}</ul>')
     parts.append('<ol class="pinlist">')
     for finding in pinned:
         info = _kind(finding["kind"])
         rank = finding["rank"]
         parts.append(
-            f'<li><a href="#m{rank}"><span class="num">{rank}</span>'
+            f'<li data-t="{finding["time_s"]}"><a href="#m{rank}"><span class="num">{rank}</span>'
             f'<span class="k k-{info["class"]}"></span>{_e(_pin_title(finding))}'
             f'<time>{_mss(finding["time_s"])}</time></a></li>'
         )
@@ -769,10 +915,19 @@ def _render_card(finding, markers_by_moment, pins_available):
     return "\n".join(parts)
 
 
+# A puzzle beat groups by area and puzzle, its attempts inside. A beat
+# with no puzzle is an area visit: one group per visit, no attempts.
 def _beat_key(finding):
     beat = finding.get("beat")
     if not beat:
         return None
+    if beat.get("puzzle_number") is None:
+        return (
+            "visit",
+            beat.get("area"),
+            beat.get("zone"),
+            beat.get("attempt_start_s"),
+        )
     return (
         beat.get("area"),
         beat.get("puzzle"),
@@ -802,6 +957,8 @@ def _kept_groups(kept):
     return groups
 
 
+# "Puzzle n: name" only for a beat that has both. An area visit shows
+# the area alone.
 def _group_title(beat):
     if not beat:
         return LABELS["moments"]["fallback"]
@@ -811,13 +968,8 @@ def _group_title(beat):
     parts = []
     if area:
         parts.append(area)
-    if puzzle and puzzle != area:
-        if number is not None:
-            parts.append(f"Puzzle {number}: {puzzle}")
-        else:
-            parts.append(puzzle)
-    elif number is not None:
-        parts.append(f"Puzzle {number}")
+    if puzzle and number is not None:
+        parts.append(f"Puzzle {number}: {puzzle}")
     return ", ".join(parts) or LABELS["moments"]["fallback"]
 
 
@@ -855,6 +1007,13 @@ def _render_groups(kept, markers_by_moment, pins_available):
     if not groups:
         return []
     open_group = min(groups, key=lambda g: min(f["rank"] for f in g["findings"]))
+    # Sections run in time order: by the earliest start, ties to the lower rank.
+    groups.sort(
+        key=lambda g: (
+            _group_span(g["findings"])[0],
+            min(f["rank"] for f in g["findings"]),
+        )
+    )
     out = []
     for group in groups:
         beat = group["findings"][0].get("beat") or {}
@@ -882,7 +1041,7 @@ def _render_groups(kept, markers_by_moment, pins_available):
         for attempt_key in attempt_keys:
             findings = group["attempts"][attempt_key]
             attempt = attempt_key[0]
-            findings = sorted(findings, key=lambda f: f["rank"])
+            findings = sorted(findings, key=lambda f: (f["time_s"], f["rank"]))
             if attempt is not None:
                 attempt_start = _first_set(
                     attempt_key[1], min(f["time_s"] for f in findings)
@@ -958,6 +1117,8 @@ def render_html(data, maps_dir=None):
                 file=sys.stderr,
             )
     pins_available = map_state is not None
+    # The time control needs a drawn route: without one the page has no script.
+    timeline = pins_available and len(route["points"]) >= 2
     pinned = [
         finding for finding in kept if finding.get("at") is not None
     ] if pins_available else []
@@ -985,7 +1146,9 @@ def render_html(data, maps_dir=None):
         parts.extend(_render_across(data["cross_player"], id_to_rank))
     if map_state is not None:
         parts.extend(
-            _render_map_section(data, map_state, pinned, markers, id_to_rank)
+            _render_map_section(
+                data, map_state, pinned, markers, id_to_rank, timeline
+            )
         )
 
     parts.extend(
@@ -1001,7 +1164,10 @@ def render_html(data, maps_dir=None):
     if dropped:
         parts.extend(_render_dropped(dropped))
 
-    parts.extend(["</main>", "</body>", "</html>", ""])
+    parts.append("</main>")
+    if timeline:
+        parts.append(f"<script>{SCRIPT}</script>")
+    parts.extend(["</body>", "</html>", ""])
     return "\n".join(parts)
 
 
