@@ -12,11 +12,12 @@ Backup plan if Claude's usage runs out before Saturday: docs/BACKUP_ORCHESTRATOR
 
 The pipeline is one path: Spark 1.2 windowed candidates, the checking pass, beats (Area, Puzzle, Attempt, Sub-beat), the cross-player summary, the report. Telemetry volumes, a schema 1 log with pause and perf lines, and the COGITO fork are in place. Committed and pushed 2026-10-28: the beats work and the logger schema (fork `playtest-lens` at `dc8c771`, main `3a090ad` plus the docs commit). Grok's beats review ran 7 rounds; round 7 is PASS (docs/reviews/06-area-beats-grok.md). 102 tests pass, Talos recompute 0 mismatches. The non-blocking grouping limits are in docs/FOLLOWUPS.md: if a COGITO run shows them, replace the fuzzy matching with checker-chosen ids.
 
-## In flight (2026-10-28, later)
+## In flight (2026-10-28, evening)
 
-- DeepSeek on task 21 (docs/tasks/21-open-weights.md): Baseten backend for Muse Spark Open, in `.worktrees/ds-21`. Baseten key and model `meta-models/muse-spark-open-1026` answered a first text call.
-- Done: Spark 1.2 and its contributor variant as the checker on the 35 Talos clips (results in PLAN.md); `muse-spark-1.2-contributor` is now the default of check.py and spark_test.py. Task 21 is under Grok review (branch `ds/21-open-weights`, 204776f).
-- Grok bot brief: docs/tasks/22-grok-bot.md. Sasha's COGITO steps: docs/COGITO_VOLUMES.md.
+- Done and pushed: Baseten open-weights backend (task 21, Grok PASS), the Grok bot's Godot work (task 22, GLM PASS; fork `playtest-lens` at `b0a52cf`), contributor Spark as the default, tester guide log path.
+- DeepSeek on task 23 (docs/tasks/23-report-redesign.md): the report page rebuilt from the Sonnet mockup (docs/design/), render only, in `.worktrees/ds-23`. Then a fresh Grok review. Task 23b (the analyzer computes route, heat, pins, summary, cross-player from the log) is next and needs Sasha's yes.
+- Grok bot, package 2 (docs/tasks/24-grok-bot-2.md): scene inventory and volume report, pasted by Sasha, in progress on the bot's VM.
+- Sasha, in a few hours: telemetry volumes in COGITO (docs/COGITO_VOLUMES.md), then the Mac play session with recording (steps in the same file), then the Windows build test with OBS.
 
 ## Remind Sasha
 
