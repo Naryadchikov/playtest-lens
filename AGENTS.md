@@ -48,6 +48,8 @@ The arrangement from 2026-10-28 (Sasha's words are quoted in [DECISIONS.md](DECI
 
 Grok runs only through Cursor (Sasha's rule for his projects; it may change). Model costs: Modal bills DeepSeek per token ($0.25 in, $0.005 cached in, $1.00 out per million); Cursor is close to unlimited.
 
+Backup mode is on from 2026-10-28 (Sasha's words are in DECISIONS.md; the arrangement is docs/BACKUP_ORCHESTRATOR.md). Until Claude's limits return, Grok 4.7 orchestrates through Cursor, DeepSeek still writes the analyzer and the report, a fresh Grok reviews that work, and GLM 5.3 (routine) or Kimi K3 (milestones) on Modal reviews Grok's work.
+
 ## When to switch to more Claude
 
 "Goes poorly" means bad software (Sasha's words: "goes poorly that we are getting bad software"). A switch is per area (the analyzer, the report page, the Godot side), not for the whole project. The orchestrator tells Sasha when a trigger trips and asks before switching.

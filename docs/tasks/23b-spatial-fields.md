@@ -38,3 +38,7 @@ Read first: `docs/tasks/23-report-redesign.md` (the field shapes), `analyzer/fin
 ## Done means and report
 
 The tests pass, the CLI works, the one path in `check.py` is wired and the rendered page shows route, heat, pins, markers and tiles from computed data. Report in at most 20 lines: files, commands with exit codes, evidence paths, what you did not check, and anything in this brief you found inconsistent (say so, do not silently change it).
+
+## What came back (2026-10-28)
+
+DeepSeek finished before Claude's limit cut the orchestrator off. Uncommitted on `ds/23b-spatial` in `.worktrees/ds-23b`. The author kept the brief's "1 moments" sentence verbatim and said so. The previous orchestrator (Claude Sonnet 5.5) then changed the template so one kept finding reads "1 moment worth a look: 1 stuck." and updated the matching test. That wording is still a proposal. The backup orchestrator reran `pytest -q` with the macOS `say` clip deselected: 159 passed. Evidence: `runs/redesign/page-spatial.html`, `runs/redesign/findings-spatial.json`. A browser check of that page showed the Lobby map, a heat spot, pins 1 to 3, and the verdict sentence. Review not merged yet.

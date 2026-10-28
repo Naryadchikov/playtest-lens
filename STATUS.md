@@ -4,20 +4,22 @@ The orchestrator keeps this file up to date at each milestone and at the end of 
 
 ## Roles (Sasha, 2026-10-28, DECISIONS.md)
 
-Orchestrator: Claude Sonnet 5.5 (Claude Code, about $10 of usage; more Claude returns Saturday evening 2026-10-31). Main author: DeepSeek V4.1 Flash 1017 on Modal through `tools/run-modal-agent.sh`. Second author and every reviewer: Grok 4.7 xhigh through Cursor. Muse Wonder is not called, and the Meta pool (about $23.90) is kept for the product's video and audio processing only. The open-weights mode is separate, so Sasha can enter several hackathon categories. His Windows machine may join later. Sasha's Grok bot (own VM) takes parallel Godot work. Modal endpoint `deepseek-1017` is live and smoke-tested (a Read tool call through the wrapper worked).
+Backup mode is on. Claude Sonnet 5.5 hit its limit mid task (access returns 2026-11-01 00:00 UTC). Orchestrator until then: Grok 4.7 through Cursor (docs/BACKUP_ORCHESTRATOR.md). Main author: DeepSeek V4.1 Flash 1017 on Modal. Reviewer of that work: a fresh Grok 4.7. Reviewer of Grok's work: GLM 5.3 (routine) or Kimi K3 (milestones) on Modal. Muse Wonder is not called. The Meta pool (about $23.90) stays for the product's video and audio only. Open-weights mode is Baseten. Sasha's Grok bot and, if needed, his Windows machine stay as before.
 
-Backup plan if Claude's usage runs out before Saturday: docs/BACKUP_ORCHESTRATOR.md. Going public is the last step: docs/PUBLIC_CHECKLIST.md.
+Going public is the last step: docs/PUBLIC_CHECKLIST.md.
 
-## Where things stand (2026-10-28)
+## Where things stand (2026-10-28, evening)
 
-The pipeline is one path: Spark 1.2 windowed candidates, the checking pass, beats (Area, Puzzle, Attempt, Sub-beat), the cross-player summary, the report. Telemetry volumes, a schema 1 log with pause and perf lines, and the COGITO fork are in place. Committed and pushed 2026-10-28: the beats work and the logger schema (fork `playtest-lens` at `dc8c771`, main `3a090ad` plus the docs commit). Grok's beats review ran 7 rounds; round 7 is PASS (docs/reviews/06-area-beats-grok.md). 102 tests pass, Talos recompute 0 mismatches. The non-blocking grouping limits are in docs/FOLLOWUPS.md: if a COGITO run shows them, replace the fuzzy matching with checker-chosen ids.
+The pipeline on main is one path: Spark 1.2 windowed candidates, the checking pass, beats, the cross-player summary, the report. Report redesign merged at `e33c046` (Grok review round 2 PASS). Fork `playtest-lens` at `b0a52cf`. Main is `020917a`, 2 commits ahead of origin (the 23b and 23c briefs only), not pushed.
 
-## In flight (2026-10-28, evening)
+## In flight
 
-- Done and pushed: Baseten open-weights backend (task 21, Grok PASS), the Grok bot's Godot work (task 22, GLM PASS; fork `playtest-lens` at `b0a52cf`), contributor Spark as the default, tester guide log path.
-- Done: report page redesign (task 23), merged e33c046 after Grok review round 2 PASS. Fictional fixture page: `runs/redesign/page.html` (git-ignored). Nobody has looked at it in a browser yet: Sasha judges the look. Task 23b (the analyzer computes route, heat, pins, summary, cross-player from the log) is next and needs Sasha's yes.
-- Grok bot, package 2 (docs/tasks/24-grok-bot-2.md): scene inventory and volume report, pasted by Sasha, in progress on the bot's VM.
-- Sasha, in a few hours: telemetry volumes in COGITO (docs/COGITO_VOLUMES.md), then the Mac play session with recording (steps in the same file), then the Windows build test with OBS.
+- Task 23c is merged: each findings file gets its Across players block. Grok review PASS, no nits (`docs/reviews/10-cross-player-grok.md`). Tests: 147 passed, 1 deselected (`test_extract_audio_from_say_clip`, unrelated, fails inside the sandbox).
+- Task 23b is still uncommitted in `.worktrees/ds-23b`. Tests there: 159 passed, 1 deselected. A fresh Grok review is still running. Not merged.
+- The previous orchestrator then changed the verdict template so one kept finding reads "1 moment worth a look: 1 stuck." The author had kept "1 moments" verbatim. Tests match the new sentence. Wording and heat thresholds stay proposals.
+- Fresh Grok reviews of both diffs are running. Not merged. Reports will be `docs/reviews/09-spatial-fields-grok.md` and `docs/reviews/10-cross-player-grok.md`.
+- Grok bot package 2 (docs/tasks/24-grok-bot-2.md): still with Sasha's bot. Not checked this turn.
+- Sasha, when he is ready: telemetry volumes (docs/COGITO_VOLUMES.md), then the Mac play session, then the Windows build with OBS.
 
 ## Remind Sasha
 
@@ -25,14 +27,14 @@ The pipeline is one path: Spark 1.2 windowed candidates, the checking pass, beat
 
 ## Next
 
-1. Sasha plays COGITO with telemetry volumes, recording before New Game.
-2. Judgement pass on the first log-zoned report, then tune idle, backtrack and view-turn numbers.
-3. Open-weights mode (Spark Open, Baseten key in the Keychain, or Modal's Shared Endpoint for Muse Spark Open).
+1. Read the two Grok reviews, then commit what passes.
+2. Sasha plays COGITO with telemetry volumes, recording before New Game.
+3. Judgement pass on the first log-zoned report, then tune idle, backtrack and view-turn numbers.
 
 ## Open questions for Sasha
 
-Answered: the Muse balance and the $150 API credits are one pool, about $23.90 (so every Wonder check draws on it), and Modal credits do pay for Shared Endpoint tokens. Open: the open-weights host and the checker model, in the plan sent to Sasha.
+Nothing blocking. The verdict sentence and the heat thresholds are proposals. The report look is still his to judge. The open-weights host is decided (Baseten). The checker stays contributor Spark 1.2 for now.
 
 ## Credits used
 
-Meta API and Muse Code, one pool: about $23.90 left (Sasha, 2026-10-28). Meta API tracked in runs/costs.jsonl: $13.09 of $150 (Spark passes, three Talos checking runs, transcripts), at 2026-10-28. Modal: about $0.02, paid from credits (billing summary shows Credits -0.02, Billed $0.00). Baseten: not used yet.
+Meta API and Muse Code, one pool: about $23.90 left (Sasha, 2026-10-28). Meta API tracked in runs/costs.jsonl: $13.09 of $150, unchanged this turn (no Meta API call). Modal before these two runs: about $0.02. The Claude harness priced the DeepSeek sessions at $3.86 (23b) and $2.26 (23c) using Anthropic rates, which is not the Modal bill. At DeepSeek's published rates the tokens are about $0.16. Modal billing was not refreshed this turn. Baseten: not used yet.
