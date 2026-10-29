@@ -103,29 +103,24 @@ def _moments_for_cut(recording, prompt, model, start, seconds, tmp_dir, stem):
         recording, Path(tmp_dir) / f"converted-{start:g}.mp4", start=start, seconds=seconds
     )
     call_prompt = prompt
-    clip_start = None
-    # Open weights sees stills and no soundtrack. The words, and frame
-    # times, are what turn an empty list into moments.
+    # The open model hears the wav; the transcript is the text quotes are checked against.
     if str(model).startswith("meta-models/"):
         wav = extract_audio(converted, Path(tmp_dir) / f"audio-{start:g}.wav")
         spoken = client_module.transcribe(
             wav, purpose=f"spark_test:{recording.name}"
         ).get("transcript") or ""
         call_prompt = (
-            "What the player said in this clip:\n"
+            "What the player said in this clip (Voice Transcribe, may be empty):\n"
             + (spoken.strip() or "(nothing transcribed)")
-            + "\n\nEach frame is labeled with seconds from the start of this clip. "
-            "time_s in your answer is seconds from the start of this clip, not the whole recording.\n\n"
+            + "\n\n"
             + prompt
         )
-        clip_start = 0.0
     try:
         reply = client_module.call_model(
             model=model,
             prompt=call_prompt,
             video_path=converted,
             purpose=f"spark_test:{recording.name}",
-            clip_start_s=clip_start,
         )
     except SystemExit:
         raise

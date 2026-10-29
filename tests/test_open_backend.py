@@ -1,11 +1,11 @@
+import base64
 import json
-import subprocess
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 from analyzer import client
-from tools.video import sample_frames
 
 OPEN_MODEL = "meta-models/muse-spark-open-1026"
 PROMPT = "check this clip"
@@ -70,15 +70,17 @@ class FakeOpenClient:
         self.chat = SimpleNamespace(completions=self.completions)
 
 
+# A fake extract_audio that writes the wav bytes held in the returned box.
 @pytest.fixture
-def frames(tmp_path, monkeypatch):
-    paths = []
-    for index, data in enumerate((b"jpeg-one", b"jpeg-two"), start=1):
-        path = tmp_path / f"frame-{index:03d}.jpg"
-        path.write_bytes(data)
-        paths.append(path)
-    monkeypatch.setattr(client, "sample_frames", lambda *args, **kwargs: list(paths))
-    return paths
+def wav(monkeypatch):
+    box = {"bytes": b"wav-bytes"}
+
+    def fake_extract_audio(video, output_path, *args, **kwargs):
+        Path(output_path).write_bytes(box["bytes"])
+        return Path(output_path)
+
+    monkeypatch.setattr(client, "extract_audio", fake_extract_audio)
+    return box
 
 
 def _video(tmp_path):
@@ -99,14 +101,14 @@ def _call(tmp_path, fake, *, prompt=PROMPT, video=None):
     )
 
 
-def test_open_model_routes_to_baseten_chat_and_strips_marker(tmp_path, frames):
+def test_open_model_routes_to_baseten_chat_and_strips_marker(tmp_path, wav):
     fake = FakeOpenClient()
     reply = _call(tmp_path, fake)
     assert len(fake.completions.calls) == 1
     assert client.extract_text(reply) == json.dumps(VERDICT)
 
 
-def test_open_request_shape(tmp_path, frames):
+def test_open_request_shape(tmp_path, wav):
     fake = FakeOpenClient()
     _call(tmp_path, fake)
     request = fake.completions.calls[0]
@@ -116,36 +118,28 @@ def test_open_request_shape(tmp_path, frames):
     message = request["messages"][0]
     assert message["role"] == "user"
     content = message["content"]
-    images = [part for part in content if part.get("type") == "image_url"]
-    texts = [part for part in content if part.get("type") == "text"]
-    assert len(images) == len(frames)
-    assert all(
-        part["image_url"]["url"].startswith("data:image/jpeg;base64,") for part in images
-    )
-    assert texts == [{"type": "text", "text": PROMPT}]
-    assert not any(part.get("type") == "input_audio" for part in content)
+    assert [part["type"] for part in content] == ["video_url", "input_audio", "text"]
+    video_url = content[0]["video_url"]["url"]
+    prefix = "data:video/mp4;base64,"
+    assert video_url.startswith(prefix)
+    assert base64.b64decode(video_url[len(prefix):]) == b"video-bytes"
+    audio = content[1]["input_audio"]
+    assert base64.b64decode(audio["data"]) == b"wav-bytes"
+    assert audio["format"] == "wav"
+    assert content[2] == {"type": "text", "text": PROMPT}
+
+def test_different_wav_bytes_are_a_cache_miss(tmp_path, wav):
+    first = FakeOpenClient()
+    _call(tmp_path, first)
+    wav["bytes"] = b"other-wav-bytes"
+    second = FakeOpenClient()
+    _call(tmp_path, second)
+    assert len(first.completions.calls) == 1
+    assert len(second.completions.calls) == 1
+    assert len((tmp_path / "costs.jsonl").read_text().strip().splitlines()) == 2
 
 
-def test_open_request_labels_frames_when_the_clip_has_a_start(tmp_path, frames, monkeypatch):
-    monkeypatch.setattr(client, "probe_duration", lambda path: 20.0)
-    fake = FakeOpenClient()
-    client.call_model(
-        model=OPEN_MODEL,
-        prompt=PROMPT,
-        video_path=_video(tmp_path),
-        purpose="spark_test:clip.mp4",
-        cache_dir=tmp_path / "cache",
-        costs_path=tmp_path / "costs.jsonl",
-        client=fake,
-        clip_start_s=28.0,
-    )
-    content = fake.completions.calls[0]["messages"][0]["content"]
-    labels = [part["text"] for part in content if part.get("type") == "text" and part["text"].startswith("frame at")]
-    assert labels[0] == "frame at 28.0 s"
-    assert labels[1].startswith("frame at ")
-
-
-def test_open_reply_feeds_extract_text_and_usage(tmp_path, frames):
+def test_open_reply_feeds_extract_text_and_usage(tmp_path, wav):
     reply = _call(tmp_path, FakeOpenClient())
     assert reply["output_text"] == json.dumps(VERDICT)
     assert reply["finish_reason"] == "stop"
@@ -155,7 +149,7 @@ def test_open_reply_feeds_extract_text_and_usage(tmp_path, frames):
     assert cost == pytest.approx(0.00975)
 
 
-def test_open_reply_is_cached_with_no_second_call(tmp_path, frames):
+def test_open_reply_is_cached_with_no_second_call(tmp_path, wav):
     first = _call(tmp_path, FakeOpenClient())
     exploding = FakeOpenClient(completions=ExplodingCompletions())
     second = _call(tmp_path, exploding)
@@ -164,7 +158,7 @@ def test_open_reply_is_cached_with_no_second_call(tmp_path, frames):
     assert len((tmp_path / "costs.jsonl").read_text().strip().splitlines()) == 1
 
 
-def test_one_cost_line_per_real_call(tmp_path, frames):
+def test_one_cost_line_per_real_call(tmp_path, wav):
     _call(tmp_path, FakeOpenClient())
     lines = (tmp_path / "costs.jsonl").read_text().strip().splitlines()
     assert len(lines) == 1
@@ -177,7 +171,7 @@ def test_one_cost_line_per_real_call(tmp_path, frames):
     assert "time" in entry
 
 
-def test_missing_baseten_key_stops_before_any_call(tmp_path, frames, monkeypatch, capsys):
+def test_missing_baseten_key_stops_before_any_call(tmp_path, wav, monkeypatch, capsys):
     monkeypatch.delenv("BASETEN_API_KEY", raising=False)
     with pytest.raises(SystemExit) as excinfo:
         _call(tmp_path, None)
@@ -185,93 +179,7 @@ def test_missing_baseten_key_stops_before_any_call(tmp_path, frames, monkeypatch
     assert "BASETEN_API_KEY is not set" in capsys.readouterr().err
 
 
-def _jpeg_size(path):
-    result = subprocess.run(
-        [
-            "ffprobe",
-            "-v",
-            "error",
-            "-select_streams",
-            "v:0",
-            "-show_entries",
-            "stream=width,height",
-            "-of",
-            "json",
-            str(path),
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert result.returncode == 0, result.stderr.strip()[-400:]
-    stream = json.loads(result.stdout)["streams"][0]
-    return stream["width"], stream["height"]
-
-
-def test_sample_frames_count_and_long_side(tmp_path):
-    source = tmp_path / "source.mp4"
-    subprocess.run(
-        [
-            "ffmpeg",
-            "-y",
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-nostdin",
-            "-f",
-            "lavfi",
-            "-i",
-            "testsrc=size=1920x1080:rate=5:duration=6",
-            "-c:v",
-            "libx264",
-            "-preset",
-            "ultrafast",
-            "-pix_fmt",
-            "yuv420p",
-            str(source),
-        ],
-        check=True,
-    )
-    frames = sample_frames(source, tmp_path / "frames")
-    # 6 s at one frame per 2 s, inside the 8 frame cap.
-    assert len(frames) == 3
-    width, height = _jpeg_size(frames[0])
-    assert max(width, height) == 768
-    assert frames[0].read_bytes().startswith(b"\xff\xd8")
-
-
-def test_sample_frames_caps_a_long_clip_at_eight(tmp_path):
-    source = tmp_path / "long.mp4"
-    subprocess.run(
-        [
-            "ffmpeg",
-            "-y",
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-nostdin",
-            "-f",
-            "lavfi",
-            "-i",
-            "testsrc=size=320x240:rate=5:duration=20",
-            "-c:v",
-            "libx264",
-            "-preset",
-            "ultrafast",
-            "-pix_fmt",
-            "yuv420p",
-            str(source),
-        ],
-        check=True,
-    )
-    frames = sample_frames(source, tmp_path / "frames")
-    # 20 s at 2 s spacing would be 10 frames; Baseten takes at most 8.
-    assert len(frames) == 8
-    width, height = _jpeg_size(frames[0])
-    assert (width, height) == (320, 240)
-
-
-def test_open_reply_without_answer_text_fails_and_is_not_cached(tmp_path, frames):
+def test_open_reply_without_answer_text_fails_and_is_not_cached(tmp_path, wav):
     empty = json.loads(json.dumps(CHAT_PAYLOAD))
     empty["choices"][0]["message"]["content"] = ""
     empty["choices"][0]["finish_reason"] = "length"

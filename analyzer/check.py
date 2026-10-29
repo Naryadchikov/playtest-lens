@@ -73,10 +73,18 @@ def parse_check(text: str):
     return data
 
 
+# The engine named in the log's session_start, for the check prompt.
+def engine_name(events) -> str:
+    for event in events:
+        if event.get("event") == "session_start" and event.get("godot_version"):
+            return f"Godot {event['godot_version']}"
+    return "unknown"
+
+
 # Fill the check prompt for one candidate. The outline names the
 # session's other candidates: it is only there so area and puzzle
 # labels stay stable across clips, never as verdict evidence.
-def build_prompt(template: str, candidate, transcript: str, log_slice: str, outline: str = "") -> str:
+def build_prompt(template: str, candidate, transcript: str, log_slice: str, outline: str = "", engine: str = "unknown") -> str:
     return template.format(
         time_s=candidate["time_s"],
         kind=candidate["kind"],
@@ -85,6 +93,7 @@ def build_prompt(template: str, candidate, transcript: str, log_slice: str, outl
         transcript=transcript.strip() or "(nothing transcribed)",
         log_slice=log_slice.strip() or "(no event log for this session)",
         outline=outline.strip() or "(no session outline)",
+        engine=engine,
     )
 
 
@@ -179,7 +188,7 @@ def verified_quote(quote, transcript):
 # offline: clip_for(candidate) -> (clip_path, start_s, end_s),
 # transcript_for(clip_path) -> str, call_for(clip_path, prompt) -> reply dict,
 # slice_for(candidate, clip_start, clip_end) -> log text for the clip span.
-def run_checks(candidates, *, model, clip_for, transcript_for, call_for, template, slice_for=None, duration_s=None):
+def run_checks(candidates, *, model, clip_for, transcript_for, call_for, template, slice_for=None, duration_s=None, engine="unknown"):
     findings = []
     kept = 0
     outline = session_outline(candidates)
@@ -187,7 +196,7 @@ def run_checks(candidates, *, model, clip_for, transcript_for, call_for, templat
         clip_path, clip_start, clip_end = clip_for(candidate)
         transcript = transcript_for(clip_path)
         log_slice = slice_for(candidate, clip_start, clip_end) if slice_for else ""
-        prompt = build_prompt(template, candidate, transcript, log_slice, outline)
+        prompt = build_prompt(template, candidate, transcript, log_slice, outline, engine)
         reply = call_for(clip_path, prompt)
         verdict = parse_check(client_module.extract_text(reply))
         if verdict["verdict"] == "keep":
@@ -211,6 +220,39 @@ def run_checks(candidates, *, model, clip_for, transcript_for, call_for, templat
             }
         )
     return findings
+
+
+MERGE_WINDOW_S = 8.0
+
+
+# Kept findings of one kind within MERGE_WINDOW_S of the previous one are
+# one moment seen twice: keep the one with a quote, else the earliest.
+def merge_same_moment(findings):
+    kept = sorted(
+        (f for f in findings if f["check"]["verdict"] == "keep"),
+        key=lambda f: f["time_s"],
+    )
+    groups = []
+    open_group = {}
+    for finding in kept:
+        group = open_group.get(finding["kind"])
+        if group and finding["time_s"] - group[-1]["time_s"] <= MERGE_WINDOW_S:
+            group.append(finding)
+        else:
+            group = [finding]
+            groups.append(group)
+            open_group[finding["kind"]] = group
+    merged_away = set()
+    for group in groups:
+        keeper = next((f for f in group if f["quote"]), group[0])
+        merged_away.update(id(f) for f in group if f is not keeper)
+    result = [f for f in findings if id(f) not in merged_away]
+    rank = 0
+    for finding in result:
+        if finding["check"]["verdict"] == "keep":
+            rank += 1
+            finding["rank"] = rank
+    return result
 
 
 def main(argv=None) -> int:
@@ -302,7 +344,9 @@ def main(argv=None) -> int:
         template=template,
         slice_for=slice_for,
         duration_s=duration_s,
+        engine=engine_name(events),
     )
+    findings = merge_same_moment(findings)
 
     zones = beats_module.zone_intervals(events, args.video_flash_s) if events else []
     beats_module.assign_beats(findings, zones=zones)

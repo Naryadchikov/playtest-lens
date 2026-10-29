@@ -56,6 +56,12 @@ def test_redesign_fixture_loads():
     assert len(data["route"]["points"]) == 40
 
 
+def test_time_lost_tile_shows_only_when_there_is_time_lost(redesign):
+    assert "Time lost to being stuck or confused" in render_html(redesign)
+    redesign["summary"]["lost_s"] = 0
+    assert "Time lost to being stuck or confused" not in render_html(redesign)
+
+
 def test_page_shows_every_kept_finding_summary_quote_and_time(redesign):
     page = render_html(redesign)
     for finding in redesign["findings"]:
@@ -184,7 +190,7 @@ def test_route_and_pin_pixels_match_the_map_json(redesign):
 @pytest.mark.parametrize(
     "friction, level, tag, unplanned",
     [
-        ("learning", 1, "planned challenge?", False),
+        ("learning", 1, "by design", False),
         ("stuck", 2, "unplanned", True),
         ("blocked", 3, "unplanned", True),
     ],

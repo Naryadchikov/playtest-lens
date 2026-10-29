@@ -8,16 +8,17 @@ Backup mode is on. Claude Sonnet 5.5 hit its limit mid task (access returns 2026
 
 Going public is the last step: docs/PUBLIC_CHECKLIST.md.
 
-## Where things stand (2026-10-28, evening)
+## Where things stand (2026-10-29, morning)
 
-The pipeline on main is one path: Spark 1.2 windowed candidates, the checking pass, beats, the cross-player summary, the report. Fork `playtest-lens` is `8049b5d`: the level-load fix plus Sasha's Lobby and Laboratory volumes. The first-room video and logs are not here yet. He places volumes and records on Windows (`docs/COGITO_VOLUMES.md`). The analyzer stays on the Mac.
+The pipeline on main is one path. Contributor Spark receives the video with its sound. Open mode is Muse Spark Open on Baseten: the mp4 plus a separate wav, and Voice Transcribe still checks every quote. The frame path is gone. Opus review of that change: PASS, no blocking findings (`docs/reviews/16-fixes-now-opus.md`). Tests: 184 passed, 1 deselected (the say-clip test, sandbox). He reruns the session himself after he updates the volumes.
+
+Fork `playtest-lens` is `8049b5d`: the level-load fix plus his Lobby and Laboratory volumes. The doc's expected hash `290cba9` is stale. He edits on Windows (`docs/COGITO_VOLUMES.md`). The analyzer stays on the Mac. The lobby recording and four logs are in `recordings/cogito/` (git-ignored). Reports from that session, also git-ignored: `runs/check/cogito-report-26.html` (contributor), `cogito-report-open.html` (frames plus transcript), `cogito-report-modal-video.html` (dropped), `cogito-report-baseten-av.html` (video plus wav, outside the client).
 
 ## In flight
 
-- Task 23c is merged: each findings file gets its Across players block. Grok review PASS, no nits (`docs/reviews/10-cross-player-grok.md`). Tests: 147 passed, 1 deselected (`test_extract_audio_from_say_clip`, unrelated, fails inside the sandbox).
-- Task 23b is merged: route, heat, pins, markers and the verdict come from the log. Grok review PASS, no nits (`docs/reviews/09-spatial-fields-grok.md`). Tests: 159 passed, 1 deselected. Two notes are in `docs/FOLLOWUPS.md`: a live check still leaves `end_s` empty so `lost_s` is 0, and a pin can fall outside the map picture.
-- The verdict template says "1 moment" for one finding and "moments" for more. The author had kept "1 moments" verbatim. The previous orchestrator changed it. Wording and heat thresholds stay proposals.
-- Grok bot package 2 is on the fork at `290cba9` (GLM PASS): annotated maps and `tools/volume_report.gd`. Sasha can place volumes from `docs/COGITO_VOLUMES.md`.
+- Task 27 is implemented and reviewed, not yet his rerun. Same-kind cards within 8 seconds merge. The time-lost tile hides when `lost_s` is 0, because the check still writes `end_s` null. The tag "by design" is Opus's proposal.
+- The verdict template and the heat thresholds stay proposals.
+- A submission is not ready: the repo is private, the README has run steps but no video, and there is no second player. Overview: `docs/reviews/15-state-overview-opus.md`.
 
 ## Remind Sasha
 
@@ -25,14 +26,14 @@ The pipeline on main is one path: Spark 1.2 windowed candidates, the checking pa
 
 ## Next
 
-1. Sasha on Windows: clone `playtest-lens`, place volumes, record with OBS, push the two scenes, copy the video and the log back (`docs/COGITO_VOLUMES.md`).
-2. Pull that commit on the Mac, point `game/` at it, run the volume report, then the analyzer.
-3. Judgement pass on the first log-zoned report, then tune idle, backtrack and view-turn numbers. The export test can be the same Windows machine after the volumes are saved.
+1. Sasha on Windows: pull `playtest-lens` (tip `8049b5d` before his edits), fix the volumes, commit only the two scene files, push, and copy the new video and log to the Mac.
+2. He looks at two cards on `cogito-report-baseten-av.html`: the Cutscene Trigger label at 1:53, and the hidden-room sculpture called a lion head. The word "by design" is his to change.
+3. After the new log is here, rerun contributor and the locked open path. Then a second player, blind notes, the 3-minute video, and the public checklist.
 
 ## Open questions for Sasha
 
-Nothing blocking. The verdict sentence and the heat thresholds are proposals. The report look is still his to judge. The open-weights host is decided (Baseten). The checker stays contributor Spark 1.2 for now.
+The word that replaced "planned challenge?" ("by design", Opus's proposal). Whether a second player is available this week. Nothing else blocks his volume pass.
 
 ## Credits used
 
-Meta API and Muse Code, one pool: about $23.90 left (Sasha, 2026-10-28). Meta API tracked in runs/costs.jsonl: $13.09 of $150, unchanged this turn (no Meta API call). Modal before these two runs: about $0.02. The Claude harness priced the DeepSeek sessions at $3.86 (23b) and $2.26 (23c) using Anthropic rates, which is not the Modal bill. At DeepSeek's published rates the tokens are about $0.16. Modal billing was not refreshed this turn. Baseten: not used yet.
+`runs/costs.jsonl` sums to $15.72. Of that, Muse Spark Open on Baseten is $1.85, including this morning's video-plus-wav session at $0.57. Voice Transcribe is $0.12. Contributor Spark is $0.07. A Modal video report of about $0.50 was billed to his Modal balance and is not in that file. The Meta pool figure of about $23.90 left was his, on 2026-10-28. No new Meta call was made for the video-plus-wav experiment.

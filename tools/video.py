@@ -3,23 +3,12 @@
 from __future__ import annotations
 
 import json
-import math
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
-
-# Open-weights requests send frames instead of video. A check clip gets one
-# frame per 2 s, a long window from the candidate pass one per 4 s. Baseten
-# rejects a request with more than 8 images, so when a clip would need more
-# the spacing widens until the frames cover the whole clip.
-CHECK_FRAME_INTERVAL_S = 2.0
-WINDOW_FRAME_INTERVAL_S = 4.0
-LONG_CLIP_S = 60.0
-FRAME_MAX_SIDE = 768
-MAX_FRAMES_PER_REQUEST = 8
 
 # signalstats YAVG, on a 0 to 255 scale. A start flash is a short white pulse.
 YAVG_JUMP = 100.0
@@ -47,89 +36,6 @@ def probe_duration(path):
         return float(json.loads(result.stdout)["format"]["duration"])
     except (ValueError, KeyError, TypeError):
         return None
-
-
-# (width, height) of the first video stream, or (None, None) if unreadable.
-def _probe_size(path):
-    ffprobe = shutil.which("ffprobe")
-    if not ffprobe:
-        return None, None
-    result = subprocess.run(
-        [
-            ffprobe,
-            "-v",
-            "error",
-            "-select_streams",
-            "v:0",
-            "-show_entries",
-            "stream=width,height",
-            "-of",
-            "json",
-            str(path),
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if result.returncode != 0:
-        return None, None
-    try:
-        stream = json.loads(result.stdout)["streams"][0]
-        return int(stream["width"]), int(stream["height"])
-    except (ValueError, KeyError, IndexError, TypeError):
-        return None, None
-
-
-# Frame spacing and cap for a clip of duration_s. Widening the spacing
-# on a long clip keeps the frames spread over it, not bunched at the start.
-def _frame_plan(duration_s):
-    base = WINDOW_FRAME_INTERVAL_S if duration_s > LONG_CLIP_S else CHECK_FRAME_INTERVAL_S
-    return max(base, duration_s / MAX_FRAMES_PER_REQUEST), MAX_FRAMES_PER_REQUEST
-
-
-# Sample evenly spaced JPEG frames from a clip, long side at most
-# FRAME_MAX_SIDE. Returns the frame paths in time order.
-def sample_frames(video, output_dir, *, interval_s=None, max_frames=None):
-    duration = probe_duration(video)
-    if duration is None:
-        raise ValueError(f"Cannot read the duration of {video}.")
-    plan_interval, plan_max = _frame_plan(duration)
-    interval_s = plan_interval if interval_s is None else interval_s
-    max_frames = plan_max if max_frames is None else max_frames
-    if interval_s <= 0 or max_frames <= 0:
-        raise ValueError("Frame interval and count must be positive.")
-    count = min(max_frames, max(1, math.ceil(duration / interval_s)))
-    width, height = _probe_size(video)
-    if not width or not height:
-        raise ValueError(f"Cannot read the size of {video}.")
-    if width >= height:
-        scale = f"{min(FRAME_MAX_SIDE, width)}:-2"
-    else:
-        scale = f"-2:{min(FRAME_MAX_SIDE, height)}"
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    _run_ffmpeg(
-        [
-            "-y",
-            "-hide_banner",
-            "-nostdin",
-            "-loglevel",
-            "error",
-            "-i",
-            str(video),
-            "-vf",
-            f"fps=1/{interval_s:g},scale={scale}",
-            "-frames:v",
-            str(count),
-            "-q:v",
-            "3",
-            str(output_dir / "frame-%03d.jpg"),
-        ]
-    )
-    frames = sorted(output_dir.glob("frame-*.jpg"))
-    if not frames:
-        raise ValueError(f"ffmpeg wrote no frames from {video}.")
-    return frames
 
 
 # Find ffmpeg and run it, exiting with the stderr tail on failure.

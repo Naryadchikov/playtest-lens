@@ -4,7 +4,8 @@ from pathlib import Path
 import pytest
 
 from analyzer import findings as findings_module
-from analyzer.check import build_prompt, clamp_time, log_slice_text, merge_candidates, parse_check, run_checks, store_clip_path, verified_quote
+from analyzer import log_candidates
+from analyzer.check import build_prompt, clamp_time, engine_name, log_slice_text, merge_candidates, merge_same_moment, parse_check, run_checks, store_clip_path, verified_quote
 
 FIXTURE = Path(__file__).parent / "fixtures" / "check_reply.json"
 TEMPLATE = (Path(__file__).parent.parent / "analyzer" / "prompts" / "check.md").read_text(
@@ -116,3 +117,62 @@ def test_prompt_and_log_slice():
     # Flash at log 1.0 maps to video 101.0, so death at log 6.0 is video 106.0.
     text = log_slice_text(events, 101.0, 100.0, 120.0)
     assert text.count("death") == 1
+
+
+def test_engine_name_reads_session_start_or_says_unknown():
+    events = log_candidates.load_log(Path(__file__).parent / "fixtures" / "session_log.jsonl")
+    assert engine_name(events) == "Godot 4.7.2-stable (official)"
+    assert engine_name([]) == "unknown"
+
+
+def test_build_prompt_names_the_engine():
+    prompt = build_prompt(TEMPLATE, CANDIDATES[0], "some words", "", engine="Godot 4.7.2")
+    assert "The game runs in Godot 4.7.2." in prompt
+    default = build_prompt(TEMPLATE, CANDIDATES[0], "some words", "")
+    assert "The game runs in unknown." in default
+
+
+def _finding(index, time_s, kind, verdict, quote=None):
+    return {
+        "id": f"f{index}",
+        "rank": None,
+        "time_s": time_s,
+        "end_s": None,
+        "kind": kind,
+        "summary": f"Summary {index}.",
+        "quote": quote,
+        "clip": None,
+        "game_state": None,
+        "sources": ["spark"],
+        "check": {"verdict": verdict, "note": "Evidence.", "model": "m", "friction": "stuck", "resolved": "unknown", "puzzle": None, "area": None},
+    }
+
+
+def test_merge_same_moment_keeps_the_quoted_one_and_ranks_the_rest(tmp_path):
+    findings = [
+        _finding(1, 100.0, "suspected_bug", "keep"),
+        _finding(2, 102.0, "suspected_bug", "drop"),
+        _finding(3, 104.0, "suspected_bug", "keep", quote="it is broken"),
+        _finding(4, 108.0, "suspected_bug", "keep"),
+        _finding(5, 200.0, "stuck", "keep"),
+        _finding(6, 206.0, "surprised", "keep"),
+    ]
+    merged = merge_same_moment(findings)
+    assert [f["id"] for f in merged] == ["f2", "f3", "f5", "f6"]
+    kept = [f for f in merged if f["check"]["verdict"] == "keep"]
+    assert [f["id"] for f in kept] == ["f3", "f5", "f6"]
+    assert [f["rank"] for f in kept] == [1, 2, 3]
+    assert merged[0]["rank"] is None
+
+    path = tmp_path / "findings.json"
+    path.write_text(
+        json.dumps(
+            {
+                "format": 1,
+                "session": {"id": "s01", "recording": "s01.mp4", "duration_s": 930.0, "start_flash_s": None},
+                "findings": merged,
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert len(findings_module.load(path)["findings"]) == 4

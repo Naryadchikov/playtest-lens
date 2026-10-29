@@ -18,9 +18,14 @@ One list for things found but not fixed: a pre-existing review finding, a case t
 
 ## Open-weights backend (task 21 review, Grok, 2026-10-28)
 
-- `sample_frames` on a clip under 1 second: ffmpeg writes no frame and the process exits with the ffmpeg error instead of the intended ValueError, so a last window under 1 s aborts a run. Real windows are 20 s and 2 minutes; left as is.
-- `_frame_plan` never reaches the 4 s spacing the brief gave for 2-minute windows: Baseten allows 8 images per request, so spacing is duration / 8 (15 s for a 2-minute window).
-- Tests do not cover tiny or odd frame sizes, a marker in the middle of a reply, or which fields change the cache key.
+- The frame helpers (`sample_frames`, `_frame_plan`) were deleted in task 27 (2026-10-29). The open path sends video plus a wav. The three frame bullets below are closed with that deletion.
+- Tests do not cover a marker in the middle of an open reply.
+
+## Open path, video plus wav (task 27 review nits, Opus, 2026-10-29)
+
+- ffmpeg writes its version into the wav header, and that wav's hash is part of the open-model cache key. An ffmpeg upgrade misses every cached open reply and bills Baseten again. `-bitexact` on `extract_audio`, or keying on the video hash alone, would stop that. Same machine and same ffmpeg are fine until then.
+- `_call_open_model` extracts the wav before the cache lookup, so a cached rerun still runs ffmpeg once per call.
+- A finding merged away still leaves its 20 s clip under `runs/`. The files are git-ignored.
 
 ## Spatial fields (task 23b, 2026-10-28)
 

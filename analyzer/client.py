@@ -1,7 +1,7 @@
 """The one module that talks to the model APIs.
 
 Muse Spark and Voice Transcribe go to the Meta Model API. A model id that
-starts with OPEN_WEIGHTS_PREFIX goes to Baseten instead, frames only.
+starts with OPEN_WEIGHTS_PREFIX goes to Baseten instead, as video plus a wav.
 Every model call goes through here so replies are cached in runs/cache/
 and every real call appends one line to runs/costs.jsonl.
 """
@@ -21,7 +21,7 @@ from pathlib import Path
 
 import httpx2
 
-from tools.video import _frame_plan, probe_duration, sample_frames
+from tools.video import extract_audio
 
 BASE_URL = "https://api.meta.ai/v1"
 OPEN_WEIGHTS_PREFIX = "meta-models/"
@@ -104,12 +104,6 @@ def _make_open_client(api_key=None):
 # Strip a leading chat token marker so extract_text sees the answer alone.
 def strip_assistant_marker(text: str) -> str:
     return LEADING_CHAT_MARKER.sub("", text.strip(), count=1)
-
-
-# One JPEG frame as a data URL, the form Baseten accepts in a user message.
-def _image_data_url(frame) -> str:
-    data = base64.b64encode(Path(frame).read_bytes()).decode("ascii")
-    return f"data:image/jpeg;base64,{data}"
 
 
 # Turn an OpenAI chat reply into the dict shape extract_text and
@@ -250,7 +244,7 @@ def _append_cost_line(costs_path, *, model, reply, purpose) -> None:
 
 
 # Send one video plus prompt in one call, with caching and cost logging.
-# A model id under OPEN_WEIGHTS_PREFIX goes to Baseten as sampled frames;
+# A model id under OPEN_WEIGHTS_PREFIX goes to Baseten as video plus a wav;
 # every other model goes to the Responses API with the video file.
 def call_model(
     *,
@@ -262,7 +256,6 @@ def call_model(
     costs_path=DEFAULT_COSTS_PATH,
     client=None,
     api_key=None,
-    clip_start_s=None,
 ) -> dict:
     cache_dir = Path(cache_dir)
     costs_path = Path(costs_path)
@@ -277,7 +270,6 @@ def call_model(
             costs_path=costs_path,
             client=client,
             api_key=api_key,
-            clip_start_s=clip_start_s,
         )
     content_hash = file_content_hash(video_path)
     request = {
@@ -311,54 +303,44 @@ def call_model(
     return reply
 
 
-# Frames and prompt to one Baseten chat call, cached by the frame hashes.
+# Video and its audio as a wav, plus the prompt, to one Baseten chat call.
+# Baseten ignores the sound inside the mp4, so the wav goes as its own part.
 def _call_open_model(
     *, model, prompt, video_path, purpose, cache_dir, costs_path, client, api_key,
-    clip_start_s=None,
 ) -> dict:
-    with tempfile.TemporaryDirectory(prefix="open-frames-") as tmp:
-        frames = sample_frames(video_path, tmp)
-        request = {
-            "model": model,
-            "prompt": prompt,
-            "frames": [file_content_hash(frame) for frame in frames],
-            "max_tokens": OPEN_MAX_TOKENS,
-            "clip_start_s": clip_start_s,
-        }
-        canonical = json.dumps(
-            request, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-        )
-        key = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-        cache_file = cache_dir / f"{key}.json"
-        if cache_file.exists():
-            return json.loads(cache_file.read_text(encoding="utf-8"))
+    with tempfile.TemporaryDirectory(prefix="open-audio-") as tmp:
+        wav_bytes = extract_audio(video_path, Path(tmp) / "clip.wav").read_bytes()
+    video_bytes = Path(video_path).read_bytes()
+    request = {
+        "model": model,
+        "prompt": prompt,
+        "video_sha256": hashlib.sha256(video_bytes).hexdigest(),
+        "wav_sha256": hashlib.sha256(wav_bytes).hexdigest(),
+        "max_tokens": OPEN_MAX_TOKENS,
+    }
+    canonical = json.dumps(request, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    key = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    cache_file = cache_dir / f"{key}.json"
+    if cache_file.exists():
+        return json.loads(cache_file.read_text(encoding="utf-8"))
 
-        if client is None:
-            client = _make_open_client(api_key)
-        # Silent stills with no clock made the model obey "reply []".
-        # A clip start labels each frame in recording time.
-        interval = None
-        if clip_start_s is not None:
-            duration = probe_duration(video_path)
-            if duration:
-                interval, _max_frames = _frame_plan(duration)
-        content = []
-        for index, frame in enumerate(frames):
-            if interval is not None:
-                content.append({
-                    "type": "text",
-                    "text": f"frame at {clip_start_s + index * interval:.1f} s",
-                })
-            content.append(
-                {"type": "image_url", "image_url": {"url": _image_data_url(frame)}}
-            )
-        content.append({"type": "text", "text": prompt})
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": content}],
-            max_tokens=OPEN_MAX_TOKENS,
-        )
-        reply = _open_reply_to_dict(response)
+    if client is None:
+        client = _make_open_client(api_key)
+    video_url = "data:video/mp4;base64," + base64.b64encode(video_bytes).decode("ascii")
+    content = [
+        {"type": "video_url", "video_url": {"url": video_url}},
+        {
+            "type": "input_audio",
+            "input_audio": {"data": base64.b64encode(wav_bytes).decode("ascii"), "format": "wav"},
+        },
+        {"type": "text", "text": prompt},
+    ]
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": content}],
+        max_tokens=OPEN_MAX_TOKENS,
+    )
+    reply = _open_reply_to_dict(response)
 
     # The reasoning can use the whole token budget and leave no answer: the
     # tokens were billed, so log them, but never cache a reply with no text.

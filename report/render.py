@@ -83,7 +83,8 @@ LABELS = {
         },
     },
     "friction": {
-        "learning": {"level": 1, "tag": "planned challenge?", "unplanned": False},
+        # Proposal (Claude Opus 5.5, 2026-10-29), not Sasha's wording.
+        "learning": {"level": 1, "tag": "by design", "unplanned": False},
         "stuck": {"level": 2, "tag": "unplanned", "unplanned": True},
         "blocked": {"level": 3, "tag": "unplanned", "unplanned": True},
     },
@@ -496,12 +497,13 @@ def _render_tiles(summary, duration_s):
             f'<div class="l"><span class="k k-{info["class"]}" aria-hidden="true"></span>'
             f'{_e(info["label"])}</div></div>'
         )
-    of_note = LABELS["tiles"]["of"].format(duration=_mss(duration_s))
-    parts.append(
-        f'<div class="tile wide"><div class="n">{_mss(summary["lost_s"])} '
-        f'<span class="note">{_e(of_note)}</span></div>'
-        f'<div class="l">{_e(LABELS["tiles"]["time_lost"])}</div></div>'
-    )
+    if summary["lost_s"]:
+        of_note = LABELS["tiles"]["of"].format(duration=_mss(duration_s))
+        parts.append(
+            f'<div class="tile wide"><div class="n">{_mss(summary["lost_s"])} '
+            f'<span class="note">{_e(of_note)}</span></div>'
+            f'<div class="l">{_e(LABELS["tiles"]["time_lost"])}</div></div>'
+        )
     count_note = LABELS["tiles"]["count_note"].format(
         kept=summary["kept"], dropped=summary["dropped"]
     )
