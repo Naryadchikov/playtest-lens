@@ -206,3 +206,54 @@ def test_merge_same_moment_keeps_the_quoted_one_and_ranks_the_rest(tmp_path):
         encoding="utf-8",
     )
     assert len(findings_module.load(path)["findings"]) == 4
+
+
+def test_merge_same_moment_folds_a_long_visit_and_keeps_the_other_kind():
+    zones = [{"zone": "Archive", "puzzle": "", "start_s": 0.0, "end_s": 80.0}]
+    findings = [
+        _finding(1, 10.0, "stuck", "keep"),
+        _finding(2, 20.0, "surprised", "keep"),
+        _finding(3, 40.0, "stuck", "keep", quote="still here"),
+    ]
+    merged = merge_same_moment(findings, zones)
+    assert [f["id"] for f in merged] == ["f2", "f3"]
+    stuck = next(f for f in merged if f["id"] == "f3")
+    assert stuck["quote"] == "still here"
+    assert stuck["end_s"] == 40.0
+    assert next(f for f in merged if f["id"] == "f2")["end_s"] is None
+
+
+def test_merge_same_moment_starts_again_after_the_player_reenters():
+    zones = [
+        {"zone": "Archive", "puzzle": "", "start_s": 0.0, "end_s": 50.0},
+        {"zone": "Archive", "puzzle": "", "start_s": 60.0, "end_s": 120.0},
+    ]
+    findings = [
+        _finding(1, 10.0, "stuck", "keep"),
+        _finding(2, 80.0, "stuck", "keep"),
+    ]
+    assert [f["id"] for f in merge_same_moment(findings, zones)] == ["f1", "f2"]
+
+
+def test_merge_same_moment_prefers_the_puzzle_box_inside_the_room():
+    zones = [
+        {"zone": "Archive", "puzzle": "", "start_s": 0.0, "end_s": 100.0},
+        {"zone": "Archive", "puzzle": "Code Lock", "start_s": 10.0, "end_s": 40.0},
+    ]
+    findings = [
+        _finding(1, 20.0, "stuck", "keep"),
+        _finding(2, 30.0, "stuck", "keep"),
+        _finding(3, 50.0, "stuck", "keep"),
+    ]
+    merged = merge_same_moment(findings, zones)
+    assert [f["id"] for f in merged] == ["f1", "f3"]
+    assert next(f for f in merged if f["id"] == "f1")["end_s"] == 30.0
+    assert next(f for f in merged if f["id"] == "f3")["end_s"] is None
+
+
+def test_merge_same_moment_leaves_a_long_gap_alone_when_there_is_no_zone():
+    findings = [
+        _finding(1, 10.0, "stuck", "keep"),
+        _finding(2, 40.0, "stuck", "keep"),
+    ]
+    assert [f["id"] for f in merge_same_moment(findings)] == ["f1", "f2"]

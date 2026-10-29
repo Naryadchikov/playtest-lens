@@ -12,5 +12,6 @@ Rules:
 - quote is the player's words at that moment, word for word as said, or null if they said nothing relevant. When a transcript is given above, copy the quote from it and never write words it does not hold.
 - stuck means the player cannot get past something. None of these is stuck: a locked door with nothing to solve behind it, which the player leaves; a problem the player works out and gets past within the video; learning how something works and then doing it.
 - surprised means a real, unplanned reaction, not a reveal the game stages that the player saw coming. If you cannot tell which it is, leave it out.
+- One struggle is one moment. While the player is still stuck, confused, or surprised at the same thing, list it once, at the time it starts. Do not list it again while it continues.
 - Order the array by how sure you are, most sure first.
 - If there are no such moments, reply with [].

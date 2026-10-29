@@ -234,26 +234,57 @@ def run_checks(candidates, *, model, clip_for, transcript_for, call_for, templat
 MERGE_WINDOW_S = 8.0
 
 
-# Kept findings of one kind within MERGE_WINDOW_S of the previous one are
-# one moment seen twice: keep the one with a quote, else the earliest.
-def merge_same_moment(findings):
+# The interval that contains time_s. A puzzle box inside a room wins.
+# Otherwise the latest enter wins. None when the player is in no zone.
+def _place(time_s, zones):
+    covering = [
+        zone for zone in zones
+        if zone["start_s"] <= time_s and (zone["end_s"] is None or time_s <= zone["end_s"])
+    ]
+    if not covering:
+        return None
+    with_puzzle = [zone for zone in covering if zone.get("puzzle")]
+    chosen = max(with_puzzle or covering, key=lambda zone: zone["start_s"])
+    return (chosen["zone"], chosen.get("puzzle") or "", chosen["start_s"])
+
+
+# One struggle in one visit is one card: same kind, same zone visit,
+# however long the visit is. A finding in no zone still folds only when
+# it is within MERGE_WINDOW_S of the previous one of that kind.
+# The card kept has a quote if any does, else it is the earliest.
+def merge_same_moment(findings, zones=None):
+    zones = zones or []
     kept = sorted(
         (f for f in findings if f["check"]["verdict"] == "keep"),
         key=lambda f: f["time_s"],
     )
     groups = []
+    visit_groups = {}
     open_group = {}
     for finding in kept:
-        group = open_group.get(finding["kind"])
-        if group and finding["time_s"] - group[-1]["time_s"] <= MERGE_WINDOW_S:
-            group.append(finding)
+        place = _place(finding["time_s"], zones)
+        if place is None:
+            group = open_group.get(finding["kind"])
+            if group and finding["time_s"] - group[-1]["time_s"] <= MERGE_WINDOW_S:
+                group.append(finding)
+            else:
+                group = [finding]
+                groups.append(group)
+                open_group[finding["kind"]] = group
         else:
-            group = [finding]
-            groups.append(group)
-            open_group[finding["kind"]] = group
+            key = (*place, finding["kind"])
+            group = visit_groups.get(key)
+            if group is None:
+                group = [finding]
+                groups.append(group)
+                visit_groups[key] = group
+            else:
+                group.append(finding)
     merged_away = set()
     for group in groups:
         keeper = next((f for f in group if f["quote"]), group[0])
+        if len(group) > 1:
+            keeper["end_s"] = max(f["time_s"] for f in group)
         merged_away.update(id(f) for f in group if f is not keeper)
     result = [f for f in findings if id(f) not in merged_away]
     rank = 0
@@ -355,9 +386,8 @@ def main(argv=None) -> int:
         duration_s=duration_s,
         engine=engine_name(events),
     )
-    findings = merge_same_moment(findings)
-
     zones = beats_module.zone_intervals(events, args.video_flash_s) if events else []
+    findings = merge_same_moment(findings, zones)
     beats_module.assign_beats(findings, zones=zones)
     for finding in findings:
         if finding["clip"] is not None:
