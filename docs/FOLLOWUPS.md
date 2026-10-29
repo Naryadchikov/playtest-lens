@@ -44,3 +44,7 @@ One list for things found but not fixed: a pre-existing review finding, a case t
 - Neighbouring sections with one area name (two "CEO Office" sections at 3:18 and 3:52) could merge on the page. Left as two. From task 25, 2026-10-28.
 - A "recent trail only" option on the map timeline (show only the last N seconds of route) if the growing route still overlaps. Sasha's call on N. From task 25, 2026-10-28.
 - Unzoned moments in a zoned session still take the checker's free area wording ("Central Office - Meeting Room Hunt", "Office Complex"), and the fuzzy matching can file a later moment under an older wording (rank 20 at 8:22, the crash, lands in the paper hunt). From task 25, 2026-10-28.
+
+## Visit merge (task 28, GLM review, 2026-10-29)
+
+- The 8-second chain for findings with no zone is not reset by a room visit in between. Two corridor stucks 8 seconds apart can fold together even when a room visit sits between them. Less folding than the old rule. From docs/reviews/17-system-glm.md.
