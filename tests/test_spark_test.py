@@ -26,9 +26,21 @@ def test_parser_rejects_bad_kind():
         parse_moments('[{"time_s": 1, "kind": "bored", "reason": "x", "quote": null}]')
 
 
-def test_window_starts_cover_the_recording():
-    assert window_starts(930.0, 120.0) == [0.0, 120.0, 240.0, 360.0, 480.0, 600.0, 720.0, 840.0]
+def test_window_starts_cover_the_recording_with_overlap():
+    assert window_starts(930.0, 120.0) == [0.0, 100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0]
     assert window_starts(100.0, 120.0) == [0.0]
+    assert window_starts(120.0, 120.0) == [0.0]
+    with pytest.raises(ValueError, match="longer than"):
+        window_starts(930.0, 20.0)
+
+
+def test_a_moment_at_a_window_edge_lies_whole_in_one_window():
+    starts = window_starts(930.0, 120.0)
+    # Each 20 s check clip around a moment near an old hard edge (120, 240, ...)
+    # or a new one (100, 200, ...) fits inside some window.
+    for moment in (98.0, 101.0, 119.0, 121.0, 238.0, 242.0, 505.0, 915.0):
+        clip = (moment - 10.0, moment + 10.0)
+        assert any(s <= clip[0] and clip[1] <= s + 120.0 for s in starts), moment
 
 
 def test_merge_window_moments_sorts_and_dedupes_near_repeats():

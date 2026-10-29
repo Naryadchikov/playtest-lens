@@ -119,6 +119,36 @@ def test_prompt_and_log_slice():
     assert text.count("death") == 1
 
 
+def test_log_slice_carries_the_zone_open_at_clip_start():
+    events = [
+        {"t": 1.0, "event": "sync_flash"},
+        {"t": 11.0, "event": "zone_enter", "zone": "Laboratory", "puzzle": "Keypad door"},
+        {"t": 15.0, "event": "zone_enter", "zone": "Hall", "puzzle": ""},
+        {"t": 20.0, "event": "zone_exit", "zone": "Hall", "puzzle": ""},
+        {"t": 45.0, "event": "death"},
+    ]
+    # Video = log + 100. The clip 140 to 160 holds only the death at 145;
+    # the Laboratory entry at 111 is still open, the Hall closed at 120.
+    lines = log_slice_text(events, 101.0, 140.0, 160.0).splitlines()
+    assert lines[0] == (
+        '[video 111.0s, before this clip, still open] '
+        '{"event": "zone_enter", "puzzle": "Keypad door", "zone": "Laboratory"}'
+    )
+    assert len(lines) == 2 and "Hall" not in "\n".join(lines)
+    assert lines[1] == '[video 145.0s] {"event": "death", "t": 45.0}'
+
+
+def test_log_slice_leaves_an_in_clip_zone_enter_as_it_was():
+    events = [
+        {"t": 1.0, "event": "sync_flash"},
+        {"t": 45.0, "event": "zone_enter", "zone": "Laboratory", "puzzle": "Keypad door"},
+    ]
+    text = log_slice_text(events, 101.0, 140.0, 160.0)
+    assert text == (
+        '[video 145.0s] {"event": "zone_enter", "puzzle": "Keypad door", "t": 45.0, "zone": "Laboratory"}'
+    )
+
+
 def test_engine_name_reads_session_start_or_says_unknown():
     events = log_candidates.load_log(Path(__file__).parent / "fixtures" / "session_log.jsonl")
     assert engine_name(events) == "Godot 4.7.2-stable (official)"

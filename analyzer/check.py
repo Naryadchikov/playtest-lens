@@ -157,6 +157,8 @@ def merge_candidates(spark_candidates, log_cands):
 
 
 # Event-log lines whose video time falls in [start_s, end_s], as text.
+# It opens with the zones already open at start_s, entered before the
+# clip, so the checker knows the room and its puzzle line.
 def log_slice_text(events, video_flash_s, start_s, end_s) -> str:
     if not events or video_flash_s is None:
         return ""
@@ -165,6 +167,13 @@ def log_slice_text(events, video_flash_s, start_s, end_s) -> str:
         return ""
     offset = video_flash_s - float(first_flash["t"])
     lines = []
+    for zone in beats_module.zone_intervals(events, video_flash_s):
+        if zone["start_s"] < start_s and (zone["end_s"] is None or zone["end_s"] >= start_s):
+            carried = {"event": "zone_enter", "zone": zone["zone"], "puzzle": zone["puzzle"]}
+            lines.append(
+                f"[video {zone['start_s']:.1f}s, before this clip, still open] "
+                + json.dumps(carried, sort_keys=True)
+            )
     for event in events:
         video_t = float(event["t"]) + offset
         if start_s <= video_t <= end_s:

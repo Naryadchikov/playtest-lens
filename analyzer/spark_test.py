@@ -60,19 +60,24 @@ def to_recording_time(moments, start):
     return [{**moment, "time_s": round(moment["time_s"] + start, 2)} for moment in moments]
 
 
+WINDOW_OVERLAP_S = 20.0
+
+
 # Start times of the windows that cover a recording of duration_s.
+# Windows overlap by WINDOW_OVERLAP_S, the check clip's length (20 s):
+# so any 20 s moment, edges included, lies whole inside one window.
 def window_starts(duration_s, window_s):
-    starts = []
-    start = 0.0
-    while start < duration_s:
-        starts.append(round(start, 2))
-        start += window_s
+    if window_s <= WINDOW_OVERLAP_S:
+        raise ValueError(f"Window length must be longer than the {WINDOW_OVERLAP_S:g} s overlap.")
+    starts = [0.0]
+    while starts[-1] + window_s < duration_s:
+        starts.append(round(starts[-1] + window_s - WINDOW_OVERLAP_S, 2))
     return starts
 
 
 # Merge per-window moments by recording time. A moment within 5 s of
 # the last kept one is dropped only when it comes from a different
-# window (the same moment seen twice at a seam), never inside a window.
+# window (the same moment seen twice in an overlap), never inside a window.
 def merge_window_moments(windows):
     tagged = [
         (moment["time_s"], window_index, moment)
@@ -165,8 +170,8 @@ def main(argv=None) -> int:
     stem = recording.stem
 
     if args.window_seconds is not None:
-        if args.window_seconds <= 0:
-            print("Window length must be positive.", file=sys.stderr)
+        if args.window_seconds <= WINDOW_OVERLAP_S:
+            print(f"Window length must be longer than the {WINDOW_OVERLAP_S:g} s overlap.", file=sys.stderr)
             return 1
         duration = probe_duration(recording)
         if duration is None:

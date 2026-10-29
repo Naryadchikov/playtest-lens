@@ -350,3 +350,19 @@ The rules Sonnet added this morning are rewritten as one instruction each, and S
 Checks: `.venv/bin/python -m pytest -q --deselect tests/test_transcribe.py::test_extract_audio_from_say_clip`: 184 passed, 1 deselected. `build_prompt` on the new template formats with no `KeyError` and leaves no stray brace before the reply line. The em dash and spaced en dash `rg` on `analyzer/prompts` and this file: no output.
 
 Not checked: the effect on real findings (no run, so no before and after findings in `runs/` yet; Sasha's rerun is that run); whether real logs put a zone name inside a clip's 20 s log slice, since `zone_enter` may fall before the clip.
+
+## What came back: clip crossings
+
+Claude Opus 5.5, Cursor, 2026-10-29, at Sasha's request ("ask opus to solve it somehow, that we have clip splits, maybe there is some nice method of how to do some crossing or whatever, let it solve the problem."). Nothing committed. No model call, no network, no Keychain. Base: `75777b5`.
+
+Method, one idea for both cuts: carry what is still true across the cut.
+- Candidate pass: the 120 s windows now overlap by `WINDOW_OVERLAP_S = 20.0`, the check clip's length, so they start at 0, 100, 200, ... Any 20 s moment, at an old edge or a new one, lies whole inside one window. Each window is still 120 s; windows stop once one reaches the end. A 930 s recording takes 10 calls instead of 8 (about 20% more candidate cost). A window of 20 s or less is refused with a clear message. `merge_window_moments` is unchanged: its 5 s cross-window repeat drop now catches a moment both overlapping windows report. Only its comment changed ("seam" to "overlap").
+- Check pass: `log_slice_text` opens with one line per zone still open at the clip start (entered before it, not exited before it), taken from `beats.zone_intervals`, not a second tracker. The line looks like `[video 111.0s, before this clip, still open] {"event": "zone_enter", "puzzle": "Keypad door", "zone": "Laboratory"}`. Lines inside the clip are as before. No prompt sentence changed: the check prompt already says to use the log's zone and puzzle names, and the carried line says itself that it comes from before the clip.
+
+Files: `analyzer/spark_test.py` (`WINDOW_OVERLAP_S`, `window_starts`, the CLI guard), `analyzer/check.py` (`log_slice_text`), `tests/test_spark_test.py`, `tests/test_check.py`, this section. `verified_quote` and both prompts are untouched.
+
+Tests: `test_window_starts_cover_the_recording` asserted the old hard edge on purpose, so it is now `test_window_starts_cover_the_recording_with_overlap` (the new starts, the short case and the refusal). New: a 20 s clip around moments at 98, 101, 119, 121, 238, 242, 505 and 915 s fits whole in some window; a `zone_enter` before the clip with no zone event inside still names the Laboratory and Keypad door at the top of the slice, and a zone closed before the clip is not carried; a `zone_enter` inside the clip prints exactly as before.
+
+Checks: `.venv/bin/python -m pytest -q --deselect tests/test_transcribe.py::test_extract_audio_from_say_clip`: 187 passed, 1 deselected.
+
+Not checked: a real run. The new window starts change the request hashes, so a rerun of the candidate pass misses the cache from window 2 on and is billed again (about 20% more calls than before). I did not check whether the 5 s repeat drop holds when two overlapping windows place one moment more than 5 s apart; `merge_same_moment` (8 s, same kind) after the check is the backstop, and no threshold was retuned. Carried state is zones only; no other event (an item held, a puzzle half solved) is carried, since nothing in the log tracks it today.
