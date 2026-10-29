@@ -336,3 +336,17 @@ Checks:
 Not checked: a real Baseten call (by instruction); the real `extract_audio` inside `_call_open_model` (tests fake it); the say-clip test (sandbox); the report page in a browser; the effect of the new prompt text on real findings.
 
 What the orchestrator changed: recorded the lock in DECISIONS.md, put the review nits in docs/FOLLOWUPS.md, and updated STATUS.md. No product code after the PASS.
+
+## What came back: the prompt rewrite
+
+Claude Opus 5.5, Cursor, 2026-10-29, at Sasha's request (Opus, not Sonnet, owns the prompt wording). Nothing committed. No model call, no network, no Keychain. Base: `31e07d7`.
+
+Files changed: `analyzer/prompts/check.md`, `analyzer/prompts/spark_test.md`, and this section. No test asserted the replaced sentences, so no test changed; `The game runs in {engine}.` is kept, which `test_build_prompt_names_the_engine` asserts.
+
+The rules Sonnet added this morning are rewritten as one instruction each, and Sasha's 2026-10-28 report notes (DECISIONS.md) are encoded as rules, not quoted:
+- Check prompt: the editor or debugger on screen is `{engine}`, never another engine. A quote is copied word for word from the Voice Transcribe text; the audio only places the moment; no transcript words means `quote` is null. Stuck means not getting past something during the clip; a locked door with nothing behind it that the player leaves, a problem solved inside the clip, and learning how a thing works and then doing it are not stuck; getting past it only later still counts as stuck here. Surprised is a real reaction, not a staged reveal the player saw coming; when unsure, drop. The area is the zone the event log names when it names one, else the plain room on screen, never an invented biome, region or multi-room name. The puzzle is null for most moments: only a real puzzle (a lock, a code, a specific device) counts, never walking, a door, a pickup or looking around; the log's puzzle name wins. The old sentence "Do not drop a moment only because the player eventually progressed" is replaced by the "only later" stuck rule; the bug rule keeps its own "even when the player then moves on". The JSON shape is unchanged, braces still doubled.
+- Spark prompt: never name a game engine, even with an editor on screen. Quote the words as said; when a transcript is prepended (open mode), copy from it and add nothing. The same three not-stuck cases and the surprise rule (when unsure, leave it out). Same JSON array shape, single braces.
+
+Checks: `.venv/bin/python -m pytest -q --deselect tests/test_transcribe.py::test_extract_audio_from_say_clip`: 184 passed, 1 deselected. `build_prompt` on the new template formats with no `KeyError` and leaves no stray brace before the reply line. The em dash and spaced en dash `rg` on `analyzer/prompts` and this file: no output.
+
+Not checked: the effect on real findings (no run, so no before and after findings in `runs/` yet; Sasha's rerun is that run); whether real logs put a zone name inside a clip's 20 s log slice, since `zone_enter` may fall before the clip.
