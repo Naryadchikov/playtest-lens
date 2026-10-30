@@ -1,0 +1,155 @@
+diff --git a/analyzer/check.py b/analyzer/check.py
+index 2e5c547..a70abde 100644
+--- a/analyzer/check.py
++++ b/analyzer/check.py
+@@ -231,7 +231,12 @@ def run_checks(candidates, *, model, clip_for, transcript_for, call_for, templat
+     return findings
+ 
+ 
+-MERGE_WINDOW_S = 8.0
++# A check clip is 20 s. The next kept moment joins the arch when it
++# starts within that span of the one before it.
++CHAIN_GAP_S = 20.0
++
++# The card shows the most serious kind in the chain.
++_KIND_RANK = {"stuck": 0, "confused": 1, "surprised": 2, "suspected_bug": 3}
+ 
+ 
+ # The interval that contains time_s. A puzzle box inside a room wins.
+@@ -248,10 +253,10 @@ def _place(time_s, zones):
+     return (chosen["zone"], chosen.get("puzzle") or "", chosen["start_s"])
+ 
+ 
+-# One struggle in one visit is one card: same kind, same zone visit,
+-# however long the visit is. A finding in no zone still folds only when
+-# it is within MERGE_WINDOW_S of the previous one of that kind.
+-# The card kept has a quote if any does, else it is the earliest.
++# One arch is one card. The next kept moment joins while it is in the
++# same place and starts within CHAIN_GAP_S of the previous one. A kind
++# change does not break the chain. Leaving the place does. A longer gap
++# does, even in the same room. The same rule applies with no zone.
+ def merge_same_moment(findings, zones=None):
+     zones = zones or []
+     kept = sorted(
+@@ -259,32 +264,35 @@ def merge_same_moment(findings, zones=None):
+         key=lambda f: f["time_s"],
+     )
+     groups = []
+-    visit_groups = {}
+-    open_group = {}
++    open_chain = {}
+     for finding in kept:
+         place = _place(finding["time_s"], zones)
+-        if place is None:
+-            group = open_group.get(finding["kind"])
+-            if group and finding["time_s"] - group[-1]["time_s"] <= MERGE_WINDOW_S:
+-                group.append(finding)
+-            else:
+-                group = [finding]
+-                groups.append(group)
+-                open_group[finding["kind"]] = group
++        group = open_chain.get(place)
++        if group is not None and finding["time_s"] - group[-1]["time_s"] <= CHAIN_GAP_S:
++            group.append(finding)
+         else:
+-            key = (*place, finding["kind"])
+-            group = visit_groups.get(key)
+-            if group is None:
+-                group = [finding]
+-                groups.append(group)
+-                visit_groups[key] = group
+-            else:
+-                group.append(finding)
++            group = [finding]
++            groups.append(group)
++            open_chain[place] = group
+     merged_away = set()
+     for group in groups:
+-        keeper = next((f for f in group if f["quote"]), group[0])
++        keeper = min(
++            group,
++            key=lambda f: (
++                _KIND_RANK.get(f["kind"], 9),
++                0 if f.get("quote") else 1,
++                f["time_s"],
++            ),
++        )
+         if len(group) > 1:
+-            keeper["end_s"] = max(f["time_s"] for f in group)
++            if not keeper.get("quote"):
++                donor = next((f for f in group if f.get("quote")), None)
++                if donor is not None:
++                    keeper["quote"] = donor["quote"]
++            start = min(f["time_s"] for f in group)
++            end = max(f["time_s"] for f in group)
++            keeper["time_s"] = start
++            keeper["end_s"] = end
+         merged_away.update(id(f) for f in group if f is not keeper)
+     result = [f for f in findings if id(f) not in merged_away]
+     rank = 0
+diff --git a/tests/test_check.py b/tests/test_check.py
+index 6604666..36bf423 100644
+--- a/tests/test_check.py
++++ b/tests/test_check.py
+@@ -188,11 +188,17 @@ def test_merge_same_moment_keeps_the_quoted_one_and_ranks_the_rest(tmp_path):
+         _finding(6, 206.0, "surprised", "keep"),
+     ]
+     merged = merge_same_moment(findings)
+-    assert [f["id"] for f in merged] == ["f2", "f3", "f5", "f6"]
++    # 100, 104, 108 are one arch. 200 stuck and 206 surprised overlap, so
++    # they are one arch too, and the card takes the more serious kind.
++    assert [f["id"] for f in merged] == ["f2", "f3", "f5"]
+     kept = [f for f in merged if f["check"]["verdict"] == "keep"]
+-    assert [f["id"] for f in kept] == ["f3", "f5", "f6"]
+-    assert [f["rank"] for f in kept] == [1, 2, 3]
++    assert [f["id"] for f in kept] == ["f3", "f5"]
++    assert [f["rank"] for f in kept] == [1, 2]
+     assert merged[0]["rank"] is None
++    assert kept[0]["time_s"] == 100.0 and kept[0]["end_s"] == 108.0
++    assert kept[0]["quote"] == "it is broken"
++    assert kept[1]["kind"] == "stuck"
++    assert kept[1]["time_s"] == 200.0 and kept[1]["end_s"] == 206.0
+ 
+     path = tmp_path / "findings.json"
+     path.write_text(
+@@ -205,22 +211,31 @@ def test_merge_same_moment_keeps_the_quoted_one_and_ranks_the_rest(tmp_path):
+         ),
+         encoding="utf-8",
+     )
+-    assert len(findings_module.load(path)["findings"]) == 4
++    assert len(findings_module.load(path)["findings"]) == 3
+ 
+ 
+-def test_merge_same_moment_folds_a_long_visit_and_keeps_the_other_kind():
++def test_merge_same_moment_chains_across_kind_while_the_times_overlap():
+     zones = [{"zone": "Archive", "puzzle": "", "start_s": 0.0, "end_s": 80.0}]
+     findings = [
+-        _finding(1, 10.0, "stuck", "keep"),
++        _finding(1, 10.0, "confused", "keep", quote="where is it"),
+         _finding(2, 20.0, "surprised", "keep"),
+-        _finding(3, 40.0, "stuck", "keep", quote="still here"),
++        _finding(3, 40.0, "stuck", "keep"),
+     ]
+     merged = merge_same_moment(findings, zones)
+-    assert [f["id"] for f in merged] == ["f2", "f3"]
+-    stuck = next(f for f in merged if f["id"] == "f3")
+-    assert stuck["quote"] == "still here"
+-    assert stuck["end_s"] == 40.0
+-    assert next(f for f in merged if f["id"] == "f2")["end_s"] is None
++    assert [f["id"] for f in merged] == ["f3"]
++    card = merged[0]
++    assert card["kind"] == "stuck"
++    assert card["quote"] == "where is it"
++    assert card["time_s"] == 10.0 and card["end_s"] == 40.0
++
++
++def test_merge_same_moment_starts_a_new_arch_after_a_gap_in_the_same_room():
++    zones = [{"zone": "Archive", "puzzle": "", "start_s": 0.0, "end_s": 200.0}]
++    findings = [
++        _finding(1, 10.0, "stuck", "keep"),
++        _finding(2, 50.0, "stuck", "keep"),
++    ]
++    assert [f["id"] for f in merge_same_moment(findings, zones)] == ["f1", "f2"]
+ 
+ 
+ def test_merge_same_moment_starts_again_after_the_player_reenters():

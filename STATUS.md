@@ -8,17 +8,19 @@ Backup mode is on. Claude Sonnet 5.5 hit its limit mid task (access returns 2026
 
 Going public is the last step: docs/PUBLIC_CHECKLIST.md.
 
-## Where things stand (2026-10-29, morning)
+## Where things stand (2026-10-30, evening)
 
-The pipeline on main is one path. Contributor Spark receives the video with its sound. Open mode is Muse Spark Open on Baseten: the mp4 plus a separate wav, and Voice Transcribe still checks every quote. The frame path is gone. Opus review of that change: PASS, no blocking findings (`docs/reviews/16-fixes-now-opus.md`). Tests: 184 passed, 1 deselected (the say-clip test, sandbox). He reruns the session himself after he updates the volumes.
+The pipeline on main is one path. Contributor Spark receives the video with its sound. Open mode is Muse Spark Open on Baseten: the mp4 plus a separate wav, and Voice Transcribe still checks every quote. The frame path is gone. Read DECISIONS.md from 2026-10-29 before changing prompts, the chain, or the editor.
 
-Fork `playtest-lens` is `8049b5d`: the level-load fix plus his Lobby and Laboratory volumes. The doc's expected hash `290cba9` is stale. He edits on Windows (`docs/COGITO_VOLUMES.md`). The analyzer stays on the Mac. The lobby recording and four logs are in `recordings/cogito/` (git-ignored). Reports from that session, also git-ignored: `runs/check/cogito-report-26.html` (contributor), `cogito-report-open.html` (frames plus transcript), `cogito-report-modal-video.html` (dropped), `cogito-report-baseten-av.html` (video plus wav, outside the client).
+Fork `playtest-lens` is `412e213`: Meeting Room spelling fixed, CEO Office puzzle line is Bear Head. He edits volumes on Windows. The analyzer stays on the Mac.
+
+Player 1's session (git-ignored): `recordings/cogito/cogito_person2.mkv` and `recordings/cogito/2026-10-30T12-20-05Z.jsonl`. Reports in `runs/check/`: `person2-report.html` (Spark, the page to show) and `person2-report-open.html` (Open). The chain versions `person2-report-chain.html` and `person2-report-open-chain.html` stay for reading. The chain code is shelved at `docs/shelved/chain-merge.patch` and is not what `merge_same_moment` does. His own lobby session is still `cogito-report-26.html` and `cogito-report-open.html`.
 
 ## In flight
 
-- Task 27 is implemented and reviewed, not yet his rerun. Same-kind cards within 8 seconds merge. The time-lost tile hides when `lost_s` is 0, because the check still writes `end_s` null. The tag "by design" is Opus's proposal.
-- The verdict template and the heat thresholds stay proposals.
-- A submission is not ready: the repo is private, the README has run steps but no video, and there is no second player. Overview: `docs/reviews/15-state-overview-opus.md`.
+- No analyzer change until he says the Spark page is wrong. Claude polishes the report look when its limit is back. He may reread the Open page and ask Claude to read it too.
+- Do not chase the ripped-page combine. Do not build the editor ghost before the submission.
+- The repo is still private. The 3-minute video is not recorded. "by design" is still Opus's proposal.
 
 ## Remind Sasha
 
@@ -26,14 +28,15 @@ Fork `playtest-lens` is `8049b5d`: the level-load fix plus his Lobby and Laborat
 
 ## Next
 
-1. Sasha on Windows: pull `playtest-lens` (tip `8049b5d` before his edits), fix the volumes, commit only the two scene files, push, and copy the new video and log to the Mac.
-2. He looks at two cards on `cogito-report-baseten-av.html`: the Cutscene Trigger label at 1:53, and the hidden-room sculpture called a lion head. The word "by design" is his to change.
-3. After the new log is here, rerun contributor and the locked open path. Then a second player, blind notes, the 3-minute video, and the public checklist.
+1. He finishes reading the Open page if he wants, and Claude reads it when asked. No prompt edits from that unless he says a card is wrong.
+2. Claude polishes the report look when the limit is back. Not the findings.
+3. He records the 3-minute video from the Spark page: one moment, one drop, the map, then Open beside it. The keypad sentence is his: stuck on the puzzle, not stuck on progression, because of the toilet route.
+4. Public checklist, repo public last, submit Wednesday 4 November, well before 9:00 PM Eastern. Freeze Tuesday 3 November.
 
 ## Open questions for Sasha
 
-The word that replaced "planned challenge?" ("by design", Opus's proposal). Whether a second player is available this week. Nothing else blocks his volume pass.
+Whether her session may be used to tune prompts, or is kept clean for the score. The word "by design" (Opus's proposal). Nothing else blocks the video.
 
 ## Credits used
 
-`runs/costs.jsonl` sums to $15.72. Of that, Muse Spark Open on Baseten is $1.85, including this morning's video-plus-wav session at $0.57. Voice Transcribe is $0.12. Contributor Spark is $0.07. A Modal video report of about $0.50 was billed to his Modal balance and is not in that file. The Meta pool figure of about $23.90 left was his, on 2026-10-28. No new Meta call was made for the video-plus-wav experiment.
+`runs/costs.jsonl` sums to $18.07 on 2026-10-30. Muse Spark Open on Baseten is $3.94. Voice Transcribe is $0.28. Contributor Spark is $0.17. The Meta pool figure of about $23.90 left was his, on 2026-10-28, and has not been rechecked against Meta's dashboard. Her session's Open check is inside the Baseten figure.
