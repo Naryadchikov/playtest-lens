@@ -108,7 +108,7 @@ LABELS = {
         # Proposal (Claude Sonnet 5.5, 2026-10-28, from the task 25 plan), not Sasha's wording.
         "sub": "In time order. A room with a puzzle line groups its attempts. Time is from the recording's start flash.",
         "fallback": "Moments",
-        "attempt": "Attempt {n} ({start}-{end})",
+        "attempt": "Attempt {n} ({span})",
         "attempt_note": "{attempts}, {moments}, {span}",
         "note": "{moments}, {span}",
     },
@@ -1238,7 +1238,7 @@ def _render_groups(kept, markers_by_moment, pins_available):
                     attempt_key[2], max(_moment_end(f) for f in findings)
                 )
                 out.append(
-                    f'<h4>{_e(LABELS["moments"]["attempt"].format(n=attempt, start=_mss(attempt_start), end=_mss(attempt_end)))}</h4>'
+                    f'<h4>{_e(LABELS["moments"]["attempt"].format(n=attempt, span=_span(attempt_start, attempt_end)))}</h4>'
                 )
             out.extend(
                 _render_card(finding, markers_by_moment, pins_available)

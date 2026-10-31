@@ -48,3 +48,7 @@ One list for things found but not fixed: a pre-existing review finding, a case t
 ## Visit merge (task 28, GLM review, 2026-10-29)
 
 - The 8-second chain for findings with no zone is not reset by a room visit in between. Two corridor stucks 8 seconds apart can fold together even when a room visit sits between them. Less folding than the old rule. From docs/reviews/17-system-glm.md.
+
+## Report page (review 18, Grok, 2026-10-31)
+
+- Print does not hide the clip: `@media print { .clip { display: none } }` loses to `.clip.video { display: block }` on specificity, so a printed page keeps the video box. Pre-existing; the task 29 redesign rewrites this CSS. From docs/reviews/18-report-polish-grok.md.
