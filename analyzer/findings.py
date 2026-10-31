@@ -11,6 +11,9 @@ from pathlib import Path
 FORMAT_VERSION = 1
 KINDS = ("confused", "stuck", "surprised", "suspected_bug")
 VERDICTS = ("keep", "drop")
+EVENT_KINDS = ("door", "pickup", "quest", "lock", "pause", "resume")
+PROBLEM_FRICTIONS = ("blocked", "stuck")
+PROBLEM_RESOLVED = ("solved", "abandoned", "mixed", "unknown")
 
 
 def _fail(field, problem):
@@ -72,18 +75,90 @@ def _check_time_or_null(value, field, duration_s):
     return value
 
 
-# The optional blocks the report page draws: summary, route, markers and
-# cross_player. A file without them is still valid.
+def _check_list(value, field):
+    if not isinstance(value, list):
+        _fail(field, "must be a list")
+    return value
+
+
+def _check_object(value, field):
+    if not isinstance(value, dict):
+        _fail(field, "must be an object")
+    return value
+
+
+# A floor is an index into route.maps; without a route, any index from 0.
+def _check_floor(value, field, floors):
+    _check_int(value, field)
+    if value < 0 or (floors is not None and value >= floors):
+        _fail(field, "must be an index into route.maps")
+    return value
+
+
+def _check_problems(problems):
+    _check_list(problems, "summary.problems")
+    for index, problem in enumerate(problems):
+        where = f"summary.problems[{index}]"
+        _check_object(problem, where)
+        _check_string(_require(problem, "place", where), f"{where}.place")
+        moments = _check_list(_require(problem, "moments", where), f"{where}.moments")
+        if not moments:
+            _fail(f"{where}.moments", "must name at least one finding")
+        for moment in moments:
+            _check_string(moment, f"{where}.moments")
+        _check_int(_require(problem, "attempts", where), f"{where}.attempts")
+        _check_number(_require(problem, "lost_s", where), f"{where}.lost_s")
+        if _require(problem, "friction", where) not in PROBLEM_FRICTIONS:
+            _fail(f"{where}.friction", f"must be one of {', '.join(PROBLEM_FRICTIONS)}")
+        if _require(problem, "resolved", where) not in PROBLEM_RESOLVED:
+            _fail(f"{where}.resolved", f"must be one of {', '.join(PROBLEM_RESOLVED)}")
+
+
+def _check_route(route):
+    _check_object(route, "route")
+    _check_string(_require(route, "scene", "route"), "route.scene")
+    maps = _check_list(_require(route, "maps", "route"), "route.maps")
+    if not maps:
+        _fail("route.maps", "must name at least one map")
+    for name in maps:
+        _check_string(name, "route.maps")
+    floors = len(maps)
+    points = _check_list(_require(route, "points", "route"), "route.points")
+    for index, point in enumerate(points):
+        where = f"route.points[{index}]"
+        if not isinstance(point, list) or len(point) != 4:
+            _fail(where, "must be [t, x, z, floor]")
+        for axis, value in zip(("t", "x", "z"), point):
+            _check_number(value, f"{where}.{axis}")
+        _check_floor(point[3], f"{where}.floor", floors)
+    heat = _check_list(_require(route, "heat", "route"), "route.heat")
+    for index, spot in enumerate(heat):
+        where = f"route.heat[{index}]"
+        _check_object(spot, where)
+        for name in ("x", "z", "r_m", "seconds"):
+            _check_number(_require(spot, name, where), f"{where}.{name}")
+        _check_floor(_require(spot, "floor", where), f"{where}.floor", floors)
+    spans = _check_list(_require(route, "floor_spans", "route"), "route.floor_spans")
+    for index, span in enumerate(spans):
+        where = f"route.floor_spans[{index}]"
+        _check_object(span, where)
+        _check_floor(_require(span, "floor", where), f"{where}.floor", floors)
+        for name in ("start_s", "end_s"):
+            _check_number(_require(span, name, where), f"{where}.{name}")
+    return floors
+
+
+# The optional blocks the report page draws: summary, route, markers,
+# zones, events and cross_player. A file without them is still valid.
+# Returns the number of floors in route.maps, or None without a route.
 def _check_optional_blocks(data):
     summary = data.get("summary")
     if summary is not None:
-        if not isinstance(summary, dict):
-            _fail("summary", "must be an object")
+        _check_object(summary, "summary")
         _check_string(_require(summary, "verdict", "summary"), "summary.verdict")
         _check_number(_require(summary, "lost_s", "summary"), "summary.lost_s")
         counts = _require(summary, "counts", "summary")
-        if not isinstance(counts, dict):
-            _fail("summary.counts", "must be an object")
+        _check_object(counts, "summary.counts")
         for name in ("stuck", "confused", "surprised", "suspected_bug"):
             _check_int(
                 _require(counts, name, "summary.counts"),
@@ -91,47 +166,49 @@ def _check_optional_blocks(data):
             )
         _check_int(_require(summary, "kept", "summary"), "summary.kept")
         _check_int(_require(summary, "dropped", "summary"), "summary.dropped")
+        _check_problems(_require(summary, "problems", "summary"))
 
+    floors = None
     route = data.get("route")
     if route is not None:
-        if not isinstance(route, dict):
-            _fail("route", "must be an object")
-        _check_string(_require(route, "scene", "route"), "route.scene")
-        _check_string(_require(route, "map", "route"), "route.map")
-        points = _require(route, "points", "route")
-        if not isinstance(points, list):
-            _fail("route.points", "must be a list")
-        for index, point in enumerate(points):
-            where = f"route.points[{index}]"
-            if not isinstance(point, list) or len(point) != 3:
-                _fail(where, "must be [t, x, z]")
-            for axis, value in zip(("t", "x", "z"), point):
-                _check_number(value, f"{where}.{axis}")
-        heat = _require(route, "heat", "route")
-        if not isinstance(heat, list):
-            _fail("route.heat", "must be a list")
-        for index, spot in enumerate(heat):
-            where = f"route.heat[{index}]"
-            if not isinstance(spot, dict):
-                _fail(where, "must be an object")
-            for name in ("x", "z", "r_m", "seconds"):
-                _check_number(
-                    _require(spot, name, where), f"{where}.{name}"
-                )
+        floors = _check_route(route)
 
     markers = data.get("markers")
     if markers is not None:
-        if not isinstance(markers, list):
-            _fail("markers", "must be a list")
+        _check_list(markers, "markers")
         for index, marker in enumerate(markers):
             where = f"markers[{index}]"
-            if not isinstance(marker, dict):
-                _fail(where, "must be an object")
+            _check_object(marker, where)
             for name in ("t", "x", "z"):
                 _check_number(_require(marker, name, where), f"{where}.{name}")
+            _check_floor(_require(marker, "floor", where), f"{where}.floor", floors)
             _check_string_or_null(
                 _require(marker, "moment", where), f"{where}.moment"
             )
+
+    zones = data.get("zones")
+    if zones is not None:
+        _check_list(zones, "zones")
+        for index, zone in enumerate(zones):
+            where = f"zones[{index}]"
+            _check_object(zone, where)
+            _check_string(_require(zone, "zone", where), f"{where}.zone")
+            _check_string(_require(zone, "puzzle", where), f"{where}.puzzle")
+            _check_number(_require(zone, "start_s", where), f"{where}.start_s")
+            end_s = _require(zone, "end_s", where)
+            if end_s is not None:
+                _check_number(end_s, f"{where}.end_s")
+
+    events = data.get("events")
+    if events is not None:
+        _check_list(events, "events")
+        for index, event in enumerate(events):
+            where = f"events[{index}]"
+            _check_object(event, where)
+            _check_number(_require(event, "t", where), f"{where}.t")
+            if _require(event, "kind", where) not in EVENT_KINDS:
+                _fail(f"{where}.kind", f"must be one of {', '.join(EVENT_KINDS)}")
+            _check_string(_require(event, "label", where), f"{where}.label")
 
     cross_player = data.get("cross_player")
     if cross_player is not None:
@@ -168,6 +245,7 @@ def _check_optional_blocks(data):
                     _require(player, "here", player_where),
                     f"{player_where}.here",
                 )
+    return floors
 
 
 def load(path):
@@ -175,12 +253,24 @@ def load(path):
 
     Raises ValueError naming the bad field on the first problem found.
     """
+    return check(read(path))
+
+
+# Parse a findings file without checking it. Only for a step that
+# rewrites the blocks it owns before calling check().
+def read(path):
     text = Path(path).read_text(encoding="utf-8")
     try:
-        data = json.loads(text)
+        return json.loads(text)
     except json.JSONDecodeError as exc:
         raise ValueError(f"findings file: invalid JSON ({exc})") from exc
 
+
+def check(data):
+    """Check a parsed findings dict, returning it unchanged.
+
+    Raises ValueError naming the bad field on the first problem found.
+    """
     if not isinstance(data, dict):
         _fail("findings file", "must be a JSON object")
 
@@ -207,7 +297,7 @@ def load(path):
         if name in session:
             _check_string(session[name], f"session.{name}")
 
-    _check_optional_blocks(data)
+    floors = _check_optional_blocks(data)
 
     findings = _require(data, "findings", "")
     if not isinstance(findings, list):
@@ -295,6 +385,9 @@ def load(path):
                 _fail(f"{where}.at", "must be an object")
             _check_number(_require(at, "x", f"{where}.at"), f"{where}.at.x")
             _check_number(_require(at, "z", f"{where}.at"), f"{where}.at.z")
+            _check_floor(
+                _require(at, "floor", f"{where}.at"), f"{where}.at.floor", floors
+            )
 
         if verdict == "keep" and rank is None:
             _fail(f"{where}.rank", "kept findings must have a rank")

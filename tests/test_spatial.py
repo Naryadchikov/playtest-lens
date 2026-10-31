@@ -27,8 +27,8 @@ def _scene(name, t=0.0):
     return {"event": "scene", "t": t, "scene": name}
 
 
-def _position(t, x=0.0, z=0.0):
-    return {"event": "position", "t": t, "x": x, "y": 0.8, "z": z}
+def _position(t, x=0.0, z=0.0, y=0.8):
+    return {"event": "position", "t": t, "x": x, "y": y, "z": z}
 
 
 def _finding(fid="f1", rank=1, time_s=10.0, end_s=None, kind="stuck", verdict="keep"):
@@ -45,6 +45,21 @@ def _finding(fid="f1", rank=1, time_s=10.0, end_s=None, kind="stuck", verdict="k
         "sources": ["spark"],
         "check": {"verdict": verdict, "note": "A note.", "model": "muse-spark"},
     }
+
+
+def _placed(finding, area, puzzle=None, attempt=None, start_s=0.0, friction="learning", resolved="unknown"):
+    finding["check"].update(friction=friction, resolved=resolved)
+    finding["beat"] = {
+        "area": area,
+        "puzzle": puzzle,
+        "zone": area,
+        "puzzle_number": 1 if puzzle else None,
+        "attempt": attempt,
+        "attempt_start_s": start_s,
+        "attempt_end_s": start_s + 30.0,
+        "index": 1,
+    }
+    return finding
 
 
 def _data(findings, duration_s=120.0):
@@ -83,8 +98,8 @@ def test_video_time_maps_through_the_first_flash():
     ]
     data = spatial.enrich(_data([]), events, video_flash_s=4.0)
     # A position at log 11.0 is at video 11.0 + (4.0 - 1.0) = 14.0.
-    assert data["route"]["points"][0] == [14.0, 1.0, 2.0]
-    assert data["route"]["points"][-1] == [15.5, 3.0, 4.0]
+    assert data["route"]["points"][0] == [14.0, 1.0, 2.0, 0]
+    assert data["route"]["points"][-1] == [15.5, 3.0, 4.0, 0]
     # The sample before the first flash is not on the route.
     assert all(point[0] >= 4.0 for point in data["route"]["points"])
 
@@ -121,7 +136,7 @@ def test_map_choice_follows_time_with_samples():
     events.append(_scene(LOBBY, t=20.5))
     data = spatial.enrich(_data([]), events, video_flash_s=0.0)
     assert data["route"]["scene"] == LAB
-    assert data["route"]["map"] == "laboratory"
+    assert data["route"]["maps"] == ["laboratory"]
 
 
 def test_unmapped_dominant_scene_hides_the_map(capsys):
@@ -186,9 +201,11 @@ def test_at_within_three_seconds_and_absent_beyond():
     far = _finding("f2", 2, time_s=13.5)
     dropped = _finding("f3", None, time_s=10.0, verdict="drop")
     data = spatial.enrich(_data([near, far, dropped]), events, video_flash_s=0.0)
-    assert near["at"] == {"x": 7.0, "z": 7.0}
+    assert near["at"] == {"x": 7.0, "z": 7.0, "floor": 0}
     assert "at" not in far
-    assert "at" not in dropped
+    # A dropped candidate is pinned too, and moves aside for a kept pin.
+    assert dropped["at"]["floor"] == 0
+    assert _px_distance(_lobby_meta(), near["at"], dropped["at"]) >= spatial.PIN_SEPARATION_PX
 
 
 def test_the_pin_nudge_keeps_two_close_pins_apart_deterministically():
@@ -198,7 +215,7 @@ def test_the_pin_nudge_keeps_two_close_pins_apart_deterministically():
     data = _data([first, second])
     spatial.enrich(data, events, video_flash_s=0.0)
     meta = _lobby_meta()
-    assert first["at"] == {"x": 5.0, "z": 5.0}
+    assert first["at"] == {"x": 5.0, "z": 5.0, "floor": 0}
     assert _px_distance(meta, first["at"], second["at"]) >= spatial.PIN_SEPARATION_PX
 
     nudged = copy.deepcopy(data)
@@ -221,6 +238,7 @@ def test_markers_render_as_f9_pins_linked_to_the_card():
     data = spatial.enrich(
         _data([_finding("f1", 1, time_s=33.0, end_s=34.0)]), events, video_flash_s=4.0
     )
+    assert [marker["floor"] for marker in data["markers"]] == [0, 0]
     page = render_html(data)
     assert page.count('class="pin f9"') == 2
     assert 'class="pin f9" id="pin-f1" href="#m1"' in page
@@ -282,7 +300,7 @@ def test_enrich_twice_gives_the_same_file():
     once = json.dumps(first, sort_keys=True)
     spatial.enrich(first, events, video_flash_s=2.0)
     assert json.dumps(first, sort_keys=True) == once
-    assert first["route"]["map"] == "lobby"
+    assert first["route"]["maps"] == ["lobby", "lobby_upper"]
     assert first["summary"]["verdict"] == (
         "3 moments worth a look: 1 stuck, 1 confused, 1 surprised."
     )
@@ -308,6 +326,8 @@ def test_enriched_file_loads_and_renders(tmp_path):
     page = render_html(data)
     assert 'id="where"' in page
     assert 'class="tiles"' in page
+    assert 'class="strip"' in page
+    assert page.count('<figure class="floor"') == 2
     assert 'fill="url(#heat-blob)"' in page
     assert "<polyline" in page
     assert 'id="pin-m1"' in page
@@ -317,3 +337,152 @@ def test_enriched_file_loads_and_renders(tmp_path):
 def test_no_sync_flash_raises():
     with pytest.raises(ValueError, match="sync_flash"):
         spatial.enrich(_data([]), [_scene(LOBBY)], video_flash_s=0.0)
+
+
+def test_floors_come_from_height_and_tile_the_route():
+    # Lobby's upper floor starts at y 2.4 (report/maps/lobby_upper.json).
+    events = [
+        _flash(),
+        _scene(LOBBY, t=0.5),
+        _position(1.0, x=1.0, y=0.8),
+        _position(2.0, x=2.0, y=2.4),
+        _position(3.0, x=3.0, y=3.5),
+        {"event": "position", "t": 4.0, "x": 4.0, "z": 0.0},
+        _position(5.0, x=5.0, y=0.9),
+    ]
+    upstairs = _finding("f1", 1, time_s=3.0)
+    data = spatial.enrich(_data([upstairs]), events, video_flash_s=0.0)
+    route = data["route"]
+    assert route["maps"] == ["lobby", "lobby_upper"]
+    # At y_floor_min is upstairs; a line with no height is the ground floor.
+    assert [point[3] for point in route["points"]] == [0, 1, 1, 0, 0]
+    assert route["floor_spans"] == [
+        {"floor": 0, "start_s": 1.0, "end_s": 2.0},
+        {"floor": 1, "start_s": 2.0, "end_s": 4.0},
+        {"floor": 0, "start_s": 4.0, "end_s": 5.0},
+    ]
+    assert upstairs["at"] == {"x": 3.0, "z": 0.0, "floor": 1}
+
+
+def test_heat_is_per_floor_and_never_mixes_a_room_with_the_one_above():
+    events = [_flash(), _scene(LOBBY, t=0.5)]
+    # 30 s below, then 20 s right above it on the upper floor.
+    for step in range(61):
+        events.append(_position(1.0 + 0.5 * step, x=-3.0, z=-13.0, y=0.8))
+    for step in range(41):
+        events.append(_position(40.0 + 0.5 * step, x=-3.0, z=-13.0, y=3.5))
+    data = spatial.enrich(_data([]), events, video_flash_s=0.0)
+    spots = data["route"]["heat"]
+    assert [(spot["floor"], spot["seconds"]) for spot in spots] == [(0, 32.0), (1, 20.0)]
+    assert all(spot["x"] == -3.0 and spot["z"] == -13.0 for spot in spots)
+
+
+def test_the_pin_nudge_works_per_floor():
+    events = [
+        _flash(),
+        _scene(LOBBY, t=0.5),
+        _position(10.0, x=-3.0, z=-13.0, y=0.8),
+        _position(11.0, x=-3.0, z=-13.0, y=3.5),
+    ]
+    below = _finding("f1", 1, time_s=10.0)
+    above = _finding("f2", 2, time_s=11.0)
+    spatial.enrich(_data([below, above]), events, video_flash_s=0.0)
+    # Same spot, different floors: neither pin moves.
+    assert below["at"] == {"x": -3.0, "z": -13.0, "floor": 0}
+    assert above["at"] == {"x": -3.0, "z": -13.0, "floor": 1}
+
+
+def test_problems_rank_places_by_friction_then_time_lost_then_time():
+    findings = [
+        # A learning-only area is never a problem.
+        _placed(_finding("f1", 1, time_s=5.0, kind="confused"), "Hall"),
+        # A puzzle over two attempts: blocked once, solved once.
+        _placed(_finding("f2", 2, time_s=20.0, end_s=30.0), "Vault", "Dial", 1, 15.0, "blocked", "abandoned"),
+        _placed(_finding("f3", 3, time_s=60.0), "Vault", "Dial", 2, 55.0, "learning", "solved"),
+        # The same area with no puzzle is its own place.
+        _placed(_finding("f4", 4, time_s=70.0, end_s=130.0, kind="confused"), "Vault", None, None, 65.0, "stuck"),
+        # Blocked, more time lost than the Dial: first.
+        _placed(_finding("f5", 5, time_s=80.0, end_s=100.0), "Kitchen", None, None, 75.0, "blocked"),
+        # Stuck, no time lost, but earlier than nothing else at stuck.
+        _placed(_finding("f6", 6, time_s=10.0, kind="surprised"), "Atrium", None, None, 8.0, "stuck"),
+        # A dropped candidate never counts.
+        _placed(_finding("f7", None, time_s=90.0, verdict="drop"), "Basement", None, None, 88.0, "blocked"),
+    ]
+    events = [_flash(), _scene(LOBBY, t=0.5), _position(1.0)]
+    data = spatial.enrich(_data(findings, duration_s=200.0), events, video_flash_s=0.0)
+    problems = data["summary"]["problems"]
+    assert [problem["place"] for problem in problems] == [
+        "Kitchen", "Vault, Dial", "Vault", "Atrium",
+    ]
+    code_lock = problems[1]
+    assert code_lock == {
+        "place": "Vault, Dial",
+        "moments": ["f2", "f3"],
+        "attempts": 2,
+        "lost_s": 10.0,
+        "friction": "blocked",
+        "resolved": "mixed",
+    }
+    assert problems[2]["lost_s"] == 60.0 and problems[2]["resolved"] == "unknown"
+    assert problems[3]["friction"] == "stuck"
+
+
+def test_problems_keep_at_most_five_places():
+    findings = [
+        _placed(_finding(f"f{n}", n, time_s=10.0 * n), f"Room {n}", None, None, 10.0 * n, "stuck")
+        for n in range(1, 8)
+    ]
+    events = [_flash(), _scene(LOBBY, t=0.5), _position(1.0)]
+    data = spatial.enrich(_data(findings), events, video_flash_s=0.0)
+    assert [p["place"] for p in data["summary"]["problems"]] == [f"Room {n}" for n in range(1, 6)]
+
+
+def test_events_and_zones_are_written_in_video_time():
+    # Video time = log time - 2.
+    events = [
+        {"event": "pickup", "t": 1.0, "item": "Before the recording"},
+        _flash(t=5.0),
+        _scene(LOBBY, t=5.05),
+        {"event": "zone_enter", "t": 6.0, "zone": "Lobby", "puzzle": ""},
+        {"event": "door", "t": 7.0, "open": True, "path": "HALL/BadgeDoor/Frame"},
+        {"event": "door", "t": 8.0, "open": False, "path": "Lift"},
+        {"event": "lock", "t": 9.0, "locked": False, "path": "NORTH_ROOM/PlateDoor/Frame"},
+        {"event": "pickup", "t": 10.0, "item": "Crate"},
+        {"event": "quest", "t": 11.0, "quest": "find_exit", "step": "completed"},
+        {"event": "pause", "t": 12.0},
+        {"event": "resume", "t": 13.0},
+        {"event": "input", "t": 13.5, "action": "jump", "pressed": True},
+        {"event": "zone_exit", "t": 14.0, "zone": "Lobby", "puzzle": ""},
+        {"event": "pickup", "t": 200.0, "item": "After the recording"},
+    ]
+    data = spatial.enrich(_data([], duration_s=100.0), events, video_flash_s=3.0)
+    assert data["events"] == [
+        {"t": 5.0, "kind": "door", "label": "HALL/BadgeDoor opened"},
+        {"t": 6.0, "kind": "door", "label": "Lift closed"},
+        {"t": 7.0, "kind": "lock", "label": "NORTH_ROOM/PlateDoor unlocked"},
+        {"t": 8.0, "kind": "pickup", "label": "Picked up Crate"},
+        {"t": 9.0, "kind": "quest", "label": "find_exit completed"},
+        {"t": 10.0, "kind": "pause", "label": "Paused"},
+        {"t": 11.0, "kind": "resume", "label": "Resumed"},
+    ]
+    assert data["zones"] == [{"zone": "Lobby", "puzzle": "", "start_s": 4.0, "end_s": 12.0}]
+
+
+def test_command_line_upgrades_a_file_in_the_old_route_format(tmp_path):
+    old = json.loads(FINDINGS.read_text(encoding="utf-8"))
+    old["route"] = {"scene": LOBBY, "map": "lobby", "points": [[0.0, 1.0, 2.0]], "heat": []}
+    counts = {"stuck": 0, "confused": 0, "surprised": 0, "suspected_bug": 0}
+    old["summary"] = {"verdict": "old", "lost_s": 0, "counts": counts, "kept": 0, "dropped": 0}
+    old["findings"][0]["at"] = {"x": 1.0, "z": 2.0}
+    path = tmp_path / "findings.json"
+    path.write_text(json.dumps(old), encoding="utf-8")
+    with pytest.raises(ValueError, match="summary.problems"):
+        findings_module.load(path)
+    del old["summary"]
+    path.write_text(json.dumps(old), encoding="utf-8")
+    with pytest.raises(ValueError, match="route.maps"):
+        findings_module.load(path)
+    assert spatial.main([str(path), "--log", str(REAL_LOG), "--video-flash-s", "2.0"]) == 0
+    data = findings_module.load(path)
+    assert data["route"]["maps"] == ["lobby", "lobby_upper"]
+    assert "problems" in data["summary"]

@@ -19,4 +19,4 @@ Every line has `t` (number) and `event` (string). While the player is inside a t
 | `death` | none | From the COGITO adapter: the player died. |
 | adapter events | varies | Pickup, door, lock, keypad and quest lines from the COGITO adapter. Unknown events are ignored by the analyzer. |
 
-Consumers: `analyzer/log_candidates.py` (deaths, retries, idle, looking around, backtracks), `analyzer/beats.py` (zone intervals bound Attempts), and `analyzer/check.py` (the log slice inside each checked clip).
+Consumers: `analyzer/log_candidates.py` (deaths, retries, idle, looking around, backtracks), `analyzer/beats.py` (zone intervals bound Attempts), `analyzer/check.py` (the log slice inside each checked clip), and `analyzer/spatial.py` (the route, with the floor from `position` `y`; heat; F9 markers; door, pickup, quest, lock, pause and resume lines as the report's game events).

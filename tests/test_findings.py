@@ -74,6 +74,24 @@ def test_load_accepts_the_optional_blocks():
     assert data["summary"]["kept"] == 9
     assert len(data["route"]["points"]) == 40
     assert len(data["cross_player"]) == 3
+    assert data["route"]["maps"] == ["lobby", "lobby_upper"]
+    assert len(data["summary"]["problems"]) == 2
+
+
+def test_a_summary_without_problems_is_the_old_format(tmp_path):
+    data = _redesign_data()
+    del data["summary"]["problems"]
+    with pytest.raises(ValueError, match=r"summary\.problems: missing"):
+        findings.load(_write(tmp_path, data))
+
+
+def test_zones_events_and_a_dropped_pin_are_optional(tmp_path):
+    data = _redesign_data()
+    del data["zones"], data["events"]
+    for finding in data["findings"]:
+        if finding["check"]["verdict"] == "drop":
+            finding.pop("at", None)
+    assert findings.load(_write(tmp_path, data))["findings"]
 
 
 @pytest.mark.parametrize(
@@ -83,11 +101,24 @@ def test_load_accepts_the_optional_blocks():
         (["summary", "lost_s"], "285", "summary.lost_s"),
         (["summary", "counts", "stuck"], True, "summary.counts.stuck"),
         (["summary", "kept"], 9.5, "summary.kept"),
-        (["route", "map"], 3, "route.map"),
-        (["route", "points", 0], [1.0, 2.0], "route.points[0]"),
+        (["route", "maps"], "lobby", "route.maps"),
+        (["route", "maps"], [], "route.maps"),
+        (["route", "points", 0], [1.0, 2.0, 3.0], "route.points[0]"),
+        (["route", "points", 0, 3], 2, "route.points[0].floor"),
         (["route", "heat", 0, "r_m"], "2", "route.heat[0].r_m"),
+        (["route", "heat", 0, "floor"], -1, "route.heat[0].floor"),
+        (["route", "floor_spans", 0, "end_s"], None, "route.floor_spans[0].end_s"),
         (["markers", 0, "t"], "1", "markers[0].t"),
+        (["markers", 0, "floor"], 0.0, "markers[0].floor"),
         (["markers", 0, "moment"], 7, "markers[0].moment"),
+        (["zones", 0, "puzzle"], None, "zones[0].puzzle"),
+        (["zones", 0, "end_s"], "open", "zones[0].end_s"),
+        (["events", 0, "kind"], "death", "events[0].kind"),
+        (["events", 0, "label"], None, "events[0].label"),
+        (["summary", "problems", 0, "moments"], [], "summary.problems[0].moments"),
+        (["summary", "problems", 0, "friction"], "learning", "summary.problems[0].friction"),
+        (["summary", "problems", 0, "resolved"], "yes", "summary.problems[0].resolved"),
+        (["summary", "problems", 0, "attempts"], 1.5, "summary.problems[0].attempts"),
         (["cross_player", 0, "of"], "3", "cross_player[0].of"),
         (
             ["cross_player", 0, "players", 0, "here"],
@@ -95,6 +126,7 @@ def test_load_accepts_the_optional_blocks():
             "cross_player[0].players[0].here",
         ),
         (["findings", 0, "at", "x"], "left", "findings[0].at.x"),
+        (["findings", 0, "at", "floor"], 2, "findings[0].at.floor"),
         (["findings", 0, "at"], "here", "findings[0].at"),
         (
             ["findings", 0, "check", "resolved_after_s"],

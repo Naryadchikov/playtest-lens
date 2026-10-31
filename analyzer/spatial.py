@@ -1,16 +1,19 @@
-"""Route, heat, pins, markers and summary computed from a session log.
+"""Route, floors, heat, pins, markers, zones, events and summary from a log.
 
 One path: the log is already loaded by log_candidates.load_log and the
 findings are already checked. This module only adds the optional fields
-the report page draws (route, markers, summary, finding.at), and makes
-no model call. analyzer/check.py calls it once after assign_beats when
-a log is given, and `python -m analyzer.spatial` re-runs it alone on an
-existing findings file.
+the report page draws (route, markers, zones, events, summary,
+finding.at), and makes no model call. analyzer/check.py calls it once
+after assign_beats when a log is given, and `python -m analyzer.spatial`
+re-runs it alone on an existing findings file.
 
-Which map: the report draws one map per report, the one whose scene
-held the most time with position samples. Without a matching map file
-no route, no pin and no marker is written, and one stderr line names
-the scene. One map per report is a known limit (docs/FOLLOWUPS.md).
+Which map: the report draws one scene, the one that held the most time
+with position samples. A scene may have several map files, one per
+floor: they share the scene and are ordered by `y_floor_min` (none for
+the ground floor). A sample is on the highest floor whose `y_floor_min`
+is at or below its height. Without a matching map file no route, no pin
+and no marker is written, and one stderr line names the scene. One
+scene per report is a known limit (docs/FOLLOWUPS.md).
 
 All times are video seconds, mapped through the first sync_flash the
 same way log_candidates.find_candidates does. Coordinates are world
@@ -31,6 +34,7 @@ import math
 import sys
 from pathlib import Path
 
+from analyzer import beats
 from analyzer import findings as findings_module
 from analyzer import log_candidates
 
@@ -49,7 +53,15 @@ PIN_SEPARATION_PX = 55.0
 PIN_STEP_PX = 60.0
 PIN_NUDGE_LIMIT = 100
 
+# The top-level fields enrich writes. The command line drops them first.
+OWNED_BLOCKS = ("route", "markers", "zones", "events", "summary")
+
 KIND_ORDER = ("stuck", "confused", "surprised", "suspected_bug")
+
+# The problems block (summary.problems). Proposal by Claude Opus 5.5,
+# 2026-11-01, not Sasha's rule: Sasha decides the numbers.
+PROBLEM_FRICTION = ("blocked", "stuck")
+PROBLEMS_MAX = 5
 
 # Sasha owns the wording; the page only prints it.
 VERDICT = {
@@ -62,6 +74,18 @@ VERDICT = {
         "surprised": "{n} surprised",
         "suspected_bug": "{n} suspected bug",
     },
+}
+
+# Game event lines the page lists, and their labels. The names come from
+# the log's own values (node paths are rough; that is fine). Proposal
+# (Claude Opus 5.5, 2026-11-01), not Sasha's wording.
+EVENT_WORDS = {
+    "door": {True: "{name} opened", False: "{name} closed"},
+    "lock": {True: "{name} locked", False: "{name} unlocked"},
+    "pickup": "Picked up {item}",
+    "quest": "{quest} {step}",
+    "pause": "Paused",
+    "resume": "Resumed",
 }
 
 
@@ -106,6 +130,7 @@ def _collect(events, offset):
                     "scene": scene,
                     "t": round(float(event["t"]) + offset, 2),
                     "x": float(event["x"]),
+                    "y": None if event.get("y") is None else float(event["y"]),
                     "z": float(event["z"]),
                     "visit": visit,
                 }
@@ -136,7 +161,8 @@ def _scene_times(samples, scene_order):
     return totals
 
 
-# Map name and meta for a scene path, from report/maps/*.json.
+# Each scene's floors, from report/maps/*.json: a list of (map name,
+# meta), the ground floor (no y_floor_min) first, then by y_floor_min.
 def _maps():
     maps = {}
     if not MAPS_DIR.is_dir():
@@ -144,13 +170,20 @@ def _maps():
     for path in sorted(MAPS_DIR.glob("*.json")):
         meta = json.loads(path.read_text(encoding="utf-8"))
         scene = meta.get("scene")
-        if isinstance(scene, str) and scene not in maps:
-            maps[scene] = (path.stem, meta)
+        if isinstance(scene, str):
+            maps.setdefault(scene, []).append((path.stem, meta))
+    for floors in maps.values():
+        floors.sort(
+            key=lambda floor: (
+                floor[1].get("y_floor_min") is not None,
+                floor[1].get("y_floor_min") or 0.0,
+            )
+        )
     return maps
 
 
 # The scene the report draws: the most time with samples, then its map
-# file. Ties go to the scene seen first. An unmapped scene that holds
+# files. Ties go to the scene seen first. An unmapped scene that holds
 # the most time gives no map at all, and one stderr line names it.
 def _choose_scene(samples, scene_order):
     if not scene_order:
@@ -158,7 +191,7 @@ def _choose_scene(samples, scene_order):
             "the log names no scene: no route, at or markers written",
             file=sys.stderr,
         )
-        return None, None, None
+        return None, None
     scene_times = _scene_times(samples, scene_order)
     scene = max(
         scene_order,
@@ -166,13 +199,42 @@ def _choose_scene(samples, scene_order):
     )
     maps = _maps()
     if scene in maps:
-        map_name, meta = maps[scene]
-        return scene, map_name, meta
+        return scene, maps[scene]
     print(
         f"no map file for scene {scene!r}: no route, at or markers written",
         file=sys.stderr,
     )
-    return None, None, None
+    return None, None
+
+
+# The highest floor whose y_floor_min is at or below y. A sample with
+# no height is on the ground floor.
+def _floor_of(y, floors):
+    floor = 0
+    if y is None:
+        return floor
+    for index, (_name, meta) in enumerate(floors):
+        floor_min = meta.get("y_floor_min")
+        if floor_min is not None and floor_min <= y:
+            floor = index
+    return floor
+
+
+# Runs of consecutive route samples on one floor. A run ends where the
+# next one starts, so the spans tile the route's time.
+def _floor_spans(samples):
+    spans = []
+    for sample in samples:
+        if spans and spans[-1]["floor"] == sample["floor"]:
+            continue
+        if spans:
+            spans[-1]["end_s"] = sample["t"]
+        spans.append(
+            {"floor": sample["floor"], "start_s": sample["t"], "end_s": sample["t"]}
+        )
+    if spans:
+        spans[-1]["end_s"] = samples[-1]["t"]
+    return spans
 
 
 # Keep the first and the last sample, and at least ROUTE_MIN_STEP_S
@@ -197,11 +259,13 @@ def _cell_key(x, z):
     return (math.floor(x / HEAT_CELL_M), math.floor(z / HEAT_CELL_M))
 
 
-# Heat spots from time spent: each pair of consecutive samples in one
-# visit adds min(dt, SAMPLE_MAX_GAP_S) to the earlier sample's cell.
-# Cells at or over HEAT_MIN_S merge with their 8-neighbours into one
-# spot; the centre of mass and the rms distance are weighted by that
-# time. The six longest spots are kept, biggest first.
+# Heat spots from time spent, per floor: each pair of consecutive
+# samples in one visit adds min(dt, SAMPLE_MAX_GAP_S) to the earlier
+# sample's cell on the earlier sample's floor, so a room upstairs never
+# mixes with the room below it. Cells at or over HEAT_MIN_S merge with
+# their 8-neighbours on the same floor into one spot; the centre of
+# mass and the rms distance are weighted by that time. Each floor keeps
+# its six longest spots; the list runs by floor, biggest first.
 def _heat(samples):
     cells = {}
     for previous, current in zip(samples, samples[1:]):
@@ -212,7 +276,7 @@ def _heat(samples):
             continue
         weight = min(step, SAMPLE_MAX_GAP_S)
         cell = cells.setdefault(
-            _cell_key(previous["x"], previous["z"]),
+            (previous["floor"], *_cell_key(previous["x"], previous["z"])),
             {"seconds": 0.0, "sum_x": 0.0, "sum_z": 0.0},
         )
         cell["seconds"] += weight
@@ -221,7 +285,7 @@ def _heat(samples):
 
     hot = {key: cell for key, cell in cells.items() if cell["seconds"] >= HEAT_MIN_S}
     seen = set()
-    spots = []
+    by_floor = {}
     for key in sorted(hot):
         if key in seen:
             continue
@@ -231,11 +295,12 @@ def _heat(samples):
         while stack:
             cell_key = stack.pop()
             component.append(cell_key)
+            floor, cell_x, cell_z = cell_key
             for step_x in (-1, 0, 1):
                 for step_z in (-1, 0, 1):
                     if step_x == 0 and step_z == 0:
                         continue
-                    neighbour = (cell_key[0] + step_x, cell_key[1] + step_z)
+                    neighbour = (floor, cell_x + step_x, cell_z + step_z)
                     if neighbour in hot and neighbour not in seen:
                         seen.add(neighbour)
                         stack.append(neighbour)
@@ -251,16 +316,21 @@ def _heat(samples):
                 (cell_x - centre_x) ** 2 + (cell_z - centre_z) ** 2
             )
         rms = math.sqrt(spread / total)
-        spots.append(
+        by_floor.setdefault(key[0], []).append(
             {
                 "x": round(centre_x, 2),
                 "z": round(centre_z, 2),
                 "r_m": round(max(HEAT_MIN_R_M, rms), 2),
                 "seconds": round(total, 2),
+                "floor": key[0],
             }
         )
-    spots.sort(key=lambda spot: (-spot["seconds"], spot["x"], spot["z"]))
-    return spots[:HEAT_MAX_SPOTS]
+    spots = []
+    for floor in sorted(by_floor):
+        floor_spots = by_floor[floor]
+        floor_spots.sort(key=lambda spot: (-spot["seconds"], spot["x"], spot["z"]))
+        spots.extend(floor_spots[:HEAT_MAX_SPOTS])
+    return spots
 
 
 # The nearest sample within POSITION_NEAR_S, earlier wins a tie.
@@ -278,8 +348,9 @@ def _nearest(samples, time_s):
     return best
 
 
-# Move later-ranked pins apart in image space, a fixed 60 px step along
-# +x then +z, checked against the pins already placed. Drawing aid only.
+# Move later pins apart in image space, a fixed 60 px step along +x
+# then +z, checked against the pins already placed on the same floor.
+# Drawing aid only: the floor never changes.
 def _nudge(pinned, meta):
     scale_x = meta["px_width"] / (meta["world_max_x"] - meta["world_min_x"])
     scale_z = meta["px_height"] / (meta["world_max_z"] - meta["world_min_z"])
@@ -301,7 +372,7 @@ def _nudge(pinned, meta):
                 x = round(x + step_x, 2)
             else:
                 z = round(z + step_z, 2)
-        finding["at"] = {"x": round(x, 2), "z": round(z, 2)}
+        finding["at"] = {"x": round(x, 2), "z": round(z, 2), "floor": finding["at"]["floor"]}
         placed.append((finding["at"]["x"], finding["at"]["z"]))
 
 
@@ -334,6 +405,7 @@ def _markers(marker_lines, samples, kept, scene):
                 "t": round(line["t"], 2),
                 "x": round(nearest["x"], 2),
                 "z": round(nearest["z"], 2),
+                "floor": nearest["floor"],
                 "moment": moment,
             }
         )
@@ -367,6 +439,55 @@ def _lost_s(findings):
     return round(lost, 2)
 
 
+# The worst places for the problems block: kept findings by area and
+# puzzle across visits (a puzzle by area and puzzle, an area without a
+# puzzle by area), only places with a kept finding at stuck or blocked
+# friction. Worst friction first, then time lost (the lost_s rule),
+# then the earliest moment; at most PROBLEMS_MAX. A finding without a
+# beat has no place and is left out.
+def _problems(findings):
+    places = {}
+    for finding in sorted(findings, key=lambda f: f["time_s"]):
+        beat = finding.get("beat")
+        if finding["check"]["verdict"] != "keep" or not beat or not beat.get("area"):
+            continue
+        key = (beat["area"], beat.get("puzzle"))
+        places.setdefault(key, []).append(finding)
+    problems = []
+    for (area, puzzle), group in places.items():
+        frictions = {f["check"].get("friction") for f in group}
+        worst = next((name for name in PROBLEM_FRICTION if name in frictions), None)
+        if worst is None:
+            continue
+        outcomes = {f["check"].get("resolved") for f in group} & {"solved", "abandoned"}
+        if len(outcomes) == 2:
+            resolved = "mixed"
+        elif outcomes:
+            resolved = outcomes.pop()
+        else:
+            resolved = "unknown"
+        visits = {
+            (f["beat"].get("attempt"), f["beat"].get("attempt_start_s")) for f in group
+        }
+        lost_s = _lost_s(group)
+        order = (PROBLEM_FRICTION.index(worst), -lost_s, group[0]["time_s"])
+        problems.append(
+            (
+                order,
+                {
+                    "place": f"{area}, {puzzle}" if puzzle else area,
+                    "moments": [f["id"] for f in group],
+                    "attempts": len(visits),
+                    "lost_s": lost_s,
+                    "friction": worst,
+                    "resolved": resolved,
+                },
+            )
+        )
+    problems.sort(key=lambda entry: entry[0])
+    return [problem for _order, problem in problems[:PROBLEMS_MAX]]
+
+
 def _summary(findings):
     counts = {kind: 0 for kind in KIND_ORDER}
     kept = 0
@@ -394,11 +515,41 @@ def _summary(findings):
         "counts": counts,
         "kept": kept,
         "dropped": dropped,
+        "problems": _problems(findings),
     }
 
 
+# One label per game event line, from the line's own values.
+def _event_label(event):
+    kind = event["event"]
+    words = EVENT_WORDS[kind]
+    if kind in ("door", "lock"):
+        name = "/".join(str(event.get("path", "")).split("/")[:2])
+        state = bool(event.get("open" if kind == "door" else "locked"))
+        return words[state].format(name=name)
+    if kind == "pickup":
+        return words.format(item=event.get("item", ""))
+    if kind == "quest":
+        return words.format(quest=event.get("quest", ""), step=event.get("step", ""))
+    return words
+
+
+# Door, pickup, quest, lock, pause and resume lines in video time,
+# inside the recording.
+def _events(events, offset, duration_s):
+    entries = []
+    for event in events:
+        if event.get("event") not in EVENT_WORDS:
+            continue
+        t = round(float(event["t"]) + offset, 2)
+        if not 0 <= t <= duration_s:
+            continue
+        entries.append({"t": t, "kind": event["event"], "label": _event_label(event)})
+    return entries
+
+
 def enrich(data, events, video_flash_s):
-    """Add route, markers, summary and finding.at to a findings dict.
+    """Add route, markers, zones, events, summary and finding.at.
 
     Returns the same dict, changed in place. Raises ValueError when the
     log has no sync_flash line. Running it twice gives the same file.
@@ -406,7 +557,7 @@ def enrich(data, events, video_flash_s):
     offset = _offset(events, video_flash_s)
     samples, marker_lines, scene_order = _collect(events, offset)
     findings = data.get("findings", [])
-    scene, map_name, meta = _choose_scene(samples, scene_order)
+    scene, floors = _choose_scene(samples, scene_order)
 
     if scene is None:
         data.pop("route", None)
@@ -415,25 +566,27 @@ def enrich(data, events, video_flash_s):
             finding.pop("at", None)
     else:
         in_scene = [sample for sample in samples if sample["scene"] == scene]
+        for sample in in_scene:
+            sample["floor"] = _floor_of(sample["y"], floors)
         route_samples = [
             sample for sample in in_scene if sample["t"] >= video_flash_s
         ]
+        data.pop("route", None)
         data["route"] = {
             "scene": scene,
-            "map": map_name,
+            "maps": [name for name, _meta in floors],
             "points": [
-                [sample["t"], round(sample["x"], 2), round(sample["z"], 2)]
+                [sample["t"], round(sample["x"], 2), round(sample["z"], 2), sample["floor"]]
                 for sample in _downsample(route_samples)
             ],
             "heat": _heat(route_samples),
+            "floor_spans": _floor_spans(route_samples),
         }
 
         kept = []
         for finding in findings:
-            if finding["check"]["verdict"] != "keep":
-                finding.pop("at", None)
-                continue
-            kept.append(finding)
+            if finding["check"]["verdict"] == "keep":
+                kept.append(finding)
             nearest = _nearest(in_scene, finding["time_s"])
             if nearest is None:
                 finding.pop("at", None)
@@ -441,21 +594,32 @@ def enrich(data, events, video_flash_s):
                 finding["at"] = {
                     "x": round(nearest["x"], 2),
                     "z": round(nearest["z"], 2),
+                    "floor": nearest["floor"],
                 }
+        # Kept pins by rank, then dropped ones by time, so a dropped
+        # pin moves aside and a kept pin never does for it.
         pinned = sorted(
-            (finding for finding in kept if finding.get("at") is not None),
-            key=lambda finding: finding["rank"],
+            (finding for finding in findings if finding.get("at") is not None),
+            key=lambda finding: (
+                finding["rank"] is None,
+                finding["rank"] or 0,
+                finding["time_s"],
+            ),
         )
-        _nudge(pinned, meta)
+        for floor, (_name, meta) in enumerate(floors):
+            _nudge([f for f in pinned if f["at"]["floor"] == floor], meta)
         data["markers"] = _markers(marker_lines, in_scene, kept, scene)
 
+    # The room visits the strip draws, the same intervals beats uses.
+    data["zones"] = beats.zone_intervals(events, video_flash_s)
+    data["events"] = _events(events, offset, data["session"]["duration_s"])
     data["summary"] = _summary(findings)
     return data
 
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
-        description="Add the route, heat, markers and summary fields to a findings file, from a session log."
+        description="Add the route, floors, heat, markers, zones, events and summary fields to a findings file, from a session log."
     )
     parser.add_argument("findings", help="finding JSON to enrich")
     parser.add_argument("--log", required=True, help="session event log (JSONL)")
@@ -473,7 +637,16 @@ def main(argv=None) -> int:
     )
     args = parser.parse_args(argv)
 
-    data = findings_module.load(args.findings)
+    # The blocks this step owns are rewritten from the log, so a file
+    # written in an older format of them still upgrades here.
+    data = findings_module.read(args.findings)
+    if isinstance(data, dict):
+        for name in OWNED_BLOCKS:
+            data.pop(name, None)
+        for finding in data.get("findings") or []:
+            if isinstance(finding, dict):
+                finding.pop("at", None)
+    findings_module.check(data)
     events = log_candidates.load_log(args.log)
     try:
         enrich(data, events, args.video_flash_s)
