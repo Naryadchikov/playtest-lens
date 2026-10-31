@@ -37,6 +37,7 @@ The arrangement from 2026-10-31 (Sasha's words are quoted in [DECISIONS.md](DECI
 |---|---|---|
 | Orchestrator and main author | Claude Opus 5.5, Claude Code in T3 Code | Plans, writes the analyzer, the report page, the tools and their tests, keeps STATUS.md and DECISIONS.md, brings Sasha results and questions |
 | Code reviewer | Grok 4.7 (xhigh, fast) through Cursor, started by T3 `delegate_task` on the `cursor` provider, a fresh reviewer every round | Reviews Opus-authored code at milestones and at the freeze |
+| Final design pass on the report | Claude Fable 5.1, a Claude Code subagent (Sasha, 2026-10-31) | Design improvements and UX suggestions on the built page; Grok reviews its code |
 | Look reviewer | Claude Sonnet 5.5, a fresh subagent every round | Judges captures of the report page and the README (the UX review in docs/REVIEW.md), and reviews any code Grok authors. The look itself is Sasha's call |
 | Grok bot on its own VM | Sasha's bot, briefed by prompts Sasha pastes | Parallel work on files nobody else touches, such as the Godot telemetry tool. It has no recordings, no Keychain and no secrets |
 | Product, normal mode | Contributor Spark `muse-spark-1.2-contributor` and Voice Transcribe, from the Meta pool (about $23.90 on 2026-10-28) | The pool pays for the product's video and audio processing only (Sasha, 2026-10-28 and 2026-10-31). No agent work is billed to it, and Muse Wonder is not called |
