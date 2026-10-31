@@ -424,3 +424,8 @@ def test_clips_render_only_for_kept_findings(redesign):
 def test_missing_quote_shows_the_label(redesign):
     page = render_html(redesign)
     assert '<p class="quote none">No spoken comment.</p>' in _card(page, 7)
+
+
+def test_span_with_one_time_at_both_ends_reads_as_one_time():
+    assert render._span(39.2, 39.8) == "0:39"
+    assert render._span(39, 54) == "0:39-0:54"

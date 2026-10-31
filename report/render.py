@@ -192,7 +192,7 @@ STYLE = """
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: var(--fs-b)/1.5 var(--font); }
-main { max-width: 1040px; margin: 0 auto; padding: var(--s5) var(--s4) var(--s6); }
+main { max-width: 1120px; margin: 0 auto; padding: var(--s5) var(--s4) var(--s6); }
 a { color: var(--accent); }
 a:focus-visible, summary:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 h1 { font-size: var(--fs-xl); line-height: 1.2; margin: 0 0 var(--s2); }
@@ -221,6 +221,9 @@ h4 { font-size: var(--fs-b); margin: var(--s4) 0 var(--s2); color: var(--ink2); 
 .tile .n { font-size: var(--fs-xl); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .tile .l { display: flex; align-items: center; gap: var(--s2); color: var(--ink2); font-size: var(--fs-s); margin-top: var(--s1); }
 .tile.wide { grid-column: span 2; }
+.tile.zero { background: transparent; }
+.tile.zero .n, .tile.zero .l { color: var(--muted); }
+.tile.zero .k { opacity: .45; }
 
 /* across players */
 .groups { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
@@ -233,11 +236,11 @@ h4 { font-size: var(--fs-b); margin: var(--s4) 0 var(--s2); color: var(--ink2); 
 a.chip:hover { border-color: var(--accent); }
 
 /* map */
-.where { display: grid; grid-template-columns: minmax(0, 480px) 1fr; gap: var(--s5); align-items: start; }
+.where { display: grid; grid-template-columns: fit-content(480px) minmax(0, 1fr); gap: var(--s5); align-items: start; }
 .mapcol { min-width: 0; }
-.map { position: relative; margin: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #0a0d14; }
-.map img, .map svg { display: block; width: 100%; height: auto; }
-.map svg { position: absolute; inset: 0; height: 100%; }
+.map { position: relative; width: fit-content; max-width: 100%; margin: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #0a0d14; }
+.map img { display: block; width: auto; height: auto; max-width: 100%; max-height: calc(100vh - 11rem); }
+.map svg { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
 .maphead { display: flex; justify-content: flex-end; margin-bottom: var(--s2); }
 .seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 6px; background: var(--sunk); }
 .seg label { position: relative; padding: 2px var(--s3); border-radius: 4px; font-size: var(--fs-s); font-weight: 600; color: var(--ink2); white-space: nowrap; cursor: pointer; }
@@ -291,10 +294,13 @@ details.puzzle.quiet > summary { opacity: .5; }
 
 /* moments */
 details.puzzle { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; margin-bottom: var(--s3); }
-details.puzzle > summary { cursor: pointer; padding: var(--s3) var(--s4); font-weight: 600; list-style-position: inside; }
+details.puzzle > summary { cursor: pointer; padding: var(--s3) var(--s4); font-weight: 600; list-style-position: inside; border-radius: 6px; }
+details.puzzle > summary:hover { background: var(--sunk); }
+details.puzzle[open] > summary { border-bottom: 1px solid var(--line); border-radius: 6px 6px 0 0; margin-bottom: var(--s3); }
 details.puzzle > summary .note { font-weight: 400; margin-left: var(--s2); }
 .puzzle-body { padding: 0 var(--s4) var(--s4); }
-.card { border: 1px solid var(--line); border-left: 6px solid var(--c); border-radius: 6px; padding: var(--s3) var(--s4); margin-bottom: var(--s3); background: var(--bg); scroll-margin-top: var(--s4); display: grid; gap: var(--s2); }
+.card { border: 1px solid var(--line); border-left: 6px solid var(--c); border-radius: 6px; padding: var(--s3) var(--s4); margin-bottom: var(--s3); background: var(--bg); scroll-margin-top: var(--s4); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s3) var(--s5); align-items: start; }
+.card-body { display: grid; gap: var(--s2); min-width: 0; }
 .card:target { outline: 3px solid var(--accent); outline-offset: 2px; }
 .card.stuck { --c: var(--k-stuck); } .card.confused { --c: var(--k-confused); }
 .card.surprised { --c: var(--k-surprised); } .card.bug { --c: var(--k-bug); }
@@ -314,7 +320,7 @@ details.puzzle > summary .note { font-weight: 400; margin-left: var(--s2); }
 .facts { display: grid; grid-template-columns: max-content 1fr; gap: var(--s1) var(--s3); margin: 0; font-size: var(--fs-s); color: var(--ink2); }
 .facts dt { color: var(--muted); font-weight: 600; }
 .facts dd { margin: 0; }
-.fric { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-s); }
+.fric { display: flex; align-items: center; gap: var(--s2); margin: 0; font-size: var(--fs-s); }
 .meter { display: inline-flex; gap: 2px; }
 .meter i { width: 14px; height: 8px; border: 1px solid var(--ink2); border-radius: 2px; }
 .meter i.on { background: var(--ink2); }
@@ -326,6 +332,7 @@ details.puzzle > summary .note { font-weight: 400; margin-left: var(--s2); }
 .clip.video { display: block; background: none; }
 .clip.video video { display: block; width: 100%; height: auto; border-radius: 4px; }
 .dropped li { margin-bottom: var(--s2); }
+@media (min-width: 900px) { .card:has(> .clip) { grid-template-columns: minmax(0, 1fr) minmax(0, 400px); } }
 @media (max-width: 760px) { .where { grid-template-columns: 1fr; } .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: no-preference) { .pin .shape, a.chip { transition: stroke-width .15s, border-color .15s; } .card, .pinlist li { transition: opacity .2s; } html { scroll-behavior: smooth; } }
 @media print {
@@ -392,7 +399,8 @@ def _duration(seconds):
 
 
 def _span(start_s, end_s):
-    return f"{_mss(start_s)}-{_mss(end_s)}"
+    start, end = _mss(start_s), _mss(end_s)
+    return start if start == end else f"{start}-{end}"
 
 
 def _plural(count, word):
@@ -492,8 +500,10 @@ def _render_tiles(summary, duration_s):
     ]
     for kind in KIND_ORDER:
         info = _kind(kind)
+        count = summary["counts"][kind]
+        tile = "tile zero" if count == 0 else "tile"
         parts.append(
-            f'<div class="tile"><div class="n">{summary["counts"][kind]}</div>'
+            f'<div class="{tile}"><div class="n">{count}</div>'
             f'<div class="l"><span class="k k-{info["class"]}" aria-hidden="true"></span>'
             f'{_e(info["label"])}</div></div>'
         )
@@ -617,7 +627,7 @@ def _render_arrows(pixels, times):
         angle = math.degrees(math.atan2(y1 - y0, x1 - x0))
         arrows.append(
             f'<path data-t="{times[index]}" d="M-16,-12L16,0L-16,12z" '
-            f'transform="translate({x1:.1f} {y1:.1f}) rotate({angle:.0f}) scale(1.3)"/>'
+            f'transform="translate({x1:.1f} {y1:.1f}) rotate({angle:.0f})"/>'
         )
     return arrows
 
@@ -639,14 +649,14 @@ def _render_route(route, meta):
     arrows = _render_arrows(pixels, times)
     if arrows:
         parts.append(
-            '<g fill="#fff" stroke="#0a0d14" stroke-width="4">'
+            '<g fill="#fff" stroke="#0a0d14" stroke-width="3">'
             + "".join(arrows)
             + "</g>"
         )
     parts.append(
         f'<circle cx="{start_x:.1f}" cy="{start_y:.1f}" r="24" fill="#fff" '
         'stroke="#0a0d14" stroke-width="6"/>'
-        f'<text x="{start_x:.1f}" y="{start_y + 58:.1f}" class="halo" '
+        f'<text x="{start_x:.1f}" y="{start_y - 38:.1f}" class="halo" '
         'style="font-size:34px">start</text>'
         f'<g data-t="{times[-1]}">'
         f'<circle cx="{end_x:.1f}" cy="{end_y:.1f}" r="24" fill="#0a0d14" '
@@ -1026,7 +1036,8 @@ def _render_card(finding, markers_by_moment, pins_available):
     end_attr = f' data-end="{end}"' if end is not None else ""
     parts = [
         f'<article class="card {info["class"]}" id="m{rank}" '
-        f'data-t="{finding["time_s"]}"{end_attr}>'
+        f'data-t="{finding["time_s"]}"{end_attr}>',
+        '<div class="card-body">',
     ]
 
     head = []
@@ -1081,6 +1092,7 @@ def _render_card(finding, markers_by_moment, pins_available):
         line = LABELS["card"]["f9"].format(time=_mss(marker["t"]))
         parts.append(f'<p class="f9line"><b>F9</b>{_e(line)}</p>')
 
+    parts.append("</div>")
     clip = finding.get("clip")
     if clip is not None:
         parts.append(
