@@ -73,12 +73,15 @@ def test_sections_follow_the_layout_order(redesign):
     ]
     header = page[page.index('<header class="head">'):page.index("</header>")]
     assert 'class="verdict"' in header
-    assert page.index("</header>") < page.index('<main class="col">')
+    # The problems are their own grid row between the header and the column
+    # (task 35: the stacked layout puts them above the stage).
+    assert page.index("</header>") < page.index('<section class="problems"') < page.index('<main class="col">')
+    assert ".problems { grid-area: probs;" in page
+    assert '"head" "probs" "pane" "tl" "col"' in page
     column = page[page.index('<main class="col">'):page.index("</main>")]
-    order = [column.index(mark) for mark in (
-        'id="problems"', 'class="tiles"', 'id="moments"', 'id="dropped"',
-    )]
+    order = [column.index(mark) for mark in ('class="tiles"', 'id="moments"', 'id="dropped"')]
     assert order == sorted(order)
+    assert 'id="problems"' not in column
     assert "verdict" not in column and "timeline" not in column
     assert page.index("</main>") < page.index('<aside class="pane"') < page.index('<section class="timeline"')
 
@@ -505,9 +508,10 @@ def test_clips_render_only_for_kept_findings(redesign):
     kept_with_clip = [
         f for f in redesign["findings"] if f["check"]["verdict"] == "keep" and f["clip"] is not None
     ]
-    # One video per clip in the list, plus the stage's, which starts empty.
+    # One video per clip in the list, plus the stage's, which starts empty:
+    # the script loads the first problem's clip into it.
     assert page.count("<video") == len(kept_with_clip) + 1
-    assert '<video controls preload="metadata"></video>' in page
+    assert re.search(r'<figure class="stage-clip" data-first="m\d+" data-needs-script hidden><video preload="metadata"></video>', page)
     for finding in kept_with_clip:
         assert page.count(f'src="{html.escape(finding["clip"]["path"], quote=True)}"') == 1
     assert "Clip 5:35-6:00" in _card(page, 1)
@@ -561,3 +565,68 @@ def test_without_script_the_stage_still_shows_the_legend(redesign):
     assert "Route, arrows point the way walked" in foot
     assert "Hollow shapes are candidates the check dropped." in foot
     assert "F9: the player flagged confusion" in foot
+
+
+def test_the_heat_view_reaches_the_timeline_outside_the_pane(redesign):
+    # Review 20 (blocking): the timeline bar is a sibling of the pane, so a
+    # rule scoped to .pane cannot hide it. Every rule that hides it on the
+    # heat switch must start at an ancestor of both.
+    page = render_html(redesign)
+    style = re.sub(r"/\*.*?\*/", "", page[page.index("<style>"):page.index("</style>")], flags=re.DOTALL)
+    assert page.index("</aside>") < page.index('<section class="timeline"')
+    rules = re.findall(r"([^{}]*:has\(\.view-heat:checked\)[^{}]*)\{", style)
+    timeline_rules = [r.strip() for r in rules if ".timeline" in r]
+    assert timeline_rules, "no rule hides the timeline in the heat view"
+    for rule in timeline_rules:
+        assert rule.startswith(".page:has(.view-heat:checked) .timeline"), rule
+    assert ".page:has(.view-heat:checked) .timeline { visibility: hidden; }" in style
+    assert ".page:has(.view-heat:checked) .timeline { display: none; }" in style
+    assert "(.timeline, " not in style
+
+
+def test_a_dropped_candidate_says_so_and_counts_among_the_dropped(redesign):
+    page = render_html(redesign)
+    dropped = [f for f in redesign["findings"] if f["check"]["verdict"] == "drop"]
+    assert dropped
+    section = page[page.index('<section class="dropped"'):]
+    assert section.count('<span class="intent dropped">Dropped by the check</span>') == len(dropped)
+    assert 'data-count-dropped="Dropped {n} of {of}"' in page
+    assert "Dropped by the check" not in page[:page.index('<section class="dropped"')]
+
+
+def test_long_node_paths_may_wrap_after_their_separators(redesign):
+    f = redesign["findings"][0]
+    f["game_state"] = "Looking at BREAK_ROOM/kitchenSink/CabinetDoor, then action_primary/action_secondary"
+    f["check"]["note"] = "Short words keep their shape; so does a/short_path."
+    page = render_html(redesign)
+    card = _card(page, f["rank"])
+    assert "BREAK_<wbr>ROOM/<wbr>kitchenSink/<wbr>CabinetDoor," in card
+    assert "action_<wbr>primary/<wbr>action_<wbr>secondary" in card
+    assert "a/short_path." in card and "a/<wbr>short" not in card
+    # The escaping still happens first.
+    f["game_state"] = "<b>" + "x" * 30 + "</b>"
+    page = render_html(redesign)
+    assert "<b>" + "x" * 30 not in page
+    assert "&lt;b&gt;" + "x" * 30 + "&lt;/<wbr>b&gt;" in page
+
+
+def test_the_overview_clip_is_the_first_problems_moment(redesign):
+    page = render_html(redesign)
+    first = redesign["summary"]["problems"][0]["moments"][0]
+    rank = next(f["rank"] for f in redesign["findings"] if f["id"] == first)
+    assert f'<figure class="stage-clip" data-first="m{rank}"' in page
+    # Without problems the rank 1 moment's clip; without any clip, none.
+    redesign["summary"]["problems"] = []
+    assert '<figure class="stage-clip" data-first="m1"' in render_html(redesign)
+    for f in redesign["findings"]:
+        f["clip"] = None
+    assert 'data-first=' not in render_html(redesign)
+
+
+def test_the_kept_tile_does_not_repeat_its_number(redesign):
+    page = render_html(redesign)
+    summary = redesign["summary"]
+    tile = re.search(r'<div class="tile"><div class="n">(\d+)<span class="note">kept</span></div>.*?</div></div>', page).group(0)
+    assert tile.startswith(f'<div class="tile"><div class="n">{summary["kept"]}<span class="note">kept</span>')
+    assert f'<span class="note">{summary["dropped"]} dropped</span>' in tile
+    assert f'{summary["kept"]} kept' not in page

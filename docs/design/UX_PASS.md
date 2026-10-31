@@ -85,3 +85,39 @@ The new rule: the union length of the attempt or visit spans (`beat.attempt_star
 - Screenshots: `/tmp/t32/shots/` (1920 x 1080 dark and light, 1440 x 900 light and dark, 960 x 1080 dark, 400 px, no script, heat map, unplanned only, a dropped candidate, a clip playing).
 - The flow video: `/tmp/t32/video/`.
 - The flow check: `/tmp/t32/flow.log` (Playwright drives the page through play, stop, resume, keys, filter, scroll sync, scrub, a card's clip, the heat view).
+
+## Task 35: the fixes after reviews 20 and 22
+
+Implementer: Claude Fable 5.1, a Claude Code subagent, 2026-11-01. Brief in `docs/tasks/35-report-review-fixes.md`; the findings are in `docs/reviews/20-report-build-design-grok.md` and `docs/reviews/22-report-look-sonnet.md`. Everything here is a proposal unless it quotes Sasha.
+
+### What changed
+
+- **The heat map turns the timeline off.** The timeline bar is a sibling of the stage, so the old rule inside `.pane` never reached it. The switch now works from `.page`: the bar is invisible in the wide layout (its row stays, so the floors keep their size) and gone in the stacked one. A test checks that every rule hiding the timeline on the heat switch starts at an ancestor of both.
+- **One current moment while a jump scrolls.** A scroll the page starts (a jump to a card, Overview's return to the top) holds the scroll sync until the scroll has ended: `scrollend` where the browser has it, otherwise 250 ms after the last scroll event, 3 s at most. The reader's own scrolling resumes the sync. The cards' 30vh scroll margin now applies only without script, so a jump centers the card exactly (a short dropped article used to land below the middle and hand "now" to the card above it).
+- **The stage clip never points at a time the map does not.** The stage's clip is one of three things: in the overview, the first problem's moment paused on its own frame, captioned with the moment and playable in place (play makes that moment current and the list follows); in a moment, that moment's clip; while the session travels or after a scrub, a black box with no controls. A moment without a clip (a dropped candidate) shows the black box too.
+- **Half a screen opens on the problems.** The top problems are their own grid row: beside the stage on a wide screen, as before, and above the stage when the layout stacks under 1100 px. At 960 x 1080 the four problems end at about 575 px.
+- **The clip beside the map is bigger.** The foot row is a grid: the clip takes the row's full height on the left (292 x 164 px at 1920, 309 x 174 at 960, was 206 x 112), the legend or the game events sit beside it, and the transport row runs under them. The legend stays in the overview's foot beside the first problem's frame.
+- **Game events.** The chips scroll when they overflow instead of being cut. The label beside the dot flips to the dot's left on the right half of a floor, so it never runs off the map. The "later" chips are a little less dimmed (0.65 instead of 0.45).
+- **Overview and Escape return to the top of the page,** where the verdict and the problems are. The scroll sync's own return to the overview (scrolling above the first card) does not move the page.
+- **A dropped candidate says so.** Its row carries a "Dropped by the check" tag (cloned into the stage panel), and the counter reads "Dropped n of N" instead of nothing.
+- **Narrow screens.** The facts grid lets its value column shrink and wrap, cards never widen the page, and under 640 px the moment panel grows instead of scrolling inside 40vh. A long node path or identifier (24 or more characters) gets a soft break after each slash and underscore in the game and checker facts, so the side column wraps "BREAK_ROOM/kitchenSink/CabinetDoor" at its slashes instead of inside a word.
+- **Spacing and type.** 24 px between the problems and the tiles. The kept tile reads "24 kept" with "5 dropped" under the label, so the number is not repeated. Timeline labels and room names are 12 and 11 px (were 11 and 10), pins are 10 percent larger with 15 percent larger numbers.
+- **Readable game event labels** (`analyzer/spatial.py`). A door or lock label names the thing the designer placed, in words, and its room in parentheses: "Kitchen sink opened (Break room)", "Windowed door unlocked (Upper office CEO)", "Desk opened (Meeting room)". The words come from the node path only: the path's second segment is the thing and the first its room; underscores, camel case and digit runs become word boundaries; a short all-caps token stays an abbreviation. A quest id reads the same way ("Demo steal laptop completed"). The brief's example used the last segment ("Cabinet door opened (kitchen sink, Break room)"); the second segment reads better here because the last one is often the prefab's own part ("AnimatableBody3D", "FrontDoor", "Door").
+- **Review 20's nits.** The duplicate `_event_icon` is gone. `_downsample` keeps every sample where the floor changes, so each span in `floor_spans` has a route point (3 points added on this session).
+
+### New strings (proposals, Claude Fable 5.1, 2026-11-01; Sasha decides the wording)
+
+- Tiles: "kept" (the note after the big number, was "{kept} kept, {dropped} dropped") and "{dropped} dropped".
+- Stage: "Dropped by the check", "Dropped {n} of {of}".
+- Event labels: "{label} ({room})" around Claude Opus 5.5's templates ("{name} opened", "{name} closed", "{name} locked", "{name} unlocked", "{quest} {step}"), with the names in words as above.
+
+Not changed: "by design" (not decided), the two Play buttons (review 22's defect 14) and the length of a full run (defect 15), both out of this task's scope.
+
+### Evidence
+
+- Tests: `.venv/bin/python -m pytest -q`, 237 passed (224 before), no model call.
+- Findings comparison: `/tmp/t35/compare.txt` (0 differences in every protected field for 29 and 47 findings; the labels and 3 route points are the only changes).
+- Blocking findings before and after, both browsers: `/tmp/t35/blocking-before.txt`, `/tmp/t35/blocking-after.txt`, shots `/tmp/t35/shots/before-*` and `after-*`.
+- Flows (play, stop, Escape, a problem, Next, arrows, scrub, filter, scroll by hand, a card's clip, a dropped mark, heat, Overview), both pages, both browsers: `/tmp/t35/flow-{spark,open}-{chromium,webkit}.log`, 0 fails.
+- The smaller defects, both pages, both browsers: `/tmp/t35/probes-spark.txt`, `/tmp/t35/probes-open.txt`.
+- Captures at 1920 x 1080, 1440 x 900, 960 x 1080 and 400 px, light and dark, Chromium and WebKit, Spark and Open: `/tmp/t35/shots/` (100 files).

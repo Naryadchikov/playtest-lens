@@ -31,6 +31,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -76,9 +77,14 @@ VERDICT = {
     },
 }
 
-# Game event lines the page lists, and their labels. The names come from
-# the log's own values (node paths are rough; that is fine). Proposal
-# (Claude Opus 5.5, 2026-11-01), not Sasha's wording.
+# Game event lines the page lists, and their labels, from the log's own
+# values only. A door or lock path is the scene's node path
+# ("BREAK_ROOM/kitchenSink/CabinetDoor"): its first segment is the room
+# and its second the thing the designer placed; the rest is the prefab's
+# own parts. The label names the thing in words and the room in
+# parentheses: "Kitchen sink opened (Break room)". Proposal (Claude
+# Fable 5.1, 2026-11-01), not Sasha's wording; the templates were Claude
+# Opus 5.5's (2026-11-01).
 EVENT_WORDS = {
     "door": {True: "{name} opened", False: "{name} closed"},
     "lock": {True: "{name} locked", False: "{name} unlocked"},
@@ -86,7 +92,27 @@ EVENT_WORDS = {
     "quest": "{quest} {step}",
     "pause": "Paused",
     "resume": "Resumed",
+    "where": "{label} ({room})",
 }
+
+# Word boundaries in a node name: underscores, camel case, and a run of
+# digits with the letters stuck to it ("Body3D" is "Body" and "3D").
+_WORD = re.compile(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+|\d+[A-Za-z]*")
+
+
+# "kitchenCabinet4" -> "Kitchen cabinet 4"; "UPPER_OFFICE_CEO" -> "Upper
+# office CEO" (a short all-caps token is an abbreviation and stays).
+def _words(name):
+    tokens = _WORD.findall(str(name))
+    if not tokens:
+        return str(name)
+    out = []
+    for index, token in enumerate(tokens):
+        if token.isupper() and len(token) <= 3 and index > 0:
+            out.append(token)
+        else:
+            out.append(token.capitalize() if index == 0 else token.lower())
+    return " ".join(out)
 
 
 def _offset(events, video_flash_s):
@@ -237,19 +263,28 @@ def _floor_spans(samples):
     return spans
 
 
-# Keep the first and the last sample, and at least ROUTE_MIN_STEP_S
-# between the others. When the last sample is closer than that to the
-# one before, the one before it is dropped unless it is the first.
+# Keep the first and the last sample, every sample where the floor
+# changes (so each floor span has a route point), and at least
+# ROUTE_MIN_STEP_S between the others. When the last sample is closer
+# than that to the one before, the one before it is dropped unless it is
+# the first or a floor change.
 def _downsample(samples):
     if not samples:
         return []
     kept = [samples[0]]
     for sample in samples[1:-1]:
-        if sample["t"] - kept[-1]["t"] >= ROUTE_MIN_STEP_S:
+        if (
+            sample["t"] - kept[-1]["t"] >= ROUTE_MIN_STEP_S
+            or sample["floor"] != kept[-1]["floor"]
+        ):
             kept.append(sample)
     last = samples[-1]
     if last is not kept[-1]:
-        if len(kept) > 1 and last["t"] - kept[-1]["t"] < ROUTE_MIN_STEP_S:
+        if (
+            len(kept) > 1
+            and last["t"] - kept[-1]["t"] < ROUTE_MIN_STEP_S
+            and kept[-1]["floor"] == kept[-2]["floor"]
+        ):
             kept.pop()
         kept.append(last)
     return kept
@@ -545,13 +580,17 @@ def _event_label(event):
     kind = event["event"]
     words = EVENT_WORDS[kind]
     if kind in ("door", "lock"):
-        name = "/".join(str(event.get("path", "")).split("/")[:2])
+        segments = [part for part in str(event.get("path", "")).split("/") if part]
         state = bool(event.get("open" if kind == "door" else "locked"))
-        return words[state].format(name=name)
+        name = _words(segments[1] if len(segments) > 1 else segments[0] if segments else "")
+        label = words[state].format(name=name)
+        if len(segments) > 1:
+            label = EVENT_WORDS["where"].format(label=label, room=_words(segments[0]))
+        return label
     if kind == "pickup":
         return words.format(item=event.get("item", ""))
     if kind == "quest":
-        return words.format(quest=event.get("quest", ""), step=event.get("step", ""))
+        return words.format(quest=_words(event.get("quest", "")), step=event.get("step", ""))
     return words
 
 

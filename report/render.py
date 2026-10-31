@@ -35,6 +35,7 @@ import argparse
 import base64
 import html
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -74,7 +75,10 @@ LABELS = {
         "time_lost_note": "in the visits and attempts with an unplanned moment",
         "kept": "Moments checked against the video and the event log",
         "of": "of {duration}",
-        "count_note": "{kept} kept, {dropped} dropped",
+        # Proposals (Claude Fable 5.1, 2026-11-01), not Sasha's wording:
+        # the big number is the kept count, so the note no longer repeats it.
+        "count_note": "kept",
+        "dropped_note": "{dropped} dropped",
     },
     "kinds": {
         "stuck": {"label": "Stuck", "lower": "stuck", "class": "stuck"},
@@ -165,6 +169,10 @@ LABELS = {
         "next": "Next",
         "overview": "Overview",
         "count": "Moment {n} of {of}",
+        # Proposals (Claude Fable 5.1, 2026-11-01), not Sasha's wording:
+        # a dropped candidate on the stage says so, and counts among the dropped.
+        "count_dropped": "Dropped {n} of {of}",
+        "dropped_tag": "Dropped by the check",
         "last": "Last moment: {label}",
         "events_so_far": "Game events so far",
         "events_none_yet": "No game events yet.",
@@ -265,12 +273,12 @@ h4 { font-size: var(--fs-b); margin: var(--s4) 0 var(--s2); color: var(--ink2); 
 
 /* Two columns: the header and the write-up on the left scroll, the stage on the right stays.
    The floors take the height the panel and the timeline leave, capped by half the width. */
-.page { --side-w: 280px; --foot-h: 190px;
+.page { --side-w: 280px; --foot-h: 200px;
   --floor-h: max(300px, min(calc(100vh - var(--tl-h) - 36px - var(--foot-h) - 44px), calc((56vw - var(--side-w) - 12px - (var(--floors) - 1) * 10px) / var(--ars))));
   --pane-w: calc(var(--floor-h) * var(--ars) + (var(--floors) - 1) * 10px + var(--side-w) + 12px);
-  display: grid; grid-template-columns: minmax(0, 1fr) var(--pane-w); grid-template-rows: auto 1fr auto;
-  grid-template-areas: "head pane" "col pane" "tl tl"; column-gap: var(--s5); padding: 0 var(--s5); max-width: 1880px; margin: 0 auto; }
-.page.solo { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "col"; max-width: 1120px; }
+  display: grid; grid-template-columns: minmax(0, 1fr) var(--pane-w); grid-template-rows: auto auto 1fr auto;
+  grid-template-areas: "head pane" "probs pane" "col pane" "tl tl"; column-gap: var(--s5); padding: 0 var(--s5); max-width: 1880px; margin: 0 auto; }
+.page.solo { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "probs" "col"; max-width: 1120px; }
 .head { grid-area: head; padding-top: var(--s5); min-width: 0; max-width: 1100px; }
 .col { grid-area: col; padding: 0 0 40vh; min-width: 0; max-width: 1100px; }
 .page.solo .col { padding-bottom: var(--s6); }
@@ -293,7 +301,8 @@ svg.sh { display: block; width: 100%; height: 100%; overflow: visible; }
 svg.sh use { fill: var(--p); stroke: #0b1020; stroke-width: 1.2; }
 .hollow svg.sh use { fill: none; stroke: var(--c); stroke-width: 2.4; }
 
-/* problems */
+/* problems: their own grid row, so the stacked layout puts them above the stage */
+.problems { grid-area: probs; min-width: 0; max-width: 1100px; margin: 0 0 var(--s5); }
 .problems ol { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); counter-reset: problem; }
 .problem { background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--k-stuck); border-radius: 6px; padding: var(--s2) var(--s4); display: grid; gap: 2px; }
 .problem a.place { font-weight: 700; color: var(--ink); text-decoration: none; font-size: var(--fs-m); }
@@ -338,7 +347,9 @@ a.chip:hover { border-color: var(--accent); }
 /* moments */
 section.moments-group { margin-top: var(--s5); }
 section.moments-group > h3 { font-size: var(--fs-l); line-height: 1.25; margin: 0 0 var(--s3); padding-bottom: var(--s2); border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s1) var(--s3); }
-.card, .drop { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "main" "clip" "facts"; column-gap: var(--s4); margin: 0 0 var(--s3); padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--c); border-radius: 8px; scroll-margin-top: 30vh; transition: border-color .2s, box-shadow .2s; }
+.card, .drop { position: relative; display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "main" "clip" "facts"; column-gap: var(--s4); margin: 0 0 var(--s3); padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--c); border-radius: 8px; transition: border-color .2s, box-shadow .2s; }
+/* Without script the fragment jump leaves a card below the top; with script the page centers it exactly. */
+html:not(.js) :is(.card, .drop) { scroll-margin-top: 30vh; }
 .card.stuck { --c: var(--k-stuck); } .card.confused { --c: var(--k-confused); }
 .card.surprised { --c: var(--k-surprised); } .card.bug { --c: var(--k-bug); }
 /* A moment by design recedes: a thinner edge, a smaller number. */
@@ -363,9 +374,11 @@ section.moments-group > h3 { font-size: var(--fs-l); line-height: 1.25; margin: 
 .summary { font-size: var(--fs-m); font-weight: 600; margin: 0 0 var(--s2); line-height: 1.35; }
 .quote { margin: 0 0 var(--s2); padding-left: var(--s3); border-left: 3px solid var(--line); color: var(--ink2); font-style: italic; }
 .quote.none { font-style: normal; color: var(--muted); }
-.facts { display: grid; grid-template-columns: max-content 1fr; gap: var(--s1) var(--s3); margin: 0; font-size: var(--fs-s); color: var(--ink2); }
+.facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--s1) var(--s3); margin: 0; font-size: var(--fs-s); color: var(--ink2); }
 .facts dt { color: var(--muted); font-weight: 600; }
-.facts dd { margin: 0; }
+/* A long node path breaks after its slashes and underscores (the renderer's <wbr>), a word only as a last resort. */
+.facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.intent.dropped { border-style: solid; border-color: var(--ink2); font-weight: 600; }
 .fric { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); margin: 0; font-size: var(--fs-s); color: var(--ink2); }
 .meter { display: inline-flex; gap: 2px; }
 .meter i { width: 14px; height: 8px; border: 1px solid var(--ink2); border-radius: 2px; }
@@ -433,8 +446,8 @@ section.moments-group > h3 { font-size: var(--fs-l); line-height: 1.25; margin: 
 .pin .scale { transition: transform .25s, opacity .25s; }
 .pin use { fill: var(--p); stroke: #0b1020; stroke-width: 1.3; }
 .pin.hollow use { fill: rgba(11, 16, 32, .55); stroke: var(--p); stroke-width: 2.6; }
-.pin text { font: 700 40px var(--font); fill: #0b1020; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
-.pin.soft text { font-size: 32px; }
+.pin text { font: 700 46px var(--font); fill: #0b1020; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.pin.soft text { font-size: 37px; }
 .pin.soft .scale { opacity: .8; }
 .pin.f9 use { fill: #0b1020; stroke: #ffffff; stroke-width: 1.2; stroke-dasharray: 2.4 1.6; }
 .pin.f9 text { fill: #ffffff; font-size: 28px; }
@@ -448,6 +461,8 @@ section.moments-group > h3 { font-size: var(--fs-l); line-height: 1.25; margin: 
 .dot .halo { fill: #8da2ff; opacity: .35; }
 .dot .core { fill: #8da2ff; stroke: #ffffff; stroke-width: 7; }
 .dot .tag { font: 600 34px var(--font); fill: #ffffff; stroke: #0a0d14; stroke-width: 8; paint-order: stroke; text-anchor: start; }
+/* Near the floor's right edge the tag sits left of the dot, so it never runs off the map. */
+.dot.flip .tag { text-anchor: end; }
 .halo-text { font: 700 40px var(--font); fill: #ffffff; stroke: #0a0d14; stroke-width: 9; paint-order: stroke; text-anchor: middle; }
 
 /* heat map view: the plan muted, the whole-session heat on top, nothing else */
@@ -455,7 +470,9 @@ section.moments-group > h3 { font-size: var(--fs-l); line-height: 1.25; margin: 
 .pane:has(.view-heat:checked) .map .heat { display: inline; }
 .pane:has(.view-heat:checked) .trail-layer { display: none; }
 .pane:has(.view-heat:checked) .floor.quiet .bg { opacity: 1; }
-.pane:has(.view-heat:checked) :is(.timeline, .focus, .readout), .pane[data-mode="whole"] .readout { visibility: hidden; }
+.pane:has(.view-heat:checked) :is(.focus, .readout), .pane[data-mode="whole"] .readout { visibility: hidden; }
+/* The timeline bar sits outside the pane, so the heat switch reaches it from the page. */
+.page:has(.view-heat:checked) .timeline { visibility: hidden; }
 .pane:has(.view-heat:checked) .bg { filter: grayscale(1) brightness(.5); }
 .ramp { height: 10px; border-radius: 3px; max-width: 220px; }
 .ramp-ends { display: flex; justify-content: space-between; max-width: 220px; color: var(--ink2); margin: 2px 0 var(--s1); }
@@ -464,7 +481,7 @@ section.moments-group > h3 { font-size: var(--fs-l); line-height: 1.25; margin: 
 .stagebody { display: flex; gap: var(--s3); flex: 1 1 auto; min-height: 0; }
 .side { flex: 1 1 var(--side-w); min-width: 200px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: var(--s3); overflow: auto; font-size: var(--fs-s); display: flex; flex-direction: column; }
 .side p { margin: 0; }
-.side > .mode, .foot > .mode { display: none; }
+.side > .mode, .foot .rest > .mode { display: none; }
 .side > .mode { flex-direction: column; gap: var(--s2); }
 .pane[data-mode="whole"] :is(.side-whole, .foot-whole), .pane[data-mode="heat"] .side-heat,
 .pane[data-mode="moment"] :is(.side-now, .foot-now), .pane[data-mode="session"] :is(.side-session, .foot-now) { display: flex; }
@@ -484,49 +501,52 @@ section.moments-group > h3 { font-size: var(--fs-l); line-height: 1.25; margin: 
 .side-session .now-where { font-size: var(--fs-m); font-weight: 600; }
 .side-session .now-last { color: var(--ink2); }
 .side-session .now-last a { color: var(--ink); }
-.foot { height: var(--foot-h); flex: none; display: flex; flex-direction: column; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: var(--s2) var(--s3); font-size: var(--fs-s); overflow: hidden; }
+/* The foot row: the clip the whole height on the left; the legend or the game events, then the transport row, on the right. */
+.foot { height: var(--foot-h); flex: none; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: "clip rest" "clip nav"; gap: 6px var(--s3); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: var(--s2) var(--s3); font-size: var(--fs-s); overflow: hidden; }
 .foot p { margin: 0; }
-.foot > .mode { flex: 1 1 auto; min-height: 0; }
+.foot .rest { grid-area: rest; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+.foot .rest > .mode { flex: 1 1 auto; min-height: 0; }
 .foot-whole { flex-direction: column; justify-content: center; gap: var(--s2); }
 html:not(.js) .side { display: none; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px var(--s4); list-style: none; margin: 0; padding: 0; color: var(--ink2); }
 .legend li { display: inline-flex; align-items: center; gap: 6px; }
-.foot-now { gap: var(--s3); }
-.stage-clip { flex: none; display: flex; flex-direction: column; gap: 2px; margin: 0; }
-.stage-clip video { display: block; height: calc(var(--foot-h) - 74px); aspect-ratio: 16 / 9; background: #000; border-radius: 6px; }
-.stage-clip figcaption { font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: var(--s2); }
+.stage-clip { grid-area: clip; display: flex; flex-direction: column; gap: 2px; margin: 0; min-height: 0; }
+.stage-clip video { display: block; height: calc(var(--foot-h) - 2 * var(--s2) - 2px - 18px); aspect-ratio: 16 / 9; background: #000; border-radius: 6px; }
+.stage-clip figcaption { height: 16px; font-size: 11px; line-height: 16px; color: var(--muted); display: flex; justify-content: space-between; gap: var(--s2); white-space: nowrap; overflow: hidden; }
+.stage-clip figcaption a { color: var(--ink2); text-decoration: none; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.stage-clip figcaption a:hover { text-decoration: underline; }
 .stage-clip .sync { color: var(--accent); font-weight: 600; visibility: hidden; }
 .pane.is-stage-playing .stage-clip .sync { visibility: visible; }
 .evrow { display: flex; flex-direction: column; gap: 4px; min-height: 0; min-width: 0; flex: 1 1 auto; }
 .evrow .evh { color: var(--muted); font-weight: 600; white-space: nowrap; }
-.events { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px var(--s2); overflow: hidden; align-content: flex-start; }
-.events li { display: inline-flex; align-items: center; gap: 4px; color: var(--ink2); padding: 1px 6px; border-radius: 4px; background: var(--sunk); white-space: nowrap; max-width: 30ch; overflow: hidden; text-overflow: ellipsis; transition: background-color 1.2s; }
-.events li.later { opacity: .45; }
+.events { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px var(--s2); overflow: auto; scrollbar-width: thin; align-content: flex-start; }
+.events li { display: inline-flex; align-items: center; gap: 4px; color: var(--ink2); padding: 1px 6px; border-radius: 4px; background: var(--sunk); white-space: nowrap; max-width: 34ch; overflow: hidden; text-overflow: ellipsis; transition: background-color 1.2s; }
+.events li.later { opacity: .65; }
 .events li.fresh { background: var(--accent-tint); color: var(--ink); transition: none; }
 .events time { color: var(--muted); font-family: var(--mono); }
 .events svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 1.6; flex: none; }
 .events span { overflow: hidden; text-overflow: ellipsis; }
-.nav { display: flex; align-items: center; gap: var(--s2); flex: none; flex-wrap: wrap; }
+.nav { grid-area: nav; display: flex; align-items: center; gap: var(--s2); flex: none; flex-wrap: wrap; }
 .nav .count { margin-left: auto; color: var(--ink2); font-variant-numeric: tabular-nums; }
 .nav:not(.in-session) .trail { display: none; }
 
 /* the timeline: a bar across the page's foot, staying in view */
 .timeline { grid-area: tl; position: sticky; bottom: 0; z-index: 2; height: var(--tl-h); display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0 var(--s3); background: var(--surface); border-top: 1px solid var(--line); margin: 0 calc(-1 * var(--s5)); padding: var(--s2) var(--s5); }
 .labs, .tracks { display: flex; flex-direction: column; gap: 4px; }
-.labs span { height: 14px; line-height: 14px; font-size: 11px; font-weight: 600; color: var(--ink2); white-space: nowrap; display: flex; align-items: center; }
+.labs span { height: 14px; line-height: 14px; font-size: 12px; font-weight: 600; color: var(--ink2); white-space: nowrap; display: flex; align-items: center; }
 .tracks { position: relative; cursor: crosshair; touch-action: none; }
 .track { position: relative; height: 14px; border-radius: 3px; background: var(--sunk); }
 .track.r-marks, .track.r-drops, .track.r-events { background: none; }
 .track.r-drops { height: 16px; }
 .track.r-events { height: 8px; }
-.bar { position: absolute; top: 0; bottom: 0; min-width: 2px; border-radius: 3px; background: var(--bar); overflow: hidden; padding: 0 4px; font: 600 10px/14px var(--font); color: var(--ink); white-space: nowrap; text-overflow: ellipsis; }
+.bar { position: absolute; top: 0; bottom: 0; min-width: 2px; border-radius: 3px; background: var(--bar); overflow: hidden; padding: 0 4px; font: 600 11px/14px var(--font); color: var(--ink); white-space: nowrap; text-overflow: ellipsis; }
 .bar.puzzle { background: var(--bar-puzzle); }
 .bar.up { background: var(--muted); opacity: .55; }
 .tick { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--muted); opacity: .6; }
 .track .mk { position: absolute; margin-left: -11px; width: 22px; height: 22px; }
 .track .mk.soft { opacity: .75; }
 .track.r-drops .mk { width: 14px; height: 14px; margin-left: -7px; top: 1px; }
-.axis { position: relative; height: 14px; font: 11px var(--mono); color: var(--muted); }
+.axis { position: relative; height: 14px; font: 12px var(--mono); color: var(--muted); }
 .axis span { position: absolute; top: 2px; transform: translateX(-50%); white-space: nowrap; }
 .axis span:first-child { transform: none; }
 .tracks .past { position: absolute; left: 0; top: 0; bottom: 18px; background: var(--accent); opacity: .1; pointer-events: none; }
@@ -536,17 +556,18 @@ html:not(.js) .side { display: none; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 @media (max-width: 1100px) {
-  .page { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto 1fr; grid-template-areas: "head" "pane" "tl" "col";
+  /* Stacked: the problems above the stage, so half a screen still opens on the worst places. */
+  .page { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto auto 1fr; grid-template-areas: "head" "probs" "pane" "tl" "col"; --foot-h: 210px;
     --floor-h: max(160px, min(50vh, calc((100vw - 2 * var(--s5) - (var(--floors) - 1) * 10px) / var(--ars)))); }
   .pane { position: static; height: auto; }
   .timeline { position: static; border: 1px solid var(--line); border-radius: 8px; margin: 0; padding: var(--s2) var(--s3); }
+  .page:has(.view-heat:checked) .timeline { display: none; }
   .col { padding-bottom: var(--s6); }
 }
 @media (max-width: 640px) {
   .stagebody { flex-wrap: wrap; }
-  .side { flex-basis: 100%; max-height: 40vh; }
-  .foot { height: auto; }
-  .foot-now { flex-direction: column; }
+  .side { flex-basis: 100%; max-height: none; }
+  .foot { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-areas: "clip" "rest" "nav"; }
   .stage-clip video { height: auto; width: 100%; }
 }
 @media print {
@@ -606,8 +627,8 @@ SVG_DEFS = (
 # Map drawing sizes, in map image pixels (about 48 per metre). A moment
 # by design (friction "learning") gets the smaller pin, so the unplanned
 # ones stand out.
-PIN_R = 40
-SOFT_R = 31
+PIN_R = 44
+SOFT_R = 34
 DROP_R = 28
 F9_R = 34
 EVENT_KINDS = ("door", "lock", "pickup", "quest", "pause", "resume")
@@ -629,6 +650,18 @@ TICK_STEPS = (30, 60, 120, 300, 600, 1200, 1800, 3600)
 
 def _e(value):
     return html.escape(str(value), quote=True)
+
+
+_LONG_TOKEN = re.compile(r"\S{24,}")
+
+
+# Escaped text where a long node path or identifier ("BREAK_ROOM/kitchenSink/CabinetDoor")
+# may wrap after its slashes and underscores, so a narrow column never splits a word.
+def _breakable(value):
+    def soften(match):
+        return match.group(0).replace("/", "/<wbr>").replace("_", "_<wbr>")
+
+    return _LONG_TOKEN.sub(soften, _e(value))
 
 
 def _mss(seconds):
@@ -852,13 +885,12 @@ def _render_glance(summary, duration_s):
             f'<div class="l">{_e(tiles["time_lost"])}'
             f'<span class="note">{_e(tiles["time_lost_note"])}</span></div></div>'
         )
-    count_note = tiles["count_note"].format(
-        kept=summary["kept"], dropped=summary["dropped"]
-    )
+    dropped_note = tiles["dropped_note"].format(dropped=summary["dropped"])
     parts.append(
         f'<div class="tile"><div class="n">{summary["kept"]}'
-        f'<span class="note">{_e(count_note)}</span></div>'
-        f'<div class="l">{_e(tiles["kept"])}</div></div>'
+        f'<span class="note">{_e(tiles["count_note"])}</span></div>'
+        f'<div class="l">{_e(tiles["kept"])}'
+        f'<span class="note">{_e(dropped_note)}</span></div></div>'
     )
     parts.append("</div>")
     kinds = []
@@ -1275,11 +1307,6 @@ def _render_toolbar(duration_s, has_heat, has_soft):
     return parts
 
 
-def _event_icon(kind):
-    name = kind if kind in EVENT_KINDS else "other"
-    return f'<svg aria-hidden="true" focusable="false"><use href="#ev-{name}"/></svg>'
-
-
 # The side column beside the floors: the overview's one big action, the
 # heat legend, the current moment's own words (the script clones its
 # card), or the player's time and room while the session plays.
@@ -1322,15 +1349,28 @@ def _event_icon(kind):
     return f'<svg aria-hidden="true" focusable="false"><use href="#ev-{name}"/></svg>'
 
 
-# The foot row under the floors and the side column: the legend in the
-# overview; otherwise the current moment's clip, the game events and
-# the transport row.
-def _render_foot(data, has_markers, has_drop_pins):
+# The moment the overview's clip shows, paused on its frame: the first
+# problem's first moment, else the rank 1 moment; one with a clip.
+def _first_moment(data, kept):
+    problems = (data.get("summary") or {}).get("problems") or []
+    by_id = {f["id"]: f for f in kept}
+    order = [by_id[m] for p in problems for m in p["moments"] if m in by_id]
+    order.extend(kept)
+    return next((f for f in order if f.get("clip") is not None), None)
+
+
+# The foot row under the floors and the side column: the stage's clip on
+# the left (the first problem's frame in the overview, the current
+# moment's clip once one is picked, black while the session travels);
+# the legend or the game events on the right, and the transport row.
+def _render_foot(data, kept, has_markers, has_drop_pins):
     words = LABELS["timeline"]
     panel = LABELS["panel"]
     map_words = LABELS["map"]
     card_words = LABELS["card"]
     play_svg = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 0 L10 5 L1 10z"/></svg>'
+    first = _first_moment(data, kept)
+    first_attr = f' data-first="m{first["rank"]}"' if first is not None else ""
     kinds = "".join(
         f'<li><span class="k k-{_kind(kind)["class"]}" aria-hidden="true"></span>'
         f'{_e(_kind(kind)["label"])}</li>'
@@ -1353,19 +1393,21 @@ def _render_foot(data, has_markers, has_drop_pins):
     ]
     return [
         '<div class="foot">',
+        f'<figure class="stage-clip"{first_attr} data-needs-script hidden><video preload="metadata"></video>'
+        f'<figcaption><span class="cap"></span><span class="sync">{_e(card_words["sync"])}</span></figcaption></figure>',
+        '<div class="rest">',
         '<div class="mode foot-whole">',
         f'<ul class="legend">{kinds}</ul>',
         f'<ul class="legend">{"".join(legend)}</ul>',
         "</div>",
         '<div class="mode foot-now" data-needs-script hidden>',
-        f'<figure class="stage-clip" hidden><video controls preload="metadata"></video>'
-        f'<figcaption><span class="cap"></span><span class="sync">{_e(card_words["sync"])}</span></figcaption></figure>',
         f'<div class="evrow" data-near="{_e(words["events_near"])}" '
         f'data-so-far="{_e(panel["events_so_far"])}" data-none="{_e(words["events_none"])}" '
         f'data-none-yet="{_e(panel["events_none_yet"])}">'
         '<span class="evh"></span>'
         f'<ol class="events">{events}</ol>'
         '<span class="none note" hidden></span>'
+        "</div>",
         "</div>",
         "</div>",
         '<div class="nav" data-needs-script hidden>'
@@ -1376,7 +1418,7 @@ def _render_foot(data, has_markers, has_drop_pins):
         f'<button type="button" class="btn next">{_e(panel["next"])}</button>'
         f'<button type="button" class="btn overview">{_e(panel["overview"])}</button>'
         f'<label class="trail">{_e(words["trail"])} <select>{"".join(options)}</select></label>'
-        f'<span class="count" data-count="{_e(panel["count"])}"></span>'
+        f'<span class="count" data-count="{_e(panel["count"])}" data-count-dropped="{_e(panel["count_dropped"])}"></span>'
         "</div>",
         "</div>",
     ]
@@ -1402,7 +1444,7 @@ def _render_pane(data, floors, kept, dropped, markers, id_to_rank):
     parts.extend(_render_side(has_heat))
     parts.append("</div>")
     has_drop_pins = any(f.get("at") is not None for f in dropped)
-    parts.extend(_render_foot(data, bool(markers), has_drop_pins))
+    parts.extend(_render_foot(data, kept, bool(markers), has_drop_pins))
     parts.append("</aside>")
     return parts
 
@@ -1539,8 +1581,8 @@ def _render_card(finding, markers_by_moment, floor_count, has_map):
 
     facts = []
     if finding.get("game_state") is not None:
-        facts.append(f'<dt>{LABELS["card"]["game"]}</dt><dd>{_e(finding["game_state"])}</dd>')
-    facts.append(f'<dt>{LABELS["card"]["checker"]}</dt><dd>{_e(check["note"])}</dd>')
+        facts.append(f'<dt>{LABELS["card"]["game"]}</dt><dd>{_breakable(finding["game_state"])}</dd>')
+    facts.append(f'<dt>{LABELS["card"]["checker"]}</dt><dd>{_breakable(check["note"])}</dd>')
     bottom = [f'<dl class="facts">{"".join(facts)}</dl>']
     fric = _render_friction_line(check)
     if fric:
@@ -1696,7 +1738,8 @@ def _render_dropped(dropped, floor_count, has_map):
             f'<article class="drop" id="d-{_e(finding["id"])}" {attrs}>'
             f'<div class="card-head">{number}<span class="time">{_mss(finding["time_s"])}</span>'
             f'<span class="badge k-{info["class"]}">'
-            f'<span class="k k-{info["class"]}" aria-hidden="true"></span>{_e(info["label"])}</span></div>'
+            f'<span class="k k-{info["class"]}" aria-hidden="true"></span>{_e(info["label"])}</span>'
+            f'<span class="intent dropped">{_e(LABELS["panel"]["dropped_tag"])}</span></div>'
             f'<div class="card-main"><p class="summary">{_e(finding["summary"])}</p>{reason_html}</div>'
             "</article>"
         )
@@ -1736,7 +1779,8 @@ SCRIPT = r"""
   var FLOORS = [];
   each(pane.querySelectorAll(".floor"), function (fig) {
     var label = fig.querySelector(".floor-label");
-    FLOORS[Number(fig.getAttribute("data-floor"))] = { fig: fig, strong: fig.querySelector(".strong"), dot: fig.querySelector(".dot"), name: label ? label.textContent : "" };
+    FLOORS[Number(fig.getAttribute("data-floor"))] = { fig: fig, strong: fig.querySelector(".strong"), dot: fig.querySelector(".dot"), name: label ? label.textContent : "",
+      w: fig.querySelector("svg.map").viewBox.baseVal.width };
   });
   var RUNS = [], POINTS = [];
   each(pane.querySelectorAll(".route polyline.line"), function (line) {
@@ -1771,6 +1815,7 @@ SCRIPT = r"""
     BY_ID[el.id] = r;
   });
   var KEPT = RECS.filter(function (r) { return r.kept; }).sort(function (a, b) { return a.t - b.t; });
+  var DROPS = RECS.filter(function (r) { return !r.kept; });
   function shown() { return page.getAttribute("data-focus") === "unplanned" ? KEPT.filter(function (r) { return !r.soft; }) : KEPT; }
   function visible(r) { return r.kept && !(r.soft && page.getAttribute("data-focus") === "unplanned"); }
 
@@ -1783,6 +1828,8 @@ SCRIPT = r"""
   var nav = pane.querySelector(".nav"), playBtn = nav.querySelector(".play"), prevBtn = nav.querySelector(".prev"), nextBtn = nav.querySelector(".next");
   var trailSel = nav.querySelector(".trail select"), count = nav.querySelector(".count");
   var bigPlay = pane.querySelector(".play-session");
+  // The overview's clip: the first problem's moment, paused on its frame.
+  var FIRST = BY_ID[stage.getAttribute("data-first")] || null;
   var roomBars = tracks ? tracks.querySelectorAll(".r-rooms .bar") : [];
   var past = tracks ? tracks.querySelector(".past") : null;
   var bands = tracks ? tracks.querySelectorAll(".band") : [];
@@ -1791,7 +1838,7 @@ SCRIPT = r"""
   // mode: whole (the overview), moment (S.cur is current), session (the map time S.t moves).
   // S.clip is the record whose clip plays, in S.clipEl; S.resume says the session goes on after it.
   var S = { mode: "whole", cur: null, t: DUR, trail: Number(trailSel.value), playing: false, clip: null, clipEl: null, clipT: null,
-    resume: false, stopIdx: 0, stageFor: null, lock: 0, hold: 0 };
+    resume: false, stopIdx: 0, stageFor: null, stageKey: "", sideFor: null, hold: 0 };
   function heatOn() { return !!(heatInput && heatInput.checked); }
   function inSpans(spans, t) { for (var i = 0; i < spans.length; i++) if (t >= spans[i][0] && t <= spans[i][1]) return true; return false; }
   function lastPassed(t) { var best = null; shown().forEach(function (r) { if (r.t <= t) best = r; }); return best; }
@@ -1873,10 +1920,14 @@ SCRIPT = r"""
     });
     var p = dotT == null ? null : pointAt(dotT), tag = freshEvent(dotT);
     FLOORS.forEach(function (F, fl) {
-      var show = !!p && p.floor === fl;
+      var show = !!p && p.floor === fl, text = F.dot.querySelector(".tag");
       F.dot.setAttribute("visibility", show ? "visible" : "hidden");
       if (show) F.dot.setAttribute("transform", "translate(" + p.xy[0] + " " + p.xy[1] + ")");
-      F.dot.querySelector(".tag").textContent = show && tag ? tag : "";
+      // The tag reads to the right of the dot, or to the left on the right half of the floor.
+      var flip = show && p.xy[0] > F.w / 2;
+      F.dot.classList.toggle("flip", flip);
+      text.setAttribute("x", flip ? -34 : 34);
+      text.textContent = show && tag ? tag : "";
     });
     if (p) lit = p.floor;
     FLOORS.forEach(function (F, fl) {
@@ -1920,21 +1971,45 @@ SCRIPT = r"""
     if (past) { past.hidden = heat || S.mode === "whole"; place(past, 0, t); }
   }
 
+  // The stage's clip shows one record's clip, paused on the moment's own
+  // frame until something plays it, or nothing (black, no controls) when
+  // r is null: the clip never points at a time the map does not.
+  function loadStage(r) {
+    // The overview captions the clip with its moment; a moment captions it with the clip's span.
+    var key = (S.mode === "whole" ? "whole " : "moment ") + (r ? r.id : "");
+    if (S.stageKey === key) return;
+    S.stageKey = key; S.stageFor = r;
+    if (r && r.clipSrc) {
+      var cardCap = r.el.querySelector(".clip figcaption span");
+      if (S.mode === "whole") {
+        var a = document.createElement("a"); a.href = "#" + r.id; a.textContent = r.el.getAttribute("data-label");
+        cap.replaceChildren(a);
+      } else cap.textContent = cardCap ? cardCap.textContent : "";
+      sv.setAttribute("controls", "");
+      if (sv.getAttribute("src") !== r.clipSrc) { sv.setAttribute("src", r.clipSrc); S.seek = r.t - r.clip[0]; }
+      else if (S.clipT == null) sv.currentTime = r.t - r.clip[0];
+    } else {
+      cap.textContent = "";
+      sv.removeAttribute("controls");
+      if (sv.hasAttribute("src")) { sv.removeAttribute("src"); sv.load(); }
+    }
+  }
+
   // The panel: the current moment's own words (clones of its card), or the
   // player's time and room; the game events row; the transport row.
   function renderPanel(heat, active, p) {
     var list = shown(), r = S.cur;
     nav.querySelector(".overview").disabled = S.mode === "whole";
     if (heat || S.mode === "whole") {
-      S.stageFor = null;
+      loadStage(heat ? null : FIRST);
       count.textContent = "";
       prevBtn.disabled = true; nextBtn.disabled = !list.length || heat;
       nav.classList.remove("in-session");
       return;
     }
     if (S.mode === "moment") {
-      if (S.stageFor !== r) {
-        S.stageFor = r;
+      if (S.sideFor !== r) {
+        S.sideFor = r;
         var head = r.el.querySelector(".card-head"), nodes = [];
         var h = document.createElement("p"); h.className = "head";
         each(head.children, function (c) { if (!c.classList.contains("floortag")) h.appendChild(c.cloneNode(true)); });
@@ -1942,20 +2017,15 @@ SCRIPT = r"""
         nodes.push(h);
         each(r.el.querySelectorAll(".card-main, .card-facts"), function (block) { each(block.children, function (c) { nodes.push(c.cloneNode(true)); }); });
         sideNow.replaceChildren.apply(sideNow, nodes);
-        if (r.clipSrc) {
-          var cardCap = r.el.querySelector(".clip figcaption span");
-          cap.textContent = cardCap ? cardCap.textContent : "";
-          stage.hidden = false;
-          if (sv.getAttribute("src") !== r.clipSrc) { sv.setAttribute("src", r.clipSrc); S.seek = r.t - r.clip[0]; }
-          else if (S.clipT == null) sv.currentTime = r.t - r.clip[0];
-        } else { stage.hidden = true; sv.removeAttribute("src"); }
       }
+      loadStage(r);
       var i = list.indexOf(r);
-      count.textContent = i >= 0 ? fill(count.getAttribute("data-count"), { n: i + 1, of: list.length }) : "";
+      if (i >= 0) count.textContent = fill(count.getAttribute("data-count"), { n: i + 1, of: list.length });
+      else count.textContent = r.kept ? "" : fill(count.getAttribute("data-count-dropped"), { n: DROPS.indexOf(r) + 1, of: DROPS.length });
       prevBtn.disabled = i <= 0 && !(i < 0 && list.length);
       nextBtn.disabled = i >= list.length - 1 && !(i < 0 && list.length);
     } else {
-      S.stageFor = null;
+      loadStage(null);
       nowT.textContent = mss(S.t);
       var bits = [roomAt(S.t)]; if (p && FLOORS[p.floor].name) bits.push(FLOORS[p.floor].name);
       nowWhere.textContent = bits.filter(Boolean).join(", ");
@@ -2013,14 +2083,25 @@ SCRIPT = r"""
     if (history.replaceState) history.replaceState(null, "", "#" + r.id);
     if (scroll) scrollTo(r);
   }
+  // A scroll the page starts (a jump to a card, the overview's return to
+  // the top) must not move "now": the scroll sync waits until that scroll
+  // has ended (scrollend, or no scroll event for 250 ms, or 3 s at most).
+  var own = 0, ownTimer = 0;
+  function ownScroll() {
+    own = performance.now() + 3000;
+    clearTimeout(ownTimer);
+    ownTimer = setTimeout(releaseScroll, 250);
+  }
+  function releaseScroll() { own = 0; clearTimeout(ownTimer); onScroll(); }
+  var behavior = reduce.matches ? "auto" : "smooth";
   // The list follows the current moment while the stage stays on screen
   // (the wide layout); in the stacked layout the stage comes into view instead.
   function sticky() { return getComputedStyle(pane).position === "sticky"; }
   function scrollTo(r) {
-    S.lock = performance.now() + (reduce.matches ? 150 : 900);
     var target = sticky() ? r.el : pane, box = target.getBoundingClientRect();
     if (target === pane && box.top >= 0 && box.bottom <= window.innerHeight) return;
-    target.scrollIntoView({ block: sticky() ? "center" : "start", behavior: reduce.matches ? "auto" : "smooth" });
+    ownScroll();
+    target.scrollIntoView({ block: sticky() ? "center" : "start", behavior: behavior });
   }
   function toSession(t) {
     pauseClips(null); showTrail();
@@ -2028,11 +2109,13 @@ SCRIPT = r"""
     S.t = Math.max(0, Math.min(DUR, t)); S.hold = performance.now() + 1500;
     render();
   }
-  function toOverview() {
+  // Back to the start: the whole route, and (from Overview or Escape) the page's top with the problems.
+  function toOverview(top) {
     stopAll();
     S.mode = "whole"; S.cur = null; S.t = DUR;
     render();
     if (history.replaceState) history.replaceState(null, "", location.pathname + location.search);
+    if (top && window.scrollY > 0) { ownScroll(); window.scrollTo({ top: 0, behavior: behavior }); }
   }
   function centered() {
     var mid = window.innerHeight / 2, last = null;
@@ -2048,18 +2131,23 @@ SCRIPT = r"""
   // The moment in the middle of the screen becomes current while the reader scrolls on their own.
   function onScroll() {
     var now = performance.now();
-    if (heatOn() || S.clip || S.playing || now < S.lock || !sticky()) return;
+    if (heatOn() || S.clip || S.playing || own || !sticky()) return;
     if (S.mode === "session" && now < S.hold) return;
     var r = centered();
     if (r) { setCur(r); return; }
-    if (S.mode === "moment") toOverview();
+    if (S.mode === "moment") toOverview(false);
   }
   var ticking = false;
   window.addEventListener("scroll", function () {
+    if (own) {
+      if (performance.now() < own) { clearTimeout(ownTimer); ownTimer = setTimeout(releaseScroll, 250); return; }
+      own = 0;
+    }
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(function () { ticking = false; onScroll(); });
   }, { passive: true });
+  window.addEventListener("scrollend", function () { if (own) releaseScroll(); });
 
   document.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest("a[href^='#']");
@@ -2139,7 +2227,7 @@ SCRIPT = r"""
   }
   prevBtn.addEventListener("click", function () { step(-1); });
   nextBtn.addEventListener("click", function () { step(1); });
-  nav.querySelector(".overview").addEventListener("click", toOverview);
+  nav.querySelector(".overview").addEventListener("click", function () { toOverview(true); });
   trailSel.addEventListener("change", function () { S.trail = Number(trailSel.value); render(); });
   each(pane.querySelectorAll("input[name=view]"), function (el) {
     el.addEventListener("change", function () {
@@ -2151,7 +2239,7 @@ SCRIPT = r"""
   each(pane.querySelectorAll("input[name=focus]"), function (el) {
     el.addEventListener("change", function () {
       page.setAttribute("data-focus", el.value);
-      if (S.cur && !visible(S.cur) && S.cur.kept) toOverview(); else render();
+      if (S.cur && !visible(S.cur) && S.cur.kept) toOverview(false); else render();
     });
   });
 
@@ -2179,7 +2267,7 @@ SCRIPT = r"""
     if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
     else if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
     else if (e.key === " " && tag !== "button") { e.preventDefault(); playBtn.click(); }
-    else if (e.key === "Escape" && S.mode !== "whole") { e.preventDefault(); toOverview(); }
+    else if (e.key === "Escape" && S.mode !== "whole") { e.preventDefault(); toOverview(true); }
   });
 
   // A playing clip holds the map on its moment and moves the dot:
@@ -2199,7 +2287,10 @@ SCRIPT = r"""
       if (!r || !r.clip) return;
       pauseClips(v); setPlaying(false); showTrail();
       if (v !== sv) S.resume = false;
-      S.mode = "moment"; S.cur = r; S.clip = r; S.clipEl = v; lastPoint = null;
+      // Play on the overview's clip makes its moment current; the list follows.
+      var fromWhole = S.mode === "whole";
+      S.mode = "moment"; S.cur = r; S.clip = r; S.clipEl = v; S.clipT = r.clip[0] + v.currentTime; lastPoint = null;
+      if (fromWhole) { render(); if (history.replaceState) history.replaceState(null, "", "#" + r.id); scrollTo(r); }
       follow();
     });
     function stop(e) {
@@ -2227,9 +2318,9 @@ SCRIPT = r"""
   // A link to a moment (#m7, #d-f12) opens on that moment.
   var start = BY_ID[decodeURIComponent(location.hash.slice(1))];
   if (start) {
-    S.mode = "moment"; S.cur = start; S.lock = performance.now() + 1200;
+    S.mode = "moment"; S.cur = start; ownScroll();
     // After the browser's own jump to the fragment, which it repeats until the page has loaded.
-    var open = function () { (sticky() ? start.el : pane).scrollIntoView({ block: sticky() ? "center" : "start", behavior: "instant" }); };
+    var open = function () { ownScroll(); (sticky() ? start.el : pane).scrollIntoView({ block: sticky() ? "center" : "start", behavior: "instant" }); };
     if (document.readyState === "complete") setTimeout(open, 0); else window.addEventListener("load", function () { setTimeout(open, 0); });
   }
   render();
@@ -2296,9 +2387,11 @@ def render_html(data, maps_dir=None):
         page_open,
     ]
     parts.extend(_render_header(data))
-    parts.append('<main class="col">')
+    # The problems are their own grid row: beside the stage on a wide
+    # screen, above it when the layout stacks.
     if summary is not None and summary.get("problems"):
         parts.extend(_render_problems(summary["problems"], by_id))
+    parts.append('<main class="col">')
     if summary is not None:
         parts.extend(_render_glance(summary, session["duration_s"]))
     if data.get("cross_player"):

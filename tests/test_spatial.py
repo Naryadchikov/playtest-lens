@@ -176,6 +176,45 @@ def test_downsample_keeps_first_last_and_one_second_apart():
     assert all(second - first >= 1.0 for first, second in zip(times, times[1:]))
 
 
+def test_downsample_keeps_the_sample_where_the_floor_changes():
+    # Review 20, nit 2: a floor change inside the one-second step kept its
+    # floor span but had no route point. t=0 floor 0, t=0.5 floor 1, t=1.0 floor 0.
+    events = [_flash(), _scene(LOBBY, t=0.05)]
+    events.append(_position(0.0, x=1.0, z=1.0, y=0.0))
+    events.append(_position(0.5, x=1.0, z=1.5, y=3.0))
+    events.append(_position(1.0, x=1.0, z=2.0, y=0.0))
+    data = spatial.enrich(_data([]), events, video_flash_s=0.0)
+    route = data["route"]
+    assert [(point[0], point[3]) for point in route["points"]] == [(0.0, 0), (0.5, 1), (1.0, 0)]
+    for span in route["floor_spans"]:
+        assert any(point[3] == span["floor"] and span["start_s"] <= point[0] <= span["end_s"] for point in route["points"])
+
+
+@pytest.mark.parametrize(
+    "name, words",
+    [
+        ("kitchenCabinet4", "Kitchen cabinet 4"),
+        ("UPPER_OFFICE_CEO", "Upper office CEO"),
+        ("BATHROOM_STALL2", "Bathroom stall 2"),
+        ("AnimatableBody3D", "Animatable body 3D"),
+        ("Platform", "Platform"),
+        ("", ""),
+    ],
+)
+def test_node_names_become_words(name, words):
+    assert spatial._words(name) == words
+
+
+def test_door_and_lock_labels_name_the_thing_and_its_room():
+    label = spatial._event_label
+    assert label({"event": "door", "open": True, "path": "BREAK_ROOM/kitchenSink/CabinetDoor"}) == "Kitchen sink opened (Break room)"
+    assert label({"event": "door", "open": False, "path": "MEETING_ROOM/desk/AnimatableBody3D"}) == "Desk closed (Meeting room)"
+    assert label({"event": "lock", "locked": False, "path": "BATHROOM_STALL2/DuctDoor"}) == "Duct door unlocked (Bathroom stall 2)"
+    # One segment: no room to name.
+    assert label({"event": "door", "open": True, "path": "Platform"}) == "Platform opened"
+    assert label({"event": "quest", "quest": "demo_steal_laptop", "step": "activated"}) == "Demo steal laptop activated"
+
+
 def test_heat_finds_a_linger_and_ignores_a_walk_through():
     events = [_flash(), _scene(LOBBY, t=0.5)]
     for step in range(9):
@@ -469,11 +508,11 @@ def test_events_and_zones_are_written_in_video_time():
     ]
     data = spatial.enrich(_data([], duration_s=100.0), events, video_flash_s=3.0)
     assert data["events"] == [
-        {"t": 5.0, "kind": "door", "label": "HALL/BadgeDoor opened"},
+        {"t": 5.0, "kind": "door", "label": "Badge door opened (Hall)"},
         {"t": 6.0, "kind": "door", "label": "Lift closed"},
-        {"t": 7.0, "kind": "lock", "label": "NORTH_ROOM/PlateDoor unlocked"},
+        {"t": 7.0, "kind": "lock", "label": "Plate door unlocked (North room)"},
         {"t": 8.0, "kind": "pickup", "label": "Picked up Crate"},
-        {"t": 9.0, "kind": "quest", "label": "find_exit completed"},
+        {"t": 9.0, "kind": "quest", "label": "Find exit completed"},
         {"t": 10.0, "kind": "pause", "label": "Paused"},
         {"t": 11.0, "kind": "resume", "label": "Resumed"},
     ]
