@@ -2,9 +2,9 @@
 
 The orchestrator keeps this file up to date at each milestone and at the end of each day, so a fresh thread can pick up from it (AGENTS.md, "Saving Claude usage"). Keep it under a page.
 
-## Roles (Sasha, 2026-10-28, DECISIONS.md)
+## Roles (Sasha, 2026-10-31, DECISIONS.md)
 
-Backup mode is on. Claude Sonnet 5.5 hit its limit mid task (access returns 2026-11-01 00:00 UTC). Orchestrator until then: Grok 4.7 through Cursor (docs/BACKUP_ORCHESTRATOR.md). Main author: DeepSeek V4.1 Flash 1017 on Modal. Reviewer of that work: a fresh Grok 4.7. Reviewer of Grok's work: GLM 5.3 (routine) or Kimi K3 (milestones) on Modal. Muse Wonder is not called. The Meta pool (about $23.90) stays for the product's video and audio only. Open-weights mode is Baseten. Sasha's Grok bot and, if needed, his Windows machine stay as before.
+Backup mode is over. Claude Opus 5.5 orchestrates and writes the code. A fresh Grok 4.7 xhigh through Cursor reviews the code; a fresh Claude Sonnet 5.5 judges the report captures and the README. Muse Wonder is not called. The Meta pool stays for the product's video and audio only. Normal mode is Contributor Spark 1.2; open mode is Muse Spark Open on Baseten. The table is in AGENTS.md.
 
 Going public is the last step: docs/PUBLIC_CHECKLIST.md.
 

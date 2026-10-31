@@ -1,6 +1,6 @@
 # Backup orchestrator
 
-For the case where Claude's usage runs out before Saturday evening (2026-10-31), when Sasha's Claude Max limits reset. A proposal from the Claude Sonnet 5.5 orchestrator (Claude Code in T3 Code), 2026-10-28, shaped by Sasha's ideas. It becomes the plan only when Sasha starts a thread on it. Until then Claude orchestrates and this file just waits.
+For the case where Claude's usage runs out. It ran from 2026-10-28 to 2026-10-31 and is now the fallback: Sasha starts it, as below. A proposal from the Claude Sonnet 5.5 orchestrator (Claude Code in T3 Code), 2026-10-28, shaped by Sasha's ideas. It becomes the plan only when Sasha starts a thread on it. Until then Claude orchestrates and this file just waits.
 
 ## How to switch
 
