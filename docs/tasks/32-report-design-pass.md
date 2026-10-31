@@ -1,6 +1,6 @@
 # 32: The final design and UX pass on the report
 
-Author of this brief: Claude Opus 5.5 (orchestrator, Claude Code in T3 Code), 2026-10-31. Designer and implementer: Claude Fable 5.1, a Claude Code subagent (Sasha's pick). Reviewer: a fresh Grok 4.7 xhigh (code), then a fresh Claude Sonnet 5.5 (captures). Base commit: filled in when task 30 is committed.
+Author of this brief: Claude Opus 5.5 (orchestrator, Claude Code in T3 Code), 2026-10-31. Designer and implementer: Claude Fable 5.1, a Claude Code subagent (Sasha's pick). Reviewer: a fresh Grok 4.7 xhigh (code), then a fresh Claude Sonnet 5.5 (captures). Base commit: `c1cd19c` on `main` (task 30 built: the page you start from is `runs/check/person2-report.html`; its screenshots are in `/tmp/t30/shots/`).
 
 Follow `.claude/skills/change-analyzer/SKILL.md` if you touch the analyzer, and `.claude/skills/validate-change/SKILL.md` before you call it done.
 
@@ -44,6 +44,8 @@ What went wrong in all three, the orchestrator's read:
 - **The signal is diluted.** Of 24 kept moments on her session, 16 are low-friction "by design" learning moments; 8 are real friction (`check.friction` stuck or blocked). Every moment stays on the page, but the hierarchy should make the 8 stand out and let the 16 recede, and a filter between them is fair game.
 - **Competing interaction models.** Scroll sync, session playback, timeline scrub and clip playback each move "now". Pick one spine (time, or the current moment) that everything follows, and make it visible.
 - **Raw game event labels** ("BATHROOM_STALL2 unlocked") read as noise next to the player's words. Present them so they help (quiet, grouped, iconified, on hover), or say what the analyzer should supply instead.
+- **"Time lost" misleads.** `summary.lost_s` and each problem's `lost_s` count only the length of merged moments (`end_s` minus `time_s`); a single moment counts zero. On her session all 3:24 lands on the Break Room (two merged moments) and the Code Lock's three attempts count 0:00, so the Break Room ranks above the Code Lock. The rule is a proposal, never Sasha's. Propose a fairer measure (for example the attempt or visit spans the file already holds) or drop the number from the ranking; implement it in the analyzer only if it is clearly better, and put the choice to Sasha as a question either way.
+- **Task 30 removed some of today's page** to follow mockup B: the card dimming and its span note, and the pin list; every group is open. Bring back what a designer misses.
 - **The demo needs half a screen.** The video puts the Open page beside the Spark page: two browser windows side by side on 1920 x 1080, so each page must still read at about 960 x 1080. There is no blended third report (Sasha, 2026-10-30).
 
 ## Fixed points
