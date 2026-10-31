@@ -35,7 +35,7 @@ func _initialize() -> void:
 	for arg in args.slice(2):
 		if arg.begins_with("--") and "=" in arg:
 			opts[arg.substr(2, arg.find("=") - 2)] = arg.substr(arg.find("=") + 1)
-		elif arg.is_valid_float():
+		elif arg.is_valid_float() and is_finite(float(arg)):
 			cutoff = float(arg)
 		else:
 			printerr("y_cutoff must be a number, got %s" % arg)
@@ -43,7 +43,7 @@ func _initialize() -> void:
 			return
 	var floor_min := -INF
 	if opts.has("floor-min"):
-		if not String(opts["floor-min"]).is_valid_float():
+		if not String(opts["floor-min"]).is_valid_float() or not is_finite(float(opts["floor-min"])):
 			printerr("--floor-min must be a number, got %s" % opts["floor-min"])
 			quit(2)
 			return
@@ -52,7 +52,7 @@ func _initialize() -> void:
 	if opts.has("box"):
 		var parts := String(opts["box"]).split(",")
 		for part in parts:
-			if part.is_valid_float():
+			if part.is_valid_float() and is_finite(float(part)):
 				box_fixed.append(float(part))
 		if parts.size() != 4 or box_fixed.size() != 4 or box_fixed[0] >= box_fixed[1] or box_fixed[2] >= box_fixed[3]:
 			printerr("--box needs four numbers min_x,max_x,min_z,max_z with min below max, got %s" % opts["box"])

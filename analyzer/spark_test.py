@@ -153,6 +153,7 @@ def main(argv=None) -> int:
     parser.add_argument("--model", default="muse-spark-1.2-contributor", help="Model id (default: muse-spark-1.2-contributor)")
     parser.add_argument("--start", type=float, default=0.0, help="Start the cut S seconds into the recording")
     parser.add_argument("--seconds", type=int, default=None, help="Keep only N seconds from the start of the cut")
+    parser.add_argument("--out", default=None, help="Candidates path (default runs/spark_test/<recording stem>[-window<N>s]-<model>.json)")
     parser.add_argument("--window-seconds", type=float, default=None, help="Split the recording into windows of N seconds, one call each, and merge (the candidate pass; ignores --start/--seconds)")
     args = parser.parse_args(argv)
 
@@ -212,10 +213,10 @@ def main(argv=None) -> int:
                 print(str(exc), file=sys.stderr)
                 return 1
 
-    output_dir.mkdir(parents=True, exist_ok=True)
     # Model ids can contain a slash (meta-models/muse-spark-open-1026). A slash
     # in the file name makes the write look for a folder that is not there.
-    output_path = output_dir / f"{stem}-{args.model.replace('/', '-')}.json"
+    output_path = Path(args.out) if args.out else output_dir / f"{stem}-{args.model.replace('/', '-')}.json"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         json.dumps(
             {
