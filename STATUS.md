@@ -8,18 +8,18 @@ Backup mode is over. Claude Opus 5.5 orchestrates and writes the code. A fresh G
 
 Going public is the last step: docs/PUBLIC_CHECKLIST.md.
 
-## Where things stand (2026-10-30, evening)
+## Where things stand (2026-10-31, evening)
 
-The pipeline on main is one path. Contributor Spark receives the video with its sound. Open mode is Muse Spark Open on Baseten: the mp4 plus a separate wav, and Voice Transcribe still checks every quote. The frame path is gone. Read DECISIONS.md from 2026-10-29 before changing prompts, the chain, or the editor.
+Main has the model setup (`c10fbc2`) and the report polish (`b36e564`). The polish is look only: each clip sits beside its card text on wide screens, the map fits one screen with its controls, zero tiles step back, lighter route arrows, the start label clear of pin 1, and one time instead of "0:39-0:39". Both person2 pages are regenerated from the same findings files; their visible text differs only in those single-time spans. The old pages are kept as `runs/check/person2-report-before-polish.html` and `person2-report-open-before-polish.html`.
 
-Fork `playtest-lens` is `412e213`: Meeting Room spelling fixed, CEO Office puzzle line is Bear Head. He edits volumes on Windows. The analyzer stays on the Mac.
+The pipeline is unchanged: one path, Contributor Spark with sound, Open on Baseten with the mp4 plus a wav and Voice Transcribe checking quotes. Fork `playtest-lens` is `412e213`. The chain stays shelved (`docs/shelved/chain-merge.patch`).
 
-Player 1's session (git-ignored): `recordings/cogito/cogito_person2.mkv` and `recordings/cogito/2026-10-30T12-20-05Z.jsonl`. Reports in `runs/check/`: `person2-report.html` (Spark, the page to show) and `person2-report-open.html` (Open). The chain versions `person2-report-chain.html` and `person2-report-open-chain.html` stay for reading. The chain code is shelved at `docs/shelved/chain-merge.patch` and is not what `merge_same_moment` does. His own lobby session is still `cogito-report-26.html` and `cogito-report-open.html`.
+Player 1's session (git-ignored): `recordings/cogito/cogito_person2.mkv` and `recordings/cogito/2026-10-30T12-20-05Z.jsonl`. The page to show is `runs/check/person2-report.html` (Spark); Open is `runs/check/person2-report-open.html`.
 
 ## In flight
 
-- No analyzer change until he says the Spark page is wrong. Claude polishes the report look when its limit is back. He may reread the Open page and ask Claude to read it too.
-- Do not chase the ripped-page combine. Do not build the editor ghost before the submission.
+- Review 18, a fresh Grok 4.7 xhigh on `b36e564`: `docs/reviews/18-report-polish-grok.md` when it lands.
+- No analyzer or prompt change until he says a card is wrong. No third blended report, no editor ghost, no ripped pages.
 - The repo is still private. The 3-minute video is not recorded. "by design" is still Opus's proposal.
 
 ## Remind Sasha
@@ -28,15 +28,16 @@ Player 1's session (git-ignored): `recordings/cogito/cogito_person2.mkv` and `re
 
 ## Next
 
-1. He finishes reading the Open page if he wants, and Claude reads it when asked. No prompt edits from that unless he says a card is wrong.
-2. Claude polishes the report look when the limit is back. Not the findings.
-3. He records the 3-minute video from the Spark page: one moment, one drop, the map, then Open beside it. The keypad sentence is his: stuck on the puzzle, not stuck on progression, because of the toilet route.
-4. Public checklist, repo public last, submit Wednesday 4 November, well before 9:00 PM Eastern. Freeze Tuesday 3 November.
+1. He looks at the polished Spark page. Look notes go to Opus; the look is his call.
+2. He records the 3-minute video from the Spark page: one moment, one drop, the map, then Open beside it. The keypad line is his.
+3. Freeze Tuesday 3 November: a fresh Grok 4.7 on the whole repo and a fresh Sonnet 5.5 on the README and page captures (docs/REVIEW.md).
+4. Public checklist (docs/PUBLIC_CHECKLIST.md), repo public last, submit Wednesday 4 November, well before 9:00 PM Eastern.
 
 ## Open questions for Sasha
 
-Whether her session may be used to tune prompts, or is kept clean for the score. The word "by design" (Opus's proposal). Nothing else blocks the video.
+1. Is her session for tuning, or kept clean for the score? Nothing is tuned until he answers.
+2. The word "by design" (Opus's proposal).
 
 ## Credits used
 
-`runs/costs.jsonl` sums to $18.07 on 2026-10-30. Muse Spark Open on Baseten is $3.94. Voice Transcribe is $0.28. Contributor Spark is $0.17. The Meta pool figure of about $23.90 left was his, on 2026-10-28, and has not been rechecked against Meta's dashboard. Her session's Open check is inside the Baseten figure.
+`runs/costs.jsonl` sums to $18.07 on 2026-10-31 (no model calls today). Muse Spark Open on Baseten is $3.94. Voice Transcribe is $0.28. Contributor Spark is $0.17. The Meta pool figure of about $23.90 left was his, on 2026-10-28, and has not been rechecked against Meta's dashboard. Her session's Open check is inside the Baseten figure.
