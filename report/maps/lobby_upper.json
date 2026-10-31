@@ -1,5 +1,11 @@
 {
 	"convention": "px = (x - world_min_x) / (world_max_x - world_min_x) * px_width; py = (z - world_min_z) / (world_max_z - world_min_z) * px_height; z grows downward in the picture; y is height and is not drawn",
+	"hidden_nodes": [
+		"MAIN_LOBBY/FloorUnit10",
+		"MAIN_LOBBY/LAB_CONNECTOR/FloorUnit12",
+		"BATHROOM_STALL/Ceiling_Bathroomstall",
+		"BATHROOM_STALL2/Ceiling_Bathroomstall"
+	],
 	"px_height": 2048,
 	"px_width": 905,
 	"scene": "res://addons/cogito/DemoScenes/COGITO_3_Lobby.tscn",
