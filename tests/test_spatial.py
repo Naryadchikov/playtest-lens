@@ -246,24 +246,32 @@ def test_markers_render_as_f9_pins_linked_to_the_card():
     assert 'class="f9line"' in page
 
 
-def test_lost_s_counts_overlapping_spans_once():
+def test_lost_s_is_the_time_in_visits_with_a_stuck_or_blocked_moment():
     events = [_flash(), _scene(LOBBY, t=0.5), _position(1.0)]
     findings = [
-        _finding("f1", 1, time_s=10.0, end_s=20.0, kind="stuck"),
-        _finding("f2", 2, time_s=15.0, end_s=25.0, kind="confused"),
-        _finding("f3", 3, time_s=30.0, end_s=40.0, kind="stuck"),
-        _finding("f4", 4, time_s=12.0, end_s=18.0, kind="surprised"),
-        _finding("f5", None, time_s=0.0, end_s=50.0, kind="stuck", verdict="drop"),
+        # Two visits that overlap count once: 10-40 and 25-55 make 45 s.
+        _placed(_finding("f1", 1, time_s=12.0, kind="confused"), "Hall", start_s=10.0, friction="stuck"),
+        _placed(_finding("f2", 2, time_s=30.0, kind="surprised"), "Hall", start_s=25.0, friction="blocked"),
+        # A moment by design never counts, whatever its kind.
+        _placed(_finding("f3", 3, time_s=70.0, end_s=80.0, kind="stuck"), "Hall", start_s=60.0),
+        # A dropped candidate never counts.
+        _placed(_finding("f4", None, time_s=0.0, end_s=50.0, verdict="drop"), "Hall", start_s=0.0, friction="blocked"),
+        # No usable visit span: the moment's own span, 100-110.
+        _placed(_finding("f5", 4, time_s=100.0, end_s=110.0, kind="confused"), "Yard", start_s=100.0, friction="stuck"),
+        # Neither span: nothing to count.
+        _placed(_finding("f6", 5, time_s=115.0, kind="confused"), "Yard", start_s=115.0, friction="stuck"),
     ]
+    findings[4]["beat"]["attempt_end_s"] = 100.0
+    findings[5]["beat"]["attempt_end_s"] = 115.0
     data = spatial.enrich(_data(findings), events, video_flash_s=0.0)
-    assert data["summary"]["lost_s"] == 25.0
+    assert data["summary"]["lost_s"] == 55.0
     assert data["summary"]["counts"] == {
-        "stuck": 2,
-        "confused": 1,
+        "stuck": 1,
+        "confused": 3,
         "surprised": 1,
         "suspected_bug": 0,
     }
-    assert data["summary"]["kept"] == 4
+    assert data["summary"]["kept"] == 5
     assert data["summary"]["dropped"] == 1
 
 
@@ -321,12 +329,13 @@ def test_enriched_file_loads_and_renders(tmp_path):
     data = findings_module.load(tmp_path / "findings.json")
     assert data["route"]["points"]
     assert data["markers"] == []
-    assert data["summary"]["lost_s"] == 5.0
+    # f1 is stuck over its attempt 6-9; f2 is by design and does not count.
+    assert data["summary"]["lost_s"] == 3.0
 
     page = render_html(data)
     assert 'id="where"' in page
     assert 'class="tiles"' in page
-    assert 'class="strip"' in page
+    assert 'class="timeline"' in page
     assert page.count('<figure class="floor"') == 2
     assert 'fill="url(#heat-blob)"' in page
     assert "<polyline" in page
@@ -392,7 +401,7 @@ def test_the_pin_nudge_works_per_floor():
     assert above["at"] == {"x": -3.0, "z": -13.0, "floor": 1}
 
 
-def test_problems_rank_places_by_friction_then_time_lost_then_time():
+def test_problems_rank_places_by_friction_then_time_stuck_then_time():
     findings = [
         # A learning-only area is never a problem.
         _placed(_finding("f1", 1, time_s=5.0, kind="confused"), "Hall"),
@@ -401,13 +410,15 @@ def test_problems_rank_places_by_friction_then_time_lost_then_time():
         _placed(_finding("f3", 3, time_s=60.0), "Vault", "Dial", 2, 55.0, "learning", "solved"),
         # The same area with no puzzle is its own place.
         _placed(_finding("f4", 4, time_s=70.0, end_s=130.0, kind="confused"), "Vault", None, None, 65.0, "stuck"),
-        # Blocked, more time lost than the Dial: first.
+        # Blocked, a longer visit than the Dial's attempt: first.
         _placed(_finding("f5", 5, time_s=80.0, end_s=100.0), "Kitchen", None, None, 75.0, "blocked"),
-        # Stuck, no time lost, but earlier than nothing else at stuck.
+        # Stuck, a short visit: last.
         _placed(_finding("f6", 6, time_s=10.0, kind="surprised"), "Atrium", None, None, 8.0, "stuck"),
         # A dropped candidate never counts.
         _placed(_finding("f7", None, time_s=90.0, verdict="drop"), "Basement", None, None, 88.0, "blocked"),
     ]
+    findings[4]["beat"]["attempt_end_s"] = 135.0
+    findings[5]["beat"]["attempt_end_s"] = 13.0
     events = [_flash(), _scene(LOBBY, t=0.5), _position(1.0)]
     data = spatial.enrich(_data(findings, duration_s=200.0), events, video_flash_s=0.0)
     problems = data["summary"]["problems"]
@@ -419,11 +430,12 @@ def test_problems_rank_places_by_friction_then_time_lost_then_time():
         "place": "Vault, Dial",
         "moments": ["f2", "f3"],
         "attempts": 2,
-        "lost_s": 10.0,
+        "lost_s": 30.0,
         "friction": "blocked",
         "resolved": "mixed",
     }
-    assert problems[2]["lost_s"] == 60.0 and problems[2]["resolved"] == "unknown"
+    assert problems[2]["lost_s"] == 30.0 and problems[2]["resolved"] == "unknown"
+    assert problems[3]["lost_s"] == 5.0
     assert problems[3]["friction"] == "stuck"
 
 

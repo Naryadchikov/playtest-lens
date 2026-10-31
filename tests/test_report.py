@@ -67,22 +67,28 @@ def test_redesign_fixture_loads():
 
 def test_sections_follow_the_layout_order(redesign):
     page = render_html(redesign)
-    # The write-up column first, then the map pane.
+    # The header, then the write-up column, then the stage, then the timeline bar.
     assert re.findall(r'<h2 id="([^"]+)"', page) == [
         "problems", "glance", "across", "moments", "dropped", "where",
     ]
+    header = page[page.index('<header class="head">'):page.index("</header>")]
+    assert 'class="verdict"' in header
+    assert page.index("</header>") < page.index('<main class="col">')
     column = page[page.index('<main class="col">'):page.index("</main>")]
     order = [column.index(mark) for mark in (
-        'class="verdict"', 'id="problems"', 'class="tiles"', 'class="strip"', 'id="moments"', 'id="dropped"',
+        'id="problems"', 'class="tiles"', 'id="moments"', 'id="dropped"',
     )]
     assert order == sorted(order)
-    assert page.index("</main>") < page.index('<aside class="pane"')
+    assert "verdict" not in column and "timeline" not in column
+    assert page.index("</main>") < page.index('<aside class="pane"') < page.index('<section class="timeline"')
 
 
 def test_time_lost_tile_shows_only_when_there_is_time_lost(redesign):
-    assert "Time lost to being stuck or confused" in render_html(redesign)
+    page = render_html(redesign)
+    assert "Time stuck or blocked" in page
+    assert "in the visits and attempts with an unplanned moment" in page
     redesign["summary"]["lost_s"] = 0
-    assert "Time lost to being stuck or confused" not in render_html(redesign)
+    assert "Time stuck or blocked" not in render_html(redesign)
 
 
 def test_header_names_the_model(redesign):
@@ -169,7 +175,7 @@ def test_problems_block_lists_the_file_places_worst_first(redesign):
     ]
     first = block.split('<li class="problem">')[1]
     assert "High" in first and "3 attempts" in first and "5 moments" in first
-    assert "2:57 lost" in first and "Partly resolved" in first
+    assert "2:57 stuck" in first and "Partly resolved" in first
     # Its moments, by rank, each linking to its card.
     assert re.findall(r'class="mk [^"]+" href="#m(\d+)"', first) == ["1", "2", "3", "7", "9"]
     # No problems, no block.
@@ -243,17 +249,21 @@ def test_dropped_candidates_are_a_visible_section_with_hollow_pins(redesign):
         assert re.search(rf'<a class="pin hollow [^"]+" id="pin-d-{finding["id"]}" href="#d-{finding["id"]}"', page)
 
 
-def test_session_strip_rows_come_from_the_file(redesign):
+def test_timeline_rows_come_from_the_file(redesign):
     page = render_html(redesign)
-    strip = page[page.index('<section class="strip"'):]
+    strip = page[page.index('<section class="timeline"'):]
     strip = strip[:strip.index("</section>")]
     duration = redesign["session"]["duration_s"]
     labels = re.findall(r'<div class="labs">(.*?)</div>', strip)[0]
     assert re.findall(r">([^<]+)</span>", labels) == [
-        "Hall", "North room", "South room", "Upper floor", "Moments", "Dropped",
+        "Rooms", "Upper floor", "Moments", "Dropped", "Events",
     ]
-    # An open zone runs to the end of the recording.
-    assert 'title="South room, crate shelf 10:40-14:20"' in strip
+    # Every visit is a bar on the one rooms row, with its times for the script;
+    # an open zone runs to the end of the recording.
+    rooms = re.search(r'<div class="track r-rooms">(.*?)</div>', strip).group(1)
+    assert rooms.count('class="bar') == len(redesign["zones"])
+    assert 'title="South room, crate shelf 10:40-14:20"' in rooms
+    assert f'data-s="640.0" data-e="{duration}" data-room="South room"' in rooms
     for span in redesign["route"]["floor_spans"]:
         if span["floor"] == 1:
             left = span["start_s"] / duration * 100
@@ -266,6 +276,26 @@ def test_session_strip_rows_come_from_the_file(redesign):
             )
         else:
             assert f'href="#d-{finding["id"]}" style="left:{left:.2f}%"' in strip
+    for event in redesign["events"]:
+        left = event["t"] / duration * 100
+        assert f'<i class="tick" style="left:{left:.2f}%" title="{_mss(event["t"])} {html.escape(event["label"])}"></i>' in strip
+    # The timeline's height is on the page, so the stage can size the floors.
+    rows, count = render._stack(
+        sorted(f["time_s"] for f in redesign["findings"] if f["check"]["verdict"] == "keep"), duration
+    )
+    height = render._timeline_height(count, 2, True, True)
+    assert f"--tl-h:{height}px" in page
+
+
+def test_short_room_visits_keep_their_name_for_the_tooltip_only(redesign):
+    redesign["zones"] = [
+        {"zone": "Closet", "puzzle": "", "start_s": 100.0, "end_s": 101.0},
+        {"zone": "Hall", "puzzle": "", "start_s": 200.0, "end_s": 400.0},
+    ]
+    page = render_html(redesign)
+    rooms = re.search(r'<div class="track r-rooms">(.*?)</div>', page).group(1)
+    assert 'data-room="Closet" title="Closet 1:40-1:41"></span>' in rooms
+    assert 'data-room="Hall" title="Hall 3:20-6:40">Hall</span>' in rooms
 
 
 def test_strip_markers_stack_into_rows_by_time():
@@ -274,12 +304,19 @@ def test_strip_markers_stack_into_rows_by_time():
     assert count == 3
 
 
-def test_game_events_wait_in_the_moment_box(redesign):
+def test_game_events_wait_in_the_foot_with_an_icon_per_kind(redesign):
+    redesign["events"].append({"t": 400.0, "kind": "odd", "label": "Something else"})
     page = render_html(redesign)
-    box = page[page.index('<div class="box-now"'):]
+    row = page[page.index('<div class="evrow"'):]
+    row = row[:row.index("</ol>")]
     for event in redesign["events"]:
-        assert f'<li data-t="{event["t"]}" hidden><time>{_mss(event["t"])}</time><span>{html.escape(event["label"])}</span></li>' in box
-    assert 'data-up-to="Game events up to {time}"' in box
+        icon = event["kind"] if event["kind"] in render.EVENT_KINDS else "other"
+        assert (
+            f'<li data-t="{event["t"]}" hidden><svg aria-hidden="true" focusable="false"><use href="#ev-{icon}"/></svg>'
+            f'<time>{_mss(event["t"])}</time><span>{html.escape(event["label"])}</span></li>'
+        ) in row
+    assert 'data-so-far="Game events so far"' in row
+    assert f'data-near="{html.escape("Game events in this moment" + chr(39) + "s visit and clip")}"' in row
 
 
 @pytest.mark.parametrize("path", [SAMPLE, SAMPLE_B])
@@ -392,24 +429,25 @@ def test_page_has_one_inline_script_no_network_and_no_capture_hooks(redesign):
 
 def test_controls_are_hidden_until_the_script_runs(redesign):
     page = render_html(redesign)
-    for css in ("btn play", "trail", "readout", "scrub", "box-now"):
+    for css in ("btn big play-session", "readout", "seg focus", "mode side-now", "mode side-session", "mode foot-now", "nav"):
         tag = re.search(rf'<[a-z]+ [^>]*class="{css}"[^>]*>', page).group(0)
         assert "data-needs-script hidden" in tag, css
-    duration = int(redesign["session"]["duration_s"])
-    assert f'min="0" max="{duration}" step="1" value="{duration}"' in page
-    assert 'aria-label="Time in the recording"' in page
     assert 'data-play="Play" data-pause="Pause"' in page
+    assert ">Play the session</span>" in page
+    assert ">Previous</button>" in page and ">Next</button>" in page and ">Overview</button>" in page
+    assert 'data-count="Moment {n} of {of}"' in page
     script = _script(page)
     assert "SPEED = 10" in script
-    assert "r.clipStart + v.currentTime" in script
-    assert "ArrowRight" in script and "ArrowLeft" in script
+    assert "r.clip[0] + v.currentTime" in script
+    assert "ArrowRight" in script and "ArrowLeft" in script and "Escape" in script
 
 
-def test_trail_offers_from_start_and_the_window_lengths(redesign):
+def test_trail_offers_from_start_and_the_window_lengths_with_30_s_picked(redesign):
     page = render_html(redesign)
     select = re.search(r'<label class="trail"[^>]*>.*?</label>', page).group(0)
-    assert re.findall(r'<option value="(\d+)">', select) == ["0", "10", "15", "30", "60"]
+    assert re.findall(r'<option value="(\d+)"', select) == ["0", "10", "15", "30", "60"]
     assert ">From start</option>" in select and ">10 s</option>" in select
+    assert '<option value="30" selected>30 s</option>' in select
     assert 'data-readout-window="{start}-{time} of {duration}"' in page
 
 
@@ -417,7 +455,8 @@ def test_heat_is_its_own_view_per_floor(redesign):
     page = render_html(redesign)
     assert '<input type="radio" name="view" value="trail" checked>' in page
     assert '<input type="radio" name="view" value="heat" class="view-heat">' in page
-    assert ".pane:has(.view-heat:checked) :is(.trail-layer, .box-whole, .box-now) { display: none; }" in page
+    assert ".pane:has(.view-heat:checked) .trail-layer { display: none; }" in page
+    assert '<div class="mode side-heat">' in page
     for index in (0, 1):
         floor = _floor(page, index)
         spots = [s for s in redesign["route"]["heat"] if s["floor"] == index]
@@ -431,7 +470,7 @@ def test_heat_is_its_own_view_per_floor(redesign):
     redesign["route"]["heat"] = []
     page = render_html(redesign)
     assert 'name="view"' not in page
-    assert 'class="box-heat"' not in page
+    assert 'class="mode side-heat"' not in page
     assert '<g class="heat"' not in page
 
 
@@ -466,9 +505,11 @@ def test_clips_render_only_for_kept_findings(redesign):
     kept_with_clip = [
         f for f in redesign["findings"] if f["check"]["verdict"] == "keep" and f["clip"] is not None
     ]
-    assert page.count("<video") == len(kept_with_clip)
+    # One video per clip in the list, plus the stage's, which starts empty.
+    assert page.count("<video") == len(kept_with_clip) + 1
+    assert '<video controls preload="metadata"></video>' in page
     for finding in kept_with_clip:
-        assert f'src="{html.escape(finding["clip"]["path"], quote=True)}"' in page
+        assert page.count(f'src="{html.escape(finding["clip"]["path"], quote=True)}"') == 1
     assert "Clip 5:35-6:00" in _card(page, 1)
 
 
@@ -480,3 +521,43 @@ def test_missing_quote_shows_the_label(redesign):
 def test_span_with_one_time_at_both_ends_reads_as_one_time():
     assert render._span(39.2, 39.8) == "0:39"
     assert render._span(39, 54) == "0:39-0:54"
+
+
+def test_moments_by_design_recede_and_the_unplanned_ones_stand_out(redesign):
+    page = render_html(redesign)
+    by_id = {f["id"]: f for f in redesign["findings"]}
+    # f1 is blocked (unplanned), f5 is learning (by design).
+    assert by_id["f1"]["check"]["friction"] == "blocked"
+    assert by_id["f5"]["check"]["friction"] == "learning"
+    strong, soft = by_id["f1"], by_id["f5"]
+    assert re.search(rf'<article class="card stuck" id="m{strong["rank"]}"', page)
+    assert re.search(rf'<article class="card [a-z]+ soft" id="m{soft["rank"]}"', page)
+    assert re.search(rf'<a class="pin k-[a-z]+" id="pin-m{strong["rank"]}"[^>]*>.*?width="{2 * render.PIN_R}"', page, re.DOTALL)
+    assert re.search(rf'<a class="pin k-[a-z]+ soft" id="pin-m{soft["rank"]}"[^>]*>.*?width="{2 * render.SOFT_R}"', page, re.DOTALL)
+    strip = page[page.index('<section class="timeline"'):]
+    assert re.search(rf'<a class="mk soft k-[a-z]+" href="#m{soft["rank"]}"', strip)
+    assert re.search(rf'<a class="mk k-[a-z]+" href="#m{strong["rank"]}"', strip)
+    assert '<input type="radio" name="focus" value="unplanned">' in page
+    # With no moment by design there is nothing to filter.
+    for finding in redesign["findings"]:
+        finding["check"]["friction"] = "stuck"
+    page = render_html(redesign)
+    assert 'name="focus"' not in page
+    assert ' soft"' not in page
+
+
+def test_each_moment_is_written_once_and_the_stage_starts_empty(redesign):
+    page = render_html(redesign)
+    for finding in redesign["findings"]:
+        assert page.count(html.escape(finding["summary"])) == 1
+        assert page.count(html.escape(finding["check"]["note"])) == 1
+    assert '<div class="mode side-now" data-needs-script hidden></div>' in page
+
+
+def test_without_script_the_stage_still_shows_the_legend(redesign):
+    page = render_html(redesign)
+    assert "html:not(.js) .side { display: none; }" in page
+    foot = page[page.index('<div class="mode foot-whole">'):page.index('<div class="mode foot-now"')]
+    assert "Route, arrows point the way walked" in foot
+    assert "Hollow shapes are candidates the check dropped." in foot
+    assert "F9: the player flagged confusion" in foot

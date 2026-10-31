@@ -412,18 +412,39 @@ def _markers(marker_lines, samples, kept, scene):
     return entries
 
 
-# Union length of the kept stuck and confused spans, overlaps once.
+# Time the player spent stuck or blocked: the union length of the
+# attempt or visit spans (beat.attempt_start_s to beat.attempt_end_s)
+# of the kept findings whose check.friction is stuck or blocked, each
+# overlap counted once. A finding with no usable beat span falls back
+# to its own time_s to end_s. "by design" (learning) moments never
+# count, and a single moment counts its whole visit, never zero.
+# Proposal (Claude Fable 5.1, 2026-11-01), not Sasha's rule: it replaces
+# the first rule (the length of merged stuck and confused moments),
+# which counted a single moment as zero and a learning moment as lost.
+LOST_FRICTION = ("stuck", "blocked")
+
+
+def _lost_span(finding):
+    beat = finding.get("beat") or {}
+    start = beat.get("attempt_start_s")
+    end = beat.get("attempt_end_s")
+    if start is None or end is None or end <= start:
+        start, end = finding["time_s"], finding.get("end_s")
+    if end is None or end <= start:
+        return None
+    return (float(start), float(end))
+
+
 def _lost_s(findings):
     spans = []
     for finding in findings:
         if finding["check"]["verdict"] != "keep":
             continue
-        if finding["kind"] not in ("stuck", "confused"):
+        if finding["check"].get("friction") not in LOST_FRICTION:
             continue
-        end_s = finding.get("end_s")
-        if end_s is None or end_s <= finding["time_s"]:
-            continue
-        spans.append((finding["time_s"], float(end_s)))
+        span = _lost_span(finding)
+        if span is not None:
+            spans.append(span)
     lost = 0.0
     current_start = None
     current_end = None
@@ -442,7 +463,7 @@ def _lost_s(findings):
 # The worst places for the problems block: kept findings by area and
 # puzzle across visits (a puzzle by area and puzzle, an area without a
 # puzzle by area), only places with a kept finding at stuck or blocked
-# friction. Worst friction first, then time lost (the lost_s rule),
+# friction. Worst friction first, then time stuck (the lost_s rule),
 # then the earliest moment; at most PROBLEMS_MAX. A finding without a
 # beat has no place and is left out.
 def _problems(findings):

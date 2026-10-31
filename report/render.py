@@ -2,22 +2,28 @@
 
 The page only renders what the file holds. It computes nothing beyond
 formatting seconds as m:ss, converting a world point to image pixels
-with each floor's map JSON, placing times along the session strip, and
-the structural counts a group needs. Section and card order come from
-the file's times and beat fields: sections by their start, cards by
-time, ties by rank.
+with each floor's map JSON, placing times along the timeline, and the
+structural counts a group needs. Section and card order come from the
+file's times and beat fields: sections by their start, cards by time,
+ties by rank.
 
-Layout (task 30, from mockup B): the write-up scrolls on the left and
-the map pane stays on the right, with every floor of the scene side by
-side. One inline script drives the pane: the moment in the middle of
-the screen lights its pin and its visit on the map, Play runs the whole
-session, a playing clip moves the dot, and the session strip and the
-slider set the map's time. It only shows, hides and highlights what the
-page already drew, by the times the file holds (written into data-
-attributes), and moves a dot to an existing route point. It never makes
-a finding, a time, a position or a count. Without script the page shows
-every moment with its clip and every floor with the whole route; the
-heat map view is a CSS switch (:has), so it needs no script.
+Layout (task 32, Claude Fable 5.1, on task 30's build): the write-up
+scrolls on the left and the stage stays on the right: every floor of
+the scene side by side, the moment panel under them (the current
+moment's clip beside its words, or the player's time and room while
+the session plays), and the timeline under that. One inline script
+drives the stage from one state: the current moment and the map time.
+Picking a problem, a pin, a timeline mark or a card makes that moment
+current; Play runs the session at 10x and stops at each shown moment
+to play its clip at normal speed, then goes on; a playing clip moves
+the dot; the list follows the current moment and the moment in the
+middle of the screen becomes current when the reader scrolls. The
+script only shows, hides and highlights what the page already drew, by
+the times the file holds (written into data-attributes), and moves a
+dot to an existing route point. It never makes a finding, a time, a
+position or a count. Without script the page shows every moment with
+its clip and every floor with the whole route; the heat map view is a
+CSS switch (:has), so it needs no script.
 
 All page wording lives in LABELS, so changing a string never means
 touching the markup.
@@ -61,7 +67,11 @@ LABELS = {
         "problems": "Top problems",
     },
     "tiles": {
-        "time_lost": "Time lost to being stuck or confused",
+        # Proposals (Claude Fable 5.1, 2026-11-01), not Sasha's wording:
+        # the number is the time in the visits and attempts that hold a
+        # stuck or blocked moment (analyzer/spatial.py, _lost_s).
+        "time_lost": "Time stuck or blocked",
+        "time_lost_note": "in the visits and attempts with an unplanned moment",
         "kept": "Moments checked against the video and the event log",
         "of": "of {duration}",
         "count_note": "{kept} kept, {dropped} dropped",
@@ -88,7 +98,8 @@ LABELS = {
         "attempt": "attempt",
         "visit": "visit",
         "moment": "moment",
-        "lost": "{time} lost",
+        # Proposal (Claude Fable 5.1, 2026-11-01), not Sasha's wording.
+        "lost": "{time} stuck",
         "mixed": "Partly resolved",
     },
     "across": {
@@ -125,13 +136,38 @@ LABELS = {
         "clip": "Clip {span}",
         "sync": "Map follows the clip",
     },
-    # Proposals (Claude Opus 5.5, 2026-11-01, from mockup B), not Sasha's wording.
+    # Proposals (Claude Fable 5.1, 2026-11-01, after mockup A's timeline),
+    # not Sasha's wording. "bar" and "bar_puzzle" are Claude Opus 5.5's
+    # (mockup B).
     "strip": {
-        "aria": "Session strip: rooms the player was in, time on the upper floor, kept moments and dropped candidates, over the whole recording.",
+        "aria": "Timeline of the recording: the rooms the player was in, time on the upper floor, the kept moments by rank, the dropped candidates and the game events. Click or drag to set the map's time.",
+        "rooms": "Rooms",
         "moments": "Moments",
         "dropped": "Dropped",
+        "events": "Events",
         "bar": "{room} {span}",
         "bar_puzzle": "{room}, {puzzle} {span}",
+        "event": "{time} {label}",
+    },
+    # Proposals (Claude Fable 5.1, 2026-11-01), not Sasha's wording.
+    "focus": {
+        "aria": "Which moments to show",
+        "all": "All moments",
+        "unplanned": "Unplanned only",
+    },
+    # Proposals (Claude Fable 5.1, 2026-11-01), not Sasha's wording.
+    # "Previous", "Next" and "Overview" are mockup A's (Claude Opus 5.5).
+    "panel": {
+        "play_session": "Play the session",
+        "hint": "Runs at 10x and stops at each moment to play its clip at normal speed, then goes on. Or pick a problem, a pin or a moment.",
+        "keys": "Space plays and pauses. Left and right arrows step between moments. Escape returns to the overview.",
+        "previous": "Previous",
+        "next": "Next",
+        "overview": "Overview",
+        "count": "Moment {n} of {of}",
+        "last": "Last moment: {label}",
+        "events_so_far": "Game events so far",
+        "events_none_yet": "No game events yet.",
     },
     # Proposals (Claude Opus 5.5, 2026-11-01, from mockup B), not Sasha's wording.
     "floors": ("Ground floor", "Upper floor"),
@@ -147,11 +183,10 @@ LABELS = {
         "f9": "F9: the player flagged confusion",
         # Proposals (Claude Opus 5.5, 2026-11-01, from mockup B), not Sasha's wording.
         "dropped": "Hollow shapes are candidates the check dropped.",
-        "hint": "Scroll the moments to light each one on the map. Play runs the whole session.",
         "drop_pin": "Dropped, {kind}, {time}",
     },
     # Proposals (Claude Opus 5.5 plan, task 25, 2026-10-28), not Sasha's wording.
-    # "view", "trail", "readout_window" and "show_all" are proposals by
+    # "view", "trail" and "readout_window" are proposals by
     # Claude Opus 5.5 (Cursor, task 26, 2026-10-28). The window lengths
     # come from Sasha's "10 sec, 15, 30, etc." (Cursor chat,
     # 2026-10-28); 60 is the brief's.
@@ -161,18 +196,17 @@ LABELS = {
         "view_heat": "Heat map",
         "play": "Play",
         "pause": "Pause",
-        "slider": "Time in the recording",
         "readout": "{time} of {duration}",
         "readout_window": "{start}-{time} of {duration}",
         "trail": "Trail",
         "trail_all": "From start",
         "trail_last": "{n} s",
         "windows": (10, 15, 30, 60),
-        "legend": "Where the player is at the slider's time",
-        "show_all": "Show all moments",
+        # Proposal (Claude Fable 5.1, 2026-11-01): the strong trail is the
+        # last 30 s by default; the whole route stays faint behind it.
+        "trail_default": 30,
         # Proposals (Claude Opus 5.5, 2026-11-01, from mockup B), not Sasha's wording.
         "events_near": "Game events in this moment's visit and clip",
-        "events_up_to": "Game events up to {time}",
         "events_none": "No game events in this span.",
     },
     # Proposals by Claude Opus 5.5 (Cursor, task 26, 2026-10-28), not Sasha's wording.
@@ -180,7 +214,7 @@ LABELS = {
         "title": "Time spent, whole session",
         "low": "Less",
         "high": "More",
-        "note": "Each number is the time spent at that spot. The route and pins are in the timeline view.",
+        "note": "Each number is the time spent at that spot. The route, the pins and the timeline are in the timeline view.",
     },
     "dropped": {
         "note": "{n} candidates the check did not keep",
@@ -229,17 +263,22 @@ h4 { font-size: var(--fs-b); margin: var(--s4) 0 var(--s2); color: var(--ink2); 
 .note { color: var(--muted); font-size: var(--fs-s); font-weight: 400; }
 .mono { font-family: var(--mono); font-size: .92em; }
 
-/* Two columns: the write-up scrolls, the map pane stays. */
-.page { --floor-h: max(420px, calc(100vh - 236px)); --pane-w: calc(var(--floor-h) * var(--ars) + (var(--floors) - 1) * 10px);
-  display: grid; grid-template-columns: minmax(0, 1fr) var(--pane-w); gap: var(--s5); padding: 0 var(--s5); max-width: 1880px; margin: 0 auto; }
-.page.solo { grid-template-columns: minmax(0, 1fr); max-width: 1120px; }
-.col { padding: var(--s5) 0 50vh; min-width: 0; }
+/* Two columns: the header and the write-up on the left scroll, the stage on the right stays.
+   The floors take the height the panel and the timeline leave, capped by half the width. */
+.page { --side-w: 280px; --foot-h: 190px;
+  --floor-h: max(300px, min(calc(100vh - var(--tl-h) - 36px - var(--foot-h) - 44px), calc((56vw - var(--side-w) - 12px - (var(--floors) - 1) * 10px) / var(--ars))));
+  --pane-w: calc(var(--floor-h) * var(--ars) + (var(--floors) - 1) * 10px + var(--side-w) + 12px);
+  display: grid; grid-template-columns: minmax(0, 1fr) var(--pane-w); grid-template-rows: auto 1fr auto;
+  grid-template-areas: "head pane" "col pane" "tl tl"; column-gap: var(--s5); padding: 0 var(--s5); max-width: 1880px; margin: 0 auto; }
+.page.solo { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "col"; max-width: 1120px; }
+.head { grid-area: head; padding-top: var(--s5); min-width: 0; max-width: 1100px; }
+.col { grid-area: col; padding: 0 0 40vh; min-width: 0; max-width: 1100px; }
 .page.solo .col { padding-bottom: var(--s6); }
 
 /* header */
 .meta { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s5); margin: 0 0 var(--s4); padding: 0; list-style: none; color: var(--ink2); font-size: var(--fs-s); }
 .meta b { color: var(--muted); font-weight: 600; margin-right: var(--s1); }
-.verdict { font-size: var(--fs-m); font-weight: 600; margin: 0 0 var(--s4); padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--accent); border-radius: 6px; }
+.verdict { font-size: var(--fs-m); font-weight: 600; margin: 0; padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--accent); border-radius: 6px; }
 
 /* kind shapes in text: badges, legends */
 .k { display: inline-block; width: .85em; height: .85em; background: var(--c); flex: none; }
@@ -255,21 +294,23 @@ svg.sh use { fill: var(--p); stroke: #0b1020; stroke-width: 1.2; }
 .hollow svg.sh use { fill: none; stroke: var(--c); stroke-width: 2.4; }
 
 /* problems */
-.problems ol { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+.problems ol { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); counter-reset: problem; }
 .problem { background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--k-stuck); border-radius: 6px; padding: var(--s2) var(--s4); display: grid; gap: 2px; }
 .problem a.place { font-weight: 700; color: var(--ink); text-decoration: none; font-size: var(--fs-m); }
+.problem a.place::before { counter-increment: problem; content: counter(problem) ". "; color: var(--muted); font-weight: 600; }
 .problem a.place:hover { text-decoration: underline; }
 .problem .facts-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s4); font-size: var(--fs-s); color: var(--ink2); }
 .problem .facts-line > span { display: inline-flex; align-items: center; gap: var(--s2); }
 .problem .mks { display: inline-flex; flex-wrap: wrap; gap: 2px; }
 
-/* rank markers: strip, problems, card numbers */
+/* rank markers: timeline, problems, card numbers */
 .mk { position: relative; display: inline-grid; place-items: center; width: 22px; height: 22px; flex: none; color: #0b1020; text-decoration: none; }
 .mk svg.sh { position: absolute; inset: 0; }
 .mk b { position: relative; font: 700 11px var(--font); }
 .k-surprised.mk b, .k-bug.mk b { font-size: 10px; }
 .k-bug.mk b { top: 2px; }
 a.mk:hover svg.sh use, a.mk:focus-visible svg.sh use { stroke: var(--ink); stroke-width: 2.4; }
+.mk.is-active svg.sh use { stroke: var(--accent); stroke-width: 3; }
 
 /* at a glance */
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); margin: 0 0 var(--s3); }
@@ -277,32 +318,12 @@ a.mk:hover svg.sh use, a.mk:focus-visible svg.sh use { stroke: var(--ink); strok
 .tile .n { font-size: var(--fs-l); font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; }
 .tile .n .note { margin-left: var(--s1); font-weight: 600; }
 .tile .l { color: var(--ink2); font-size: var(--fs-s); }
+.tile .l .note { display: block; }
 .kinds { list-style: none; margin: 0 0 var(--s4); padding: 0; display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); font-size: var(--fs-s); color: var(--ink2); }
 .kinds li { display: inline-flex; align-items: center; gap: 6px; }
 .kinds b { color: var(--ink); font-size: var(--fs-b); }
 .kinds .zero, .kinds .zero b { color: var(--muted); }
 .kinds .zero .k { opacity: .45; }
-
-/* session strip */
-.strip { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0 var(--s3); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: var(--s3); margin: 0 0 var(--s4); }
-.labs, .tracks { display: flex; flex-direction: column; gap: 4px; }
-.labs span { height: 12px; line-height: 12px; font-size: 11px; font-weight: 600; color: var(--ink2); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.labs span.r-marks, .labs span.r-drops { display: flex; align-items: center; }
-.tracks { position: relative; cursor: crosshair; touch-action: none; }
-.track { position: relative; height: 12px; border-radius: 2px; background: var(--sunk); }
-.r-floor { margin-top: 4px; }
-.r-drops { height: 18px !important; }
-.track.r-marks, .track.r-drops { background: none; }
-.bar { position: absolute; top: 0; bottom: 0; min-width: 2px; border-radius: 2px; background: var(--bar); }
-.bar.puzzle { background: var(--bar-puzzle); }
-.bar.up { background: var(--muted); opacity: .55; }
-.track .mk { position: absolute; margin-left: -11px; }
-.track.r-drops .mk { width: 14px; height: 14px; margin-left: -7px; top: 2px; }
-.axis { position: relative; height: 16px; font: 11px var(--mono); color: var(--muted); }
-.axis span { position: absolute; top: 2px; transform: translateX(-50%); white-space: nowrap; }
-.axis span:first-child { transform: none; }
-.tracks .band { position: absolute; top: 0; bottom: 20px; background: var(--accent); opacity: .18; pointer-events: none; min-width: 2px; }
-.tracks .cursor { position: absolute; top: 0; bottom: 20px; width: 2px; margin-left: -1px; background: var(--accent); pointer-events: none; }
 
 /* across players */
 .groups { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
@@ -320,6 +341,11 @@ section.moments-group > h3 { font-size: var(--fs-l); line-height: 1.25; margin: 
 .card, .drop { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "main" "clip" "facts"; column-gap: var(--s4); margin: 0 0 var(--s3); padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--c); border-radius: 8px; scroll-margin-top: 30vh; transition: border-color .2s, box-shadow .2s; }
 .card.stuck { --c: var(--k-stuck); } .card.confused { --c: var(--k-confused); }
 .card.surprised { --c: var(--k-surprised); } .card.bug { --c: var(--k-bug); }
+/* A moment by design recedes: a thinner edge, a smaller number. */
+.card.soft { border-left-width: 3px; padding-left: calc(var(--s4) + 3px); }
+.card.soft .num-pin { width: 22px; height: 22px; }
+.card.soft .num-pin b { font-size: 11px; }
+.card.soft .summary { font-weight: 500; }
 .card.is-active, .drop.is-active, html:not(.js) :is(.card, .drop):target { box-shadow: 0 0 0 2px var(--accent); }
 .card-head { grid-area: head; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: var(--s2); }
 .card-main { grid-area: main; }
@@ -356,6 +382,9 @@ section.moments-group > h3 { font-size: var(--fs-l); line-height: 1.25; margin: 
 @media (min-width: 900px) {
   .card:has(> .clip) { grid-template-columns: minmax(0, 1fr) min(44%, 440px); grid-template-areas: "head clip" "main clip" "facts facts"; grid-template-rows: auto 1fr auto; }
 }
+/* Unplanned only: the moments by design leave the map, the timeline and the list. */
+.page[data-focus="unplanned"] :is(.card.soft, .pin.soft, .mk.soft) { display: none; }
+.page[data-focus="unplanned"] section.moments-group:not(:has(.card:not(.soft))) { display: none; }
 
 /* dropped */
 .drop { --c: var(--line); border-style: dashed; border-left-style: solid; background: transparent; }
@@ -363,22 +392,25 @@ section.moments-group > h3 { font-size: var(--fs-l); line-height: 1.25; margin: 
 .reason { margin: 0; font-size: var(--fs-s); color: var(--ink); padding: var(--s1) var(--s2); background: var(--sunk); border-radius: 6px; }
 .drop .num-pin { width: 18px; height: 18px; }
 
-/* the pane */
-.pane { position: sticky; top: 0; height: 100vh; min-height: 640px; display: flex; flex-direction: column; gap: 8px; padding: 12px 0; }
-.toolbar { display: flex; align-items: center; gap: var(--s2) var(--s3); flex-wrap: wrap; min-height: 34px; }
+/* the stage */
+.pane { grid-area: pane; position: sticky; top: 0; height: calc(100vh - var(--tl-h)); display: flex; flex-direction: column; gap: var(--s2); padding: var(--s3) 0 var(--s2); }
+.toolbar { display: flex; align-items: center; gap: var(--s2) var(--s3); flex-wrap: wrap; min-height: 28px; }
+.toolbar .readout { margin-left: auto; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 2px; }
 .seg label { position: relative; }
 .seg input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
-.seg span { display: block; padding: 3px 12px; border-radius: 6px; font-size: var(--fs-s); font-weight: 600; color: var(--ink2); }
+.seg span { display: block; padding: 2px 12px; border-radius: 6px; font-size: var(--fs-s); font-weight: 600; color: var(--ink2); }
 .seg input:checked + span { background: var(--accent); color: var(--on-accent); }
 .seg input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
 .btn { font: 600 var(--fs-s) var(--font); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
 .btn:hover { border-color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: default; }
 .btn svg { width: 10px; height: 10px; fill: currentColor; }
+.btn.big { font-size: var(--fs-m); padding: var(--s2) var(--s5); background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.btn.big svg { width: 14px; height: 14px; }
+.readout { font-family: var(--mono); font-size: var(--fs-s); color: var(--ink2); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .trail { font-size: var(--fs-s); color: var(--ink2); display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
 .trail select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 4px; }
-.readout { font-family: var(--mono); font-size: var(--fs-s); color: var(--ink2); white-space: nowrap; margin-left: auto; font-variant-numeric: tabular-nums; }
-.scrub input { display: block; width: 100%; margin: 0; accent-color: var(--accent); }
 .floors { display: flex; gap: 10px; }
 .floor { position: relative; width: calc(var(--floor-h) * var(--ar)); height: var(--floor-h); margin: 0; background: var(--map-bg); border-radius: 8px; overflow: hidden; outline: 2px solid transparent; outline-offset: -2px; transition: outline-color .25s; }
 .floor.lit { outline-color: var(--accent); }
@@ -402,60 +434,127 @@ section.moments-group > h3 { font-size: var(--fs-l); line-height: 1.25; margin: 
 .pin use { fill: var(--p); stroke: #0b1020; stroke-width: 1.3; }
 .pin.hollow use { fill: rgba(11, 16, 32, .55); stroke: var(--p); stroke-width: 2.6; }
 .pin text { font: 700 40px var(--font); fill: #0b1020; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.pin.soft text { font-size: 32px; }
+.pin.soft .scale { opacity: .8; }
 .pin.f9 use { fill: #0b1020; stroke: #ffffff; stroke-width: 1.2; stroke-dasharray: 2.4 1.6; }
 .pin.f9 text { fill: #ffffff; font-size: 28px; }
 .pin:focus { outline: none; }
 .pin:focus-visible use, .pin:hover use, html:not(.js) .pin:target use { stroke: #8da2ff; stroke-width: 3; }
 .pin .ring { fill: none; stroke: #ffffff; stroke-width: 6; opacity: 0; }
-.pin.is-quiet .scale { opacity: .5; }
+.pin.is-quiet .scale { opacity: .45; }
 .pin.is-later { visibility: hidden; }
-.pin.is-focus .scale { transform: scale(1.5); }
+.pin.is-focus .scale { transform: scale(1.5); opacity: 1; }
 .pin.is-focus .ring { opacity: 1; }
 .dot .halo { fill: #8da2ff; opacity: .35; }
 .dot .core { fill: #8da2ff; stroke: #ffffff; stroke-width: 7; }
+.dot .tag { font: 600 34px var(--font); fill: #ffffff; stroke: #0a0d14; stroke-width: 8; paint-order: stroke; text-anchor: start; }
 .halo-text { font: 700 40px var(--font); fill: #ffffff; stroke: #0a0d14; stroke-width: 9; paint-order: stroke; text-anchor: middle; }
 
 /* heat map view: the plan muted, the whole-session heat on top, nothing else */
-.map .heat, .box-heat { display: none; }
+.map .heat { display: none; }
 .pane:has(.view-heat:checked) .map .heat { display: inline; }
-.pane:has(.view-heat:checked) .box-heat { display: block; }
-.pane:has(.view-heat:checked) :is(.trail-layer, .box-whole, .box-now) { display: none; }
-.pane:has(.view-heat:checked) :is(.play, .trail, .scrub) { visibility: hidden; }
+.pane:has(.view-heat:checked) .trail-layer { display: none; }
+.pane:has(.view-heat:checked) .floor.quiet .bg { opacity: 1; }
+.pane:has(.view-heat:checked) :is(.timeline, .focus, .readout), .pane[data-mode="whole"] .readout { visibility: hidden; }
 .pane:has(.view-heat:checked) .bg { filter: grayscale(1) brightness(.5); }
 .ramp { height: 10px; border-radius: 3px; max-width: 220px; }
 .ramp-ends { display: flex; justify-content: space-between; max-width: 220px; color: var(--ink2); margin: 2px 0 var(--s1); }
 
-/* the moment box */
-.box { flex: 1 1 auto; min-height: 96px; overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: var(--s2) var(--s3); font-size: var(--fs-s); }
-.box p { margin: 0 0 4px; }
-.box .legend { display: flex; flex-wrap: wrap; gap: 4px var(--s4); list-style: none; margin: 0 0 4px; padding: 0; color: var(--ink2); }
-.box .legend li { display: inline-flex; align-items: center; gap: 6px; }
-.pane[data-mode="whole"] .box-now, .pane:not([data-mode="whole"]) .box-whole { display: none; }
-.box-now .head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--s2); font-weight: 700; font-size: var(--fs-b); }
-.box-now .head .where { font-weight: 400; color: var(--ink2); }
-.box-now .evh { display: flex; align-items: center; gap: var(--s3); color: var(--ink2); font-weight: 600; }
-.box-now .evh .btn { padding: 1px 8px; }
-.pane:not([data-mode="session"]) .showall { display: none; }
-.events { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: var(--s5); }
-.events li { break-inside: avoid; display: flex; gap: var(--s2); color: var(--ink2); padding: 1px 4px; border-radius: 4px; transition: background-color 1.2s, opacity .2s; }
-.events time { color: var(--muted); flex: none; min-width: 3.2em; font-family: var(--mono); }
+/* the stage body: the floors with the side column beside them; the foot row under both */
+.stagebody { display: flex; gap: var(--s3); flex: 1 1 auto; min-height: 0; }
+.side { flex: 1 1 var(--side-w); min-width: 200px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: var(--s3); overflow: auto; font-size: var(--fs-s); display: flex; flex-direction: column; }
+.side p { margin: 0; }
+.side > .mode, .foot > .mode { display: none; }
+.side > .mode { flex-direction: column; gap: var(--s2); }
+.pane[data-mode="whole"] :is(.side-whole, .foot-whole), .pane[data-mode="heat"] .side-heat,
+.pane[data-mode="moment"] :is(.side-now, .foot-now), .pane[data-mode="session"] :is(.side-session, .foot-now) { display: flex; }
+.pane[data-mode="heat"] .foot { visibility: hidden; }
+.side .facts dd, .side .quote, .side .summary, .side .reason { overflow-wrap: anywhere; }
+.side-whole { justify-content: center; gap: var(--s3); }
+.side-whole .btn.big { align-self: flex-start; }
+.side-whole .hint, .side-whole .keys { color: var(--ink2); }
+.btn.big { font-size: var(--fs-m); padding: var(--s2) var(--s5); background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.btn.big svg { width: 14px; height: 14px; }
+.side-now .head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--s2); }
+.side-now .where { color: var(--ink2); }
+.side-now .summary { font-size: var(--fs-b); }
+.side-now .card-facts { margin-top: var(--s1); }
+.side-session { gap: var(--s3); }
+.side-session .now-t { font: 700 var(--fs-xl)/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.side-session .now-where { font-size: var(--fs-m); font-weight: 600; }
+.side-session .now-last { color: var(--ink2); }
+.side-session .now-last a { color: var(--ink); }
+.foot { height: var(--foot-h); flex: none; display: flex; flex-direction: column; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: var(--s2) var(--s3); font-size: var(--fs-s); overflow: hidden; }
+.foot p { margin: 0; }
+.foot > .mode { flex: 1 1 auto; min-height: 0; }
+.foot-whole { flex-direction: column; justify-content: center; gap: var(--s2); }
+html:not(.js) .side { display: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px var(--s4); list-style: none; margin: 0; padding: 0; color: var(--ink2); }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.foot-now { gap: var(--s3); }
+.stage-clip { flex: none; display: flex; flex-direction: column; gap: 2px; margin: 0; }
+.stage-clip video { display: block; height: calc(var(--foot-h) - 74px); aspect-ratio: 16 / 9; background: #000; border-radius: 6px; }
+.stage-clip figcaption { font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; gap: var(--s2); }
+.stage-clip .sync { color: var(--accent); font-weight: 600; visibility: hidden; }
+.pane.is-stage-playing .stage-clip .sync { visibility: visible; }
+.evrow { display: flex; flex-direction: column; gap: 4px; min-height: 0; min-width: 0; flex: 1 1 auto; }
+.evrow .evh { color: var(--muted); font-weight: 600; white-space: nowrap; }
+.events { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px var(--s2); overflow: hidden; align-content: flex-start; }
+.events li { display: inline-flex; align-items: center; gap: 4px; color: var(--ink2); padding: 1px 6px; border-radius: 4px; background: var(--sunk); white-space: nowrap; max-width: 30ch; overflow: hidden; text-overflow: ellipsis; transition: background-color 1.2s; }
 .events li.later { opacity: .45; }
 .events li.fresh { background: var(--accent-tint); color: var(--ink); transition: none; }
+.events time { color: var(--muted); font-family: var(--mono); }
+.events svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 1.6; flex: none; }
+.events span { overflow: hidden; text-overflow: ellipsis; }
+.nav { display: flex; align-items: center; gap: var(--s2); flex: none; flex-wrap: wrap; }
+.nav .count { margin-left: auto; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.nav:not(.in-session) .trail { display: none; }
+
+/* the timeline: a bar across the page's foot, staying in view */
+.timeline { grid-area: tl; position: sticky; bottom: 0; z-index: 2; height: var(--tl-h); display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0 var(--s3); background: var(--surface); border-top: 1px solid var(--line); margin: 0 calc(-1 * var(--s5)); padding: var(--s2) var(--s5); }
+.labs, .tracks { display: flex; flex-direction: column; gap: 4px; }
+.labs span { height: 14px; line-height: 14px; font-size: 11px; font-weight: 600; color: var(--ink2); white-space: nowrap; display: flex; align-items: center; }
+.tracks { position: relative; cursor: crosshair; touch-action: none; }
+.track { position: relative; height: 14px; border-radius: 3px; background: var(--sunk); }
+.track.r-marks, .track.r-drops, .track.r-events { background: none; }
+.track.r-drops { height: 16px; }
+.track.r-events { height: 8px; }
+.bar { position: absolute; top: 0; bottom: 0; min-width: 2px; border-radius: 3px; background: var(--bar); overflow: hidden; padding: 0 4px; font: 600 10px/14px var(--font); color: var(--ink); white-space: nowrap; text-overflow: ellipsis; }
+.bar.puzzle { background: var(--bar-puzzle); }
+.bar.up { background: var(--muted); opacity: .55; }
+.tick { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--muted); opacity: .6; }
+.track .mk { position: absolute; margin-left: -11px; width: 22px; height: 22px; }
+.track .mk.soft { opacity: .75; }
+.track.r-drops .mk { width: 14px; height: 14px; margin-left: -7px; top: 1px; }
+.axis { position: relative; height: 14px; font: 11px var(--mono); color: var(--muted); }
+.axis span { position: absolute; top: 2px; transform: translateX(-50%); white-space: nowrap; }
+.axis span:first-child { transform: none; }
+.tracks .past { position: absolute; left: 0; top: 0; bottom: 18px; background: var(--accent); opacity: .1; pointer-events: none; }
+.tracks .band { position: absolute; top: 0; bottom: 18px; background: var(--accent); opacity: .18; pointer-events: none; min-width: 2px; }
+.tracks .cursor { position: absolute; top: 0; bottom: 18px; width: 2px; margin-left: -1px; background: var(--accent); pointer-events: none; }
 
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
 @media (max-width: 1100px) {
-  .page { grid-template-columns: minmax(0, 1fr); --floor-h: min(70vh, calc((100vw - 2 * var(--s5) - 20px - (var(--floors) - 1) * 10px) / var(--ars))); }
-  .pane { order: -1; position: static; height: auto; min-height: 0; }
+  .page { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto 1fr; grid-template-areas: "head" "pane" "tl" "col";
+    --floor-h: max(160px, min(50vh, calc((100vw - 2 * var(--s5) - (var(--floors) - 1) * 10px) / var(--ars)))); }
+  .pane { position: static; height: auto; }
+  .timeline { position: static; border: 1px solid var(--line); border-radius: 8px; margin: 0; padding: var(--s2) var(--s3); }
   .col { padding-bottom: var(--s6); }
-  .box { max-height: 140px; }
+}
+@media (max-width: 640px) {
+  .stagebody { flex-wrap: wrap; }
+  .side { flex-basis: 100%; max-height: 40vh; }
+  .foot { height: auto; }
+  .foot-now { flex-direction: column; }
+  .stage-clip video { height: auto; width: 100%; }
 }
 @media print {
   body { background: #fff; color: #000; }
-  .page { grid-template-columns: 1fr; }
-  .pane { position: static; height: auto; }
+  .page { grid-template-columns: 1fr; grid-template-areas: "head" "col"; }
+  .pane, .timeline { display: none; }
   .card, .drop, .tile, .problem { break-inside: avoid; }
-  .clip, .toolbar, .scrub, .box, .strip { display: none; }
+  .clip { display: none; }
 }
 """
 
@@ -482,6 +581,14 @@ SVG_DEFS = (
     '<symbol id="sh-surprised" viewBox="-10 -10 20 20" overflow="visible"><polygon points="0,-10 10,0 0,10 -10,0"/></symbol>'
     '<symbol id="sh-bug" viewBox="-10 -10 20 20" overflow="visible"><polygon points="0,-9.5 10,8.5 -10,8.5"/></symbol>'
     '<symbol id="sh-f9" viewBox="-10 -10 20 20" overflow="visible"><polygon points="0,-9.5 8.2,-4.75 8.2,4.75 0,9.5 -8.2,4.75 -8.2,-4.75"/></symbol>'
+    # Game event icons, one per kind the analyzer writes; a kind without one gets a plain dot.
+    '<symbol id="ev-door" viewBox="0 0 12 12"><rect x="2.5" y="1" width="7" height="10" rx="1"/><circle cx="7.5" cy="6.5" r=".8"/></symbol>'
+    '<symbol id="ev-lock" viewBox="0 0 12 12"><rect x="2" y="5.5" width="8" height="5.5" rx="1"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5"/></symbol>'
+    '<symbol id="ev-pickup" viewBox="0 0 12 12"><path d="M2 5.5h8M6 1.5v8M2.5 10.5h7"/></symbol>'
+    '<symbol id="ev-quest" viewBox="0 0 12 12"><path d="M3 11V1.5h6.5L8 4l1.5 2.5H3"/></symbol>'
+    '<symbol id="ev-pause" viewBox="0 0 12 12"><path d="M4 2v8M8 2v8"/></symbol>'
+    '<symbol id="ev-resume" viewBox="0 0 12 12"><path d="M3.5 2l6 4-6 4z"/></symbol>'
+    '<symbol id="ev-other" viewBox="0 0 12 12"><circle cx="6" cy="6" r="2.5"/></symbol>'
     '<radialGradient id="heat-blob"><stop offset="0" stop-color="#fff"/>'
     '<stop offset=".4" stop-color="#fff" stop-opacity=".85"/>'
     '<stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>'
@@ -496,16 +603,27 @@ SVG_DEFS = (
     "</defs></svg>"
 )
 
-# Map drawing sizes, in map image pixels (about 48 per metre).
+# Map drawing sizes, in map image pixels (about 48 per metre). A moment
+# by design (friction "learning") gets the smaller pin, so the unplanned
+# ones stand out.
 PIN_R = 40
+SOFT_R = 31
 DROP_R = 28
 F9_R = 34
+EVENT_KINDS = ("door", "lock", "pickup", "quest", "pause", "resume")
 
-# The session strip: two markers closer than this share of the
-# recording go on separate rows, up to STRIP_ROWS rows.
+# The timeline: two markers closer than this share of the recording go
+# on separate rows, up to STRIP_ROWS rows. The row heights feed the
+# timeline's height, which the stage needs to size the floors.
 STRIP_GAP = 0.035
 STRIP_ROWS = 3
 STRIP_ROW_PX = 22
+TRACK_PX = 14
+DROPS_PX = 16
+EVENTS_PX = 8
+TRACK_GAP_PX = 4
+TIMELINE_PAD_PX = 17
+BAR_LABEL_MIN_PCT = 4.0
 TICK_STEPS = (30, 60, 120, 300, 600, 1200, 1800, 3600)
 
 
@@ -579,6 +697,13 @@ def _kind(kind):
     )
 
 
+# A moment by design (friction "learning") recedes on the map, the
+# timeline and the list; the unplanned ones stand out.
+def _is_soft(finding):
+    rule = LABELS["friction"].get(finding["check"].get("friction"))
+    return rule is not None and not rule["unplanned"]
+
+
 def _shape(kind, extra=""):
     return (
         f'<svg class="sh" viewBox="-10 -10 20 20" aria-hidden="true" focusable="false">'
@@ -641,7 +766,7 @@ def _render_header(data):
         meta.append(f'<li><b>{words["date"]}</b>{_e(session["recorded"])}</li>')
 
     parts = [
-        "<header>",
+        '<header class="head">',
         f"<h1>{heading}</h1>",
         f'<ul class="meta">{"".join(meta)}</ul>',
     ]
@@ -724,7 +849,8 @@ def _render_glance(summary, duration_s):
         parts.append(
             f'<div class="tile"><div class="n">{_mss(summary["lost_s"])}'
             f'<span class="note">{_e(of_note)}</span></div>'
-            f'<div class="l">{_e(tiles["time_lost"])}</div></div>'
+            f'<div class="l">{_e(tiles["time_lost"])}'
+            f'<span class="note">{_e(tiles["time_lost_note"])}</span></div></div>'
         )
     count_note = tiles["count_note"].format(
         kept=summary["kept"], dropped=summary["dropped"]
@@ -837,31 +963,49 @@ def _bar(start_s, end_s, duration_s, css, title):
     )
 
 
-# The session strip: one row per room, one per upper floor, the kept
-# moments by rank, the dropped candidates, and a time axis. The script
-# draws the map time on it and reads clicks and drags as a map time.
-def _render_strip(data, kept, dropped, floor_count):
+# The timeline under the panel: the rooms the player was in on one
+# row (puzzle visits in the puzzle colour), one row per upper floor,
+# the kept moments by rank, the dropped candidates, the game events as
+# ticks, and a time axis. Returns the markup and its height in pixels,
+# which the stage needs to size the floors. The script draws the map
+# time on it and reads clicks and drags as a map time.
+def _timeline_height(row_count, floor_count, has_drops, has_events):
+    rows = [TRACK_PX, row_count * STRIP_ROW_PX, TRACK_PX]
+    rows.extend(TRACK_PX for _floor in range(1, floor_count))
+    if has_drops:
+        rows.append(DROPS_PX)
+    if has_events:
+        rows.append(EVENTS_PX)
+    return sum(rows) + TRACK_GAP_PX * (len(rows) - 1) + TIMELINE_PAD_PX
+
+
+def _render_timeline(data, kept, dropped, floor_count):
     duration = data["session"]["duration_s"]
     words = LABELS["strip"]
     labs = []
     tracks = []
 
-    rooms = {}
+    bars = []
     for zone in data.get("zones") or []:
-        rooms.setdefault(zone["zone"], []).append(zone)
-    for room, visits in rooms.items():
-        bars = []
-        for zone in visits:
-            end = zone["end_s"] if zone["end_s"] is not None else duration
-            span = _span(max(0.0, zone["start_s"]), end)
-            if zone["puzzle"]:
-                title = words["bar_puzzle"].format(room=room, puzzle=zone["puzzle"], span=span)
-            else:
-                title = words["bar"].format(room=room, span=span)
-            css = "bar puzzle" if zone["puzzle"] else "bar"
-            bars.append(_bar(zone["start_s"], end, duration, css, title))
-        labs.append(f'<span title="{_e(room)}">{_e(room)}</span>')
-        tracks.append(f'<div class="track">{"".join(bars)}</div>')
+        end = zone["end_s"] if zone["end_s"] is not None else duration
+        span = _span(max(0.0, zone["start_s"]), end)
+        room = zone["zone"]
+        if zone["puzzle"]:
+            title = words["bar_puzzle"].format(room=room, puzzle=zone["puzzle"], span=span)
+        else:
+            title = words["bar"].format(room=room, span=span)
+        css = "bar puzzle" if zone["puzzle"] else "bar"
+        left = _pct(zone["start_s"], duration)
+        width = max(0.0, _pct(end, duration) - left)
+        # A short visit keeps its name for the tooltip only.
+        text = _e(room) if width >= BAR_LABEL_MIN_PCT else ""
+        bars.append(
+            f'<span class="{css}" style="left:{left:.2f}%;width:{width:.2f}%" '
+            f'data-s="{zone["start_s"]}" data-e="{end}" data-room="{_e(room)}" '
+            f'title="{_e(title)}">{text}</span>'
+        )
+    labs.append(f"<span>{_e(words['rooms'])}</span>")
+    tracks.append(f'<div class="track r-rooms">{"".join(bars)}</div>')
 
     route = data.get("route") or {}
     for floor in range(1, floor_count):
@@ -872,7 +1016,7 @@ def _render_strip(data, kept, dropped, floor_count):
             for span in route.get("floor_spans", [])
             if span["floor"] == floor
         ]
-        labs.append(f'<span class="r-floor">{_e(name)}</span>')
+        labs.append(f"<span>{_e(name)}</span>")
         tracks.append(f'<div class="track r-floor">{"".join(bars)}</div>')
 
     by_time = sorted(kept, key=lambda f: (f["time_s"], f["rank"]))
@@ -882,13 +1026,14 @@ def _render_strip(data, kept, dropped, floor_count):
     for finding, row in zip(by_time, rows):
         info = _kind(finding["kind"])
         label = _pin_words(finding)
+        soft = " soft" if _is_soft(finding) else ""
         marks.append(
-            f'<a class="mk k-{info["class"]}" href="#m{finding["rank"]}" '
+            f'<a class="mk{soft} k-{info["class"]}" href="#m{finding["rank"]}" '
             f'style="left:{_pct(finding["time_s"], duration):.2f}%;top:{row * STRIP_ROW_PX}px" '
             f'aria-label="{_e(label)}" title="{_e(label)}">'
             f'{_shape(finding["kind"], f"<b>{finding['rank']}</b>")}</a>'
         )
-    labs.append(f'<span class="r-marks" style="height:{height}px">{_e(words["moments"])}</span>')
+    labs.append(f'<span style="height:{height}px">{_e(words["moments"])}</span>')
     tracks.append(f'<div class="track r-marks" style="height:{height}px">{"".join(marks)}</div>')
 
     if dropped:
@@ -901,8 +1046,18 @@ def _render_strip(data, kept, dropped, floor_count):
                 f'style="left:{_pct(finding["time_s"], duration):.2f}%" '
                 f'aria-label="{_e(label)}" title="{_e(label)}">{_shape(finding["kind"])}</a>'
             )
-        labs.append(f'<span class="r-drops">{_e(words["dropped"])}</span>')
+        labs.append(f'<span style="height:{DROPS_PX}px">{_e(words["dropped"])}</span>')
         tracks.append(f'<div class="track r-drops">{"".join(drops)}</div>')
+
+    events = data.get("events") or []
+    if events:
+        ticks = "".join(
+            f'<i class="tick" style="left:{_pct(event["t"], duration):.2f}%" '
+            f'title="{_e(words["event"].format(time=_mss(event["t"]), label=event["label"]))}"></i>'
+            for event in events
+        )
+        labs.append(f'<span style="height:{EVENTS_PX}px">{_e(words["events"])}</span>')
+        tracks.append(f'<div class="track r-events">{ticks}</div>')
 
     step = next((s for s in TICK_STEPS if duration / s <= 10), TICK_STEPS[-1])
     ticks = []
@@ -913,16 +1068,18 @@ def _render_strip(data, kept, dropped, floor_count):
     labs.append("<span></span>")
     tracks.append(f'<div class="axis" aria-hidden="true">{"".join(ticks)}</div>')
 
-    return [
-        f'<section class="strip" aria-label="{_e(words["aria"])}">',
+    parts = [
+        f'<section class="timeline" aria-label="{_e(words["aria"])}">',
         f'<div class="labs">{"".join(labs)}</div>',
         f'<div class="tracks" data-duration="{duration}">',
         *tracks,
+        '<div class="past" hidden></div>'
         '<div class="band" hidden></div><div class="band" hidden></div>'
         '<div class="cursor" hidden></div>',
         "</div>",
         "</section>",
     ]
+    return parts, _timeline_height(row_count, floor_count, bool(dropped), bool(events))
 
 
 def _render_heat(spots, meta, top):
@@ -1020,14 +1177,17 @@ def _render_pins(kept, dropped, markers, floor, meta, id_to_rank):
         info = _kind(finding["kind"])
         rank = finding["rank"]
         x, y = world_to_px(meta, at["x"], at["z"])
-        dy = 8 if info["class"] == "bug" else 2
+        soft = _is_soft(finding)
+        radius = SOFT_R if soft else PIN_R
+        dy = (6 if soft else 8) if info["class"] == "bug" else 2
+        css = f'pin k-{info["class"]}' + (" soft" if soft else "")
         parts.append(
-            f'<a class="pin k-{info["class"]}" id="pin-m{rank}" href="#m{rank}" '
+            f'<a class="{css}" id="pin-m{rank}" href="#m{rank}" '
             f'data-t="{finding["time_s"]}" aria-label="{_e(_pin_words(finding))}" '
             f'transform="translate({x:.1f} {y:.1f})">'
-            f'<g class="scale"><circle class="ring" r="{PIN_R + 14}"/>'
-            f'<use href="#sh-{info["class"]}" x="-{PIN_R}" y="-{PIN_R}" '
-            f'width="{2 * PIN_R}" height="{2 * PIN_R}"/><text y="{dy}">{rank}</text></g></a>'
+            f'<g class="scale"><circle class="ring" r="{radius + 14}"/>'
+            f'<use href="#sh-{info["class"]}" x="-{radius}" y="-{radius}" '
+            f'width="{2 * radius}" height="{2 * radius}"/><text y="{dy}">{rank}</text></g></a>'
         )
     for index, marker in enumerate(markers, start=1):
         if marker["floor"] != floor:
@@ -1075,7 +1235,8 @@ def _render_floor(data, index, meta, data_uri, runs, floor_count, kept, dropped,
     parts.extend(_render_pins(kept, dropped, markers, index, meta, id_to_rank))
     parts.append(
         '<g class="dot" visibility="hidden" aria-hidden="true">'
-        '<circle class="halo" r="46"/><circle class="core" r="20"/></g>'
+        '<circle class="halo" r="46"/><circle class="core" r="20"/>'
+        '<text class="tag" x="34" y="-30"></text></g>'
     )
     parts.extend(["</g>", "</svg>"])
     if floor_count > 1:
@@ -1084,8 +1245,9 @@ def _render_floor(data, index, meta, data_uri, runs, floor_count, kept, dropped,
     return parts
 
 
-def _render_toolbar(duration_s, has_heat):
+def _render_toolbar(duration_s, has_heat, has_soft):
     words = LABELS["timeline"]
+    focus = LABELS["focus"]
     total = int(duration_s)
     parts = ['<div class="toolbar">']
     if has_heat:
@@ -1096,81 +1258,128 @@ def _render_toolbar(duration_s, has_heat):
             '<label><input type="radio" name="view" value="heat" class="view-heat">'
             f'<span>{_e(words["view_heat"])}</span></label></div>'
         )
-    options = [f'<option value="0">{_e(words["trail_all"])}</option>'] + [
-        f'<option value="{n}">{_e(words["trail_last"].format(n=n))}</option>'
-        for n in words["windows"]
-    ]
+    if has_soft:
+        parts.append(
+            f'<div class="seg focus" role="radiogroup" aria-label="{_e(focus["aria"])}" data-needs-script hidden>'
+            '<label><input type="radio" name="focus" value="all" checked>'
+            f'<span>{_e(focus["all"])}</span></label>'
+            '<label><input type="radio" name="focus" value="unplanned">'
+            f'<span>{_e(focus["unplanned"])}</span></label></div>'
+        )
     readout = words["readout"].format(time=_mss(total), duration=_mss(total))
     parts.append(
-        f'<button type="button" class="btn play" data-needs-script hidden aria-pressed="false" '
-        f'data-play="{_e(words["play"])}" data-pause="{_e(words["pause"])}">'
-        '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 0 L10 5 L1 10z"/></svg>'
-        f'<span>{_e(words["play"])}</span></button>'
-        f'<label class="trail" data-needs-script hidden>{_e(words["trail"])} '
-        f'<select>{"".join(options)}</select></label>'
         f'<output class="readout" data-needs-script hidden data-readout="{_e(words["readout"])}" '
         f'data-readout-window="{_e(words["readout_window"])}">{_e(readout)}</output>'
     )
     parts.append("</div>")
-    parts.append(
-        '<div class="scrub" data-needs-script hidden>'
-        f'<input type="range" min="0" max="{total}" step="1" value="{total}" '
-        f'aria-label="{_e(words["slider"])}"></div>'
-    )
     return parts
 
 
-# Under the floors: the legend for the whole route, the heat legend for
-# the heat view, and the current moment with its game events.
-def _render_box(data, has_heat, has_markers, has_drop_pins):
-    words = LABELS["timeline"]
-    map_words = LABELS["map"]
-    kinds = "".join(
-        f'<li><span class="k k-{_kind(kind)["class"]}" aria-hidden="true"></span>'
-        f'{_e(_kind(kind)["label"])}</li>'
-        for kind in KIND_ORDER
-    )
+def _event_icon(kind):
+    name = kind if kind in EVENT_KINDS else "other"
+    return f'<svg aria-hidden="true" focusable="false"><use href="#ev-{name}"/></svg>'
+
+
+# The side column beside the floors: the overview's one big action, the
+# heat legend, the current moment's own words (the script clones its
+# card), or the player's time and room while the session plays.
+def _render_side(has_heat):
+    panel = LABELS["panel"]
+    play_svg = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 0 L10 5 L1 10z"/></svg>'
     parts = [
-        '<div class="box">',
-        '<div class="box-whole">',
-        f'<ul class="legend">{kinds}</ul>',
-        f'<p class="note">{_e(map_words["route"])}</p>',
+        '<div class="side">',
+        '<div class="mode side-whole">',
+        f'<button type="button" class="btn big play-session" data-needs-script hidden>{play_svg}'
+        f'<span>{_e(panel["play_session"])}</span></button>',
+        f'<p class="hint" data-needs-script hidden>{_e(panel["hint"])}</p>',
+        f'<p class="note keys" data-needs-script hidden>{_e(panel["keys"])}</p>',
+        "</div>",
     ]
-    if has_drop_pins:
-        parts.append(f'<p class="note">{_e(map_words["dropped"])}</p>')
-    if has_markers:
-        parts.append(f'<p class="note">{_e(map_words["f9"])}</p>')
-    parts.append(f'<p data-needs-script hidden>{_e(map_words["hint"])}</p>')
-    parts.append("</div>")
     if has_heat:
         heat = LABELS["heat"]
         stops = ", ".join(HEAT_RAMP)
         parts.append(
-            '<div class="box-heat">'
+            '<div class="mode side-heat">'
             f'<p><b>{_e(heat["title"])}</b></p>'
             f'<div class="ramp" style="background:linear-gradient(90deg, {stops})" aria-hidden="true"></div>'
             f'<div class="ramp-ends"><span>{_e(heat["low"])}</span><span>{_e(heat["high"])}</span></div>'
             f'<p class="note">{_e(heat["note"])}</p>'
             "</div>"
         )
-    events = "".join(
-        f'<li data-t="{event["t"]}" hidden><time>{_mss(event["t"])}</time>'
-        f'<span>{_e(event["label"])}</span></li>'
-        for event in data.get("events") or []
-    )
+    parts.append('<div class="mode side-now" data-needs-script hidden></div>')
     parts.append(
-        f'<div class="box-now" data-needs-script hidden data-near="{_e(words["events_near"])}" '
-        f'data-up-to="{_e(words["events_up_to"])}" aria-live="off">'
-        '<p class="head"><span class="k" aria-hidden="true"></span><span class="what"></span>'
-        '<span class="where"></span></p>'
-        '<p class="evh"><span></span>'
-        f'<button type="button" class="btn showall">{_e(words["show_all"])}</button></p>'
-        f'<ol class="events">{events}</ol>'
-        f'<p class="none note" hidden>{_e(words["events_none"])}</p>'
+        '<div class="mode side-session" data-needs-script hidden>'
+        '<div><p class="now-t"></p><p class="now-where"></p></div>'
+        f'<p class="now-last" data-last="{_e(panel["last"])}"></p>'
         "</div>"
     )
     parts.append("</div>")
     return parts
+
+
+def _event_icon(kind):
+    name = kind if kind in EVENT_KINDS else "other"
+    return f'<svg aria-hidden="true" focusable="false"><use href="#ev-{name}"/></svg>'
+
+
+# The foot row under the floors and the side column: the legend in the
+# overview; otherwise the current moment's clip, the game events and
+# the transport row.
+def _render_foot(data, has_markers, has_drop_pins):
+    words = LABELS["timeline"]
+    panel = LABELS["panel"]
+    map_words = LABELS["map"]
+    card_words = LABELS["card"]
+    play_svg = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 0 L10 5 L1 10z"/></svg>'
+    kinds = "".join(
+        f'<li><span class="k k-{_kind(kind)["class"]}" aria-hidden="true"></span>'
+        f'{_e(_kind(kind)["label"])}</li>'
+        for kind in KIND_ORDER
+    )
+    legend = [f'<li>{_e(map_words["route"])}</li>']
+    if has_drop_pins:
+        legend.append(f'<li>{_e(map_words["dropped"])}</li>')
+    if has_markers:
+        legend.append(f'<li>{_e(map_words["f9"])}</li>')
+    events = "".join(
+        f'<li data-t="{event["t"]}" hidden>{_event_icon(event.get("kind"))}<time>{_mss(event["t"])}</time>'
+        f'<span>{_e(event["label"])}</span></li>'
+        for event in data.get("events") or []
+    )
+    options = [f'<option value="0">{_e(words["trail_all"])}</option>'] + [
+        f'<option value="{n}"{" selected" if n == words["trail_default"] else ""}>'
+        f'{_e(words["trail_last"].format(n=n))}</option>'
+        for n in words["windows"]
+    ]
+    return [
+        '<div class="foot">',
+        '<div class="mode foot-whole">',
+        f'<ul class="legend">{kinds}</ul>',
+        f'<ul class="legend">{"".join(legend)}</ul>',
+        "</div>",
+        '<div class="mode foot-now" data-needs-script hidden>',
+        f'<figure class="stage-clip" hidden><video controls preload="metadata"></video>'
+        f'<figcaption><span class="cap"></span><span class="sync">{_e(card_words["sync"])}</span></figcaption></figure>',
+        f'<div class="evrow" data-near="{_e(words["events_near"])}" '
+        f'data-so-far="{_e(panel["events_so_far"])}" data-none="{_e(words["events_none"])}" '
+        f'data-none-yet="{_e(panel["events_none_yet"])}">'
+        '<span class="evh"></span>'
+        f'<ol class="events">{events}</ol>'
+        '<span class="none note" hidden></span>'
+        "</div>",
+        "</div>",
+        '<div class="nav" data-needs-script hidden>'
+        f'<button type="button" class="btn play" aria-pressed="false" '
+        f'data-play="{_e(words["play"])}" data-pause="{_e(words["pause"])}">{play_svg}'
+        f'<span>{_e(words["play"])}</span></button>'
+        f'<button type="button" class="btn prev">{_e(panel["previous"])}</button>'
+        f'<button type="button" class="btn next">{_e(panel["next"])}</button>'
+        f'<button type="button" class="btn overview">{_e(panel["overview"])}</button>'
+        f'<label class="trail">{_e(words["trail"])} <select>{"".join(options)}</select></label>'
+        f'<span class="count" data-count="{_e(panel["count"])}"></span>'
+        "</div>",
+        "</div>",
+    ]
 
 
 def _render_pane(data, floors, kept, dropped, markers, id_to_rank):
@@ -1183,15 +1392,17 @@ def _render_pane(data, floors, kept, dropped, markers, id_to_rank):
         f'<aside class="pane" data-mode="whole" data-duration="{duration}" aria-labelledby="where">',
         f'<h2 id="where" class="vh">{LABELS["sections"]["where"]}</h2>',
     ]
-    parts.extend(_render_toolbar(duration, has_heat))
-    parts.append('<div class="floors">')
+    parts.extend(_render_toolbar(duration, has_heat, any(_is_soft(f) for f in kept)))
+    parts.append('<div class="stagebody"><div class="floors">')
     for index, (meta, data_uri) in enumerate(floors):
         parts.extend(
             _render_floor(data, index, meta, data_uri, runs, len(floors), kept, dropped, markers, id_to_rank, top)
         )
     parts.append("</div>")
+    parts.extend(_render_side(has_heat))
+    parts.append("</div>")
     has_drop_pins = any(f.get("at") is not None for f in dropped)
-    parts.extend(_render_box(data, has_heat, bool(markers), has_drop_pins))
+    parts.extend(_render_foot(data, bool(markers), has_drop_pins))
     parts.append("</aside>")
     return parts
 
@@ -1251,6 +1462,8 @@ def _data_attrs(finding, label, place, floor_count, has_map):
         f'data-kind="{_kind(finding["kind"])["class"]}"',
         f'data-label="{_e(label)}"',
     ]
+    if finding.get("rank") is not None:
+        attrs.append(f'data-rank="{finding["rank"]}"')
     clip = finding.get("clip")
     if clip is not None:
         attrs.append(f'data-clip="{clip["start_s"]} {clip["end_s"]}"')
@@ -1281,7 +1494,8 @@ def _render_card(finding, markers_by_moment, floor_count, has_map):
     check = finding["check"]
     at = finding.get("at")
     attrs = _data_attrs(finding, _pin_words(finding), _pin_title(finding), floor_count, has_map)
-    parts = [f'<article class="card {info["class"]}" id="m{rank}" {attrs}>']
+    css = f'card {info["class"]}' + (" soft" if _is_soft(finding) else "")
+    parts = [f'<article class="{css}" id="m{rank}" {attrs}>']
 
     head = []
     number = _shape(finding["kind"], f"<b>{rank}</b>")
@@ -1496,15 +1710,17 @@ def _render_dropped(dropped, floor_count, has_map):
     ]
 
 
-# Which moment is current, the map's time, the dot, the strong route.
-# It reads every time, floor and word from the page and the data-
-# attributes the renderer wrote, and computes no finding, time, position
+# One state drives the stage: the current moment and the map time. The
+# script reads every time, floor and word from the page and the data-
+# attributes the renderer wrote, fills the side column with clones of
+# the current card's own nodes, and computes no finding, time, position
 # or count: it only compares the file's times with the map time.
 SCRIPT = r"""
 (function () {
   "use strict";
   var pane = document.querySelector(".pane");
   if (!pane) return;
+  var page = document.querySelector(".page");
   document.documentElement.classList.add("js");
   var SPEED = 10;
   var NS = "http://www.w3.org/2000/svg";
@@ -1514,11 +1730,13 @@ SCRIPT = r"""
   function nums(el, name) { var v = el.getAttribute(name); return v ? v.split(" ").map(Number) : null; }
   function mss(s) { s = Math.max(0, Math.floor(s)); return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2); }
   function svg(tag, attrs) { var n = document.createElementNS(NS, tag); for (var k in attrs) n.setAttribute(k, attrs[k]); return n; }
+  function fill(text, vars) { return text.replace(/\{(\w+)\}/g, function (m, k) { return k in vars ? vars[k] : m; }); }
 
   // Floors and the route, read back from the drawn polylines.
   var FLOORS = [];
   each(pane.querySelectorAll(".floor"), function (fig) {
-    FLOORS[Number(fig.getAttribute("data-floor"))] = { fig: fig, strong: fig.querySelector(".strong"), dot: fig.querySelector(".dot") };
+    var label = fig.querySelector(".floor-label");
+    FLOORS[Number(fig.getAttribute("data-floor"))] = { fig: fig, strong: fig.querySelector(".strong"), dot: fig.querySelector(".dot"), name: label ? label.textContent : "" };
   });
   var RUNS = [], POINTS = [];
   each(pane.querySelectorAll(".route polyline.line"), function (line) {
@@ -1536,37 +1754,55 @@ SCRIPT = r"""
     return POINTS[lo];
   }
 
-  // Kept cards and dropped rows, in page order.
+  var tracks = document.querySelector(".timeline .tracks");
+  // Kept cards and dropped rows, in page order; KEPT in time order.
   var RECS = [], BY_ID = {};
   each(document.querySelectorAll(".card[data-t], .drop[data-t]"), function (el) {
-    var clip = nums(el, "data-clip");
+    var clip = nums(el, "data-clip"), video = el.querySelector("video");
     var r = {
-      el: el, id: el.id, t: Number(el.getAttribute("data-t")), kept: el.classList.contains("card"),
+      el: el, id: el.id, t: Number(el.getAttribute("data-t")), kept: el.classList.contains("card"), soft: el.classList.contains("soft"),
       floor: el.hasAttribute("data-floor") ? Number(el.getAttribute("data-floor")) : null,
-      spans: [nums(el, "data-visit"), clip].filter(Boolean),
-      clipStart: clip ? clip[0] : null, video: el.querySelector("video"),
-      pin: document.getElementById("pin-" + el.id)
+      spans: [nums(el, "data-visit"), clip].filter(Boolean), clip: clip,
+      clipSrc: video ? video.getAttribute("src") : null, video: video,
+      pin: document.getElementById("pin-" + el.id),
+      mark: tracks ? tracks.querySelector('a[href="#' + el.id + '"]') : null
     };
     RECS.push(r);
     BY_ID[el.id] = r;
   });
-  var KEPT = RECS.filter(function (r) { return r.kept; });
+  var KEPT = RECS.filter(function (r) { return r.kept; }).sort(function (a, b) { return a.t - b.t; });
+  function shown() { return page.getAttribute("data-focus") === "unplanned" ? KEPT.filter(function (r) { return !r.soft; }) : KEPT; }
+  function visible(r) { return r.kept && !(r.soft && page.getAttribute("data-focus") === "unplanned"); }
 
-  var playBtn = pane.querySelector(".play");
-  var trailSel = pane.querySelector(".trail select");
   var readout = pane.querySelector(".readout");
-  var slider = pane.querySelector(".scrub input");
   var heatInput = pane.querySelector(".view-heat");
-  var box = pane.querySelector(".box-now");
-  var evItems = box.querySelectorAll(".events li");
-  var tracks = document.querySelector(".strip .tracks");
+  var stage = pane.querySelector(".stage-clip"), sv = stage.querySelector("video"), cap = stage.querySelector(".cap");
+  var sideNow = pane.querySelector(".side-now");
+  var nowT = pane.querySelector(".now-t"), nowWhere = pane.querySelector(".now-where"), nowLast = pane.querySelector(".now-last");
+  var evrow = pane.querySelector(".evrow"), evh = evrow.querySelector(".evh"), evItems = evrow.querySelectorAll(".events li"), evNone = evrow.querySelector(".none");
+  var nav = pane.querySelector(".nav"), playBtn = nav.querySelector(".play"), prevBtn = nav.querySelector(".prev"), nextBtn = nav.querySelector(".next");
+  var trailSel = nav.querySelector(".trail select"), count = nav.querySelector(".count");
+  var bigPlay = pane.querySelector(".play-session");
+  var roomBars = tracks ? tracks.querySelectorAll(".r-rooms .bar") : [];
+  var past = tracks ? tracks.querySelector(".past") : null;
   var bands = tracks ? tracks.querySelectorAll(".band") : [];
   var cursor = tracks ? tracks.querySelector(".cursor") : null;
 
-  var S = { mode: "whole", cur: null, t: DUR, trail: 0, playing: false, clip: null, clipT: null, lock: 0, hold: 0 };
+  // mode: whole (the overview), moment (S.cur is current), session (the map time S.t moves).
+  // S.clip is the record whose clip plays, in S.clipEl; S.resume says the session goes on after it.
+  var S = { mode: "whole", cur: null, t: DUR, trail: Number(trailSel.value), playing: false, clip: null, clipEl: null, clipT: null,
+    resume: false, stopIdx: 0, stageFor: null, lock: 0, hold: 0 };
   function heatOn() { return !!(heatInput && heatInput.checked); }
   function inSpans(spans, t) { for (var i = 0; i < spans.length; i++) if (t >= spans[i][0] && t <= spans[i][1]) return true; return false; }
-  function lastPassed(t) { var best = null; KEPT.forEach(function (r) { if (r.t <= t && (!best || r.t >= best.t)) best = r; }); return best; }
+  function lastPassed(t) { var best = null; shown().forEach(function (r) { if (r.t <= t) best = r; }); return best; }
+  function startOf(r) { return r.clip ? r.clip[0] : r.t; }
+  function roomAt(t) {
+    for (var i = 0; i < roomBars.length; i++) {
+      var b = roomBars[i];
+      if (t >= Number(b.getAttribute("data-s")) && t <= Number(b.getAttribute("data-e"))) return b.getAttribute("data-room");
+    }
+    return "";
+  }
 
   // Draw the route points that pass the test, per run, strong or faint.
   function drawRoute(test, faint, every) {
@@ -1605,6 +1841,15 @@ SCRIPT = r"""
     if (last && first !== last) FLOORS[last.floor].strong.appendChild(svg("circle", { "class": "end", cx: last.xy[0], cy: last.xy[1], r: 18 }));
   }
 
+  // The map time: the clip's time while one plays, else the moment's, else the session's.
+  function mapTime() {
+    if (S.mode === "moment") return S.clipT != null ? S.clipT : S.cur.t;
+    if (S.mode === "session") return S.t;
+    return DUR;
+  }
+  // A game event is fresh for 1.5 s on screen: 15 s of map time at 10x, 3 s inside a clip.
+  function freshWindow() { return S.clip ? 3 : 1.5 * SPEED; }
+
   function render() {
     var heat = heatOn();
     pane.setAttribute("data-mode", heat ? "heat" : S.mode);
@@ -1613,8 +1858,7 @@ SCRIPT = r"""
     if (!heat && S.mode === "moment") {
       var r = S.cur;
       drawRoute(function (t) { return inSpans(r.spans, t); }, false, 4);
-      active = r; lit = r.floor;
-      if (S.clipT != null) dotT = S.clipT;
+      active = r; lit = r.floor; dotT = mapTime();
     } else if (!heat && S.mode === "session") {
       if (S.trail > 0) { lo = S.t - S.trail; drawRoute(function (t) { return t <= lo; }, true, 0); }
       drawRoute(function (t) { return t > lo && t <= S.t; }, false, S.trail > 0 ? 3 : 8);
@@ -1622,16 +1866,17 @@ SCRIPT = r"""
     }
     RECS.forEach(function (r) {
       if (!r.pin) return;
-      r.pin.classList.toggle("is-focus", r === active);
+      r.pin.classList.toggle("is-focus", r === active && S.mode === "moment");
       r.pin.classList.toggle("is-quiet", S.mode === "moment" && r !== active);
       r.pin.classList.toggle("is-later", S.mode === "session" && r.t > S.t);
       if (r === active && r.pin !== r.pin.parentNode.lastElementChild) r.pin.parentNode.appendChild(r.pin);
     });
-    var p = dotT == null ? null : pointAt(dotT);
+    var p = dotT == null ? null : pointAt(dotT), tag = freshEvent(dotT);
     FLOORS.forEach(function (F, fl) {
       var show = !!p && p.floor === fl;
       F.dot.setAttribute("visibility", show ? "visible" : "hidden");
       if (show) F.dot.setAttribute("transform", "translate(" + p.xy[0] + " " + p.xy[1] + ")");
+      F.dot.querySelector(".tag").textContent = show && tag ? tag : "";
     });
     if (p) lit = p.floor;
     FLOORS.forEach(function (F, fl) {
@@ -1639,80 +1884,155 @@ SCRIPT = r"""
       F.fig.classList.toggle("quiet", lit != null && lit !== fl);
     });
     RECS.forEach(function (r) {
-      r.el.classList.toggle("is-active", r === active && !heat);
-      r.el.classList.toggle("is-playing", r === S.clip);
+      r.el.classList.toggle("is-active", r === active && S.mode === "moment" && !heat);
+      r.el.classList.toggle("is-playing", r === S.clip && S.clipEl === r.video);
+      if (r.mark) r.mark.classList.toggle("is-active", r === active && !heat);
     });
-    renderTime(heat, active, lo);
-    renderBox(heat, active, lo);
+    pane.classList.toggle("is-stage-playing", !!S.clip && S.clipEl === sv);
+    renderPlayBtn();
+    renderTime(heat, lo);
+    renderPanel(heat, active, p);
+  }
+
+  // The latest game event inside the fresh window before t, for the dot's tag.
+  function freshEvent(t) {
+    if (t == null || S.mode === "whole") return "";
+    if (S.mode === "session" && !S.playing) return "";
+    if (S.mode === "moment" && !S.clip) return "";
+    var best = null;
+    each(evItems, function (li) {
+      var et = Number(li.getAttribute("data-t"));
+      if (et <= t && t - et < freshWindow() && (!best || et >= Number(best.getAttribute("data-t")))) best = li;
+    });
+    return best ? best.querySelector("span").textContent : "";
   }
 
   function place(el, a, b) { el.style.left = (a / DUR * 100) + "%"; if (b != null) el.style.width = Math.max(0, (b - a) / DUR * 100) + "%"; }
-  function renderTime(heat, active, lo) {
-    var t = DUR, spans = [];
-    if (!heat && S.mode === "session") { t = S.t; spans = [[Math.max(0, lo), S.t]]; }
-    else if (!heat && S.mode === "moment") { t = S.clipT != null ? S.clipT : S.cur.t; spans = S.cur.spans; }
+  function renderTime(heat, lo) {
+    var t = heat ? DUR : mapTime(), spans = [];
+    if (!heat && S.mode === "session") spans = [[Math.max(0, lo), S.t]];
+    else if (!heat && S.mode === "moment") spans = S.cur.spans;
     var text = (!heat && S.mode === "session" && S.trail > 0 ? readout.getAttribute("data-readout-window") : readout.getAttribute("data-readout"))
       .replace("{start}", mss(Math.max(0, lo))).replace("{time}", mss(t)).replace("{duration}", mss(DUR));
     readout.textContent = text;
-    slider.value = Math.floor(t);
-    slider.setAttribute("aria-valuetext", text);
     each(bands, function (band, i) { band.hidden = !spans[i]; if (spans[i]) place(band, spans[i][0], spans[i][1]); });
     if (cursor) { cursor.hidden = heat || S.mode === "whole"; place(cursor, t); }
+    if (past) { past.hidden = heat || S.mode === "whole"; place(past, 0, t); }
   }
 
-  // The moment box: the current moment and its game events, or, in a
-  // session, the last moment passed and the events up to the map time.
-  function renderBox(heat, active, lo) {
-    if (heat || S.mode === "whole") return;
-    var head = box.querySelector(".head");
-    head.querySelector(".k").className = "k" + (active ? " k-" + active.el.getAttribute("data-kind") : "");
-    head.querySelector(".what").textContent = active ? active.el.getAttribute("data-label") : "";
-    head.querySelector(".where").textContent = active ? (active.el.getAttribute("data-place") || "") : "";
-    box.querySelector(".evh span").textContent = S.mode === "session"
-      ? box.getAttribute("data-up-to").replace("{time}", mss(S.t)) : box.getAttribute("data-near");
-    var shown = 0;
+  // The panel: the current moment's own words (clones of its card), or the
+  // player's time and room; the game events row; the transport row.
+  function renderPanel(heat, active, p) {
+    var list = shown(), r = S.cur;
+    nav.querySelector(".overview").disabled = S.mode === "whole";
+    if (heat || S.mode === "whole") {
+      S.stageFor = null;
+      count.textContent = "";
+      prevBtn.disabled = true; nextBtn.disabled = !list.length || heat;
+      nav.classList.remove("in-session");
+      return;
+    }
+    if (S.mode === "moment") {
+      if (S.stageFor !== r) {
+        S.stageFor = r;
+        var head = r.el.querySelector(".card-head"), nodes = [];
+        var h = document.createElement("p"); h.className = "head";
+        each(head.children, function (c) { if (!c.classList.contains("floortag")) h.appendChild(c.cloneNode(true)); });
+        var where = document.createElement("span"); where.className = "where"; where.textContent = r.el.getAttribute("data-place") || ""; h.appendChild(where);
+        nodes.push(h);
+        each(r.el.querySelectorAll(".card-main, .card-facts"), function (block) { each(block.children, function (c) { nodes.push(c.cloneNode(true)); }); });
+        sideNow.replaceChildren.apply(sideNow, nodes);
+        if (r.clipSrc) {
+          var cardCap = r.el.querySelector(".clip figcaption span");
+          cap.textContent = cardCap ? cardCap.textContent : "";
+          stage.hidden = false;
+          if (sv.getAttribute("src") !== r.clipSrc) { sv.setAttribute("src", r.clipSrc); S.seek = r.t - r.clip[0]; }
+          else if (S.clipT == null) sv.currentTime = r.t - r.clip[0];
+        } else { stage.hidden = true; sv.removeAttribute("src"); }
+      }
+      var i = list.indexOf(r);
+      count.textContent = i >= 0 ? fill(count.getAttribute("data-count"), { n: i + 1, of: list.length }) : "";
+      prevBtn.disabled = i <= 0 && !(i < 0 && list.length);
+      nextBtn.disabled = i >= list.length - 1 && !(i < 0 && list.length);
+    } else {
+      S.stageFor = null;
+      nowT.textContent = mss(S.t);
+      var bits = [roomAt(S.t)]; if (p && FLOORS[p.floor].name) bits.push(FLOORS[p.floor].name);
+      nowWhere.textContent = bits.filter(Boolean).join(", ");
+      nowLast.replaceChildren();
+      if (active) {
+        var a = document.createElement("a"); a.href = "#" + active.id; a.textContent = active.el.getAttribute("data-label");
+        nowLast.append(fill(nowLast.getAttribute("data-last"), { label: "" }));
+        nowLast.appendChild(a);
+      }
+      count.textContent = "";
+      prevBtn.disabled = !list.length; nextBtn.disabled = !list.length;
+    }
+    // The events row: in a moment, the events of its visit and clip; in the session, the last ones passed.
+    evh.textContent = evrow.getAttribute(S.mode === "session" ? "data-so-far" : "data-near");
+    var on = [];
     each(evItems, function (li) {
       var t = Number(li.getAttribute("data-t"));
-      var on = S.mode === "session" ? t <= S.t : inSpans(S.cur.spans, t);
-      li.hidden = !on;
-      li.classList.toggle("later", on && S.mode === "moment" && S.clipT != null && t > S.clipT);
-      li.classList.toggle("fresh", S.mode === "session" && S.playing && S.t - t < 1.5 * SPEED);
-      if (on) shown++;
+      var keep = S.mode === "session" ? t <= S.t : inSpans(S.cur.spans, t);
+      li.hidden = !keep;
+      if (keep) on.push(li);
+      li.classList.toggle("later", keep && S.mode === "moment" && S.clipT != null && t > S.clipT);
+      li.classList.toggle("fresh", keep && S.mode === "session" && S.playing && S.t - t < freshWindow());
     });
-    box.querySelector(".none").hidden = shown > 0;
-    if (S.mode === "session") { var list = pane.querySelector(".box"); list.scrollTop = list.scrollHeight; }
+    if (S.mode === "session") on.slice(0, Math.max(0, on.length - 6)).forEach(function (li) { li.hidden = true; });
+    evNone.textContent = evrow.getAttribute(S.mode === "session" ? "data-none-yet" : "data-none");
+    evNone.hidden = on.length > 0;
+    nav.classList.toggle("in-session", S.mode === "session");
   }
 
   // ---- Interactions ----
-  function setPlaying(on) {
-    S.playing = on;
+  function setPlaying(on) { S.playing = on; renderPlayBtn(); }
+  // The button reads Pause while the session runs or the stage's clip plays.
+  function renderPlayBtn() {
+    var on = S.playing || (!!S.clip && S.clipEl === sv);
     playBtn.querySelector("span").textContent = playBtn.getAttribute(on ? "data-pause" : "data-play");
     playBtn.querySelector("path").setAttribute("d", on ? "M1 0 H4 V10 H1z M6 0 H9 V10 H6z" : "M1 0 L10 5 L1 10z");
     playBtn.setAttribute("aria-pressed", on ? "true" : "false");
   }
-  function pauseClips(except) { RECS.forEach(function (r) { if (r.video && r !== except && !r.video.paused) r.video.pause(); }); }
+  function pauseClips(except) {
+    RECS.forEach(function (r) { if (r.video && r.video !== except && !r.video.paused) r.video.pause(); });
+    if (sv !== except && !sv.paused) sv.pause();
+  }
   function showTrail() { if (heatOn()) pane.querySelector("input[name=view][value=trail]").checked = true; }
+  function stopAll(keepView) { pauseClips(null); setPlaying(false); if (!keepView) showTrail(); S.clip = null; S.clipEl = null; S.clipT = null; S.resume = false; }
   function setCur(r) {
     if (S.mode === "moment" && S.cur === r) return;
     S.mode = "moment"; S.cur = r; S.clipT = null;
     render();
   }
-  // From a pin, the strip, a problem or a number: light it, and bring its card to the middle.
+  // From a pin, a mark, a problem, a card number, Previous or Next: light it and bring its card to the middle.
   function goTo(r, scroll) {
-    pauseClips(null); setPlaying(false); showTrail();
-    S.mode = "moment"; S.cur = r; S.clip = null; S.clipT = null;
+    stopAll();
+    S.mode = "moment"; S.cur = r; S.clipT = null;
     render();
     if (history.replaceState) history.replaceState(null, "", "#" + r.id);
-    if (scroll) {
-      S.lock = performance.now() + (reduce.matches ? 150 : 900);
-      r.el.scrollIntoView({ block: "center", behavior: reduce.matches ? "auto" : "smooth" });
-    }
+    if (scroll) scrollTo(r);
+  }
+  // The list follows the current moment while the stage stays on screen
+  // (the wide layout); in the stacked layout the stage comes into view instead.
+  function sticky() { return getComputedStyle(pane).position === "sticky"; }
+  function scrollTo(r) {
+    S.lock = performance.now() + (reduce.matches ? 150 : 900);
+    var target = sticky() ? r.el : pane, box = target.getBoundingClientRect();
+    if (target === pane && box.top >= 0 && box.bottom <= window.innerHeight) return;
+    target.scrollIntoView({ block: sticky() ? "center" : "start", behavior: reduce.matches ? "auto" : "smooth" });
   }
   function toSession(t) {
     pauseClips(null); showTrail();
-    S.mode = "session"; S.cur = null; S.clip = null; S.clipT = null;
+    S.mode = "session"; S.cur = null; S.clip = null; S.clipEl = null; S.clipT = null; S.resume = false;
     S.t = Math.max(0, Math.min(DUR, t)); S.hold = performance.now() + 1500;
     render();
+  }
+  function toOverview() {
+    stopAll();
+    S.mode = "whole"; S.cur = null; S.t = DUR;
+    render();
+    if (history.replaceState) history.replaceState(null, "", location.pathname + location.search);
   }
   function centered() {
     var mid = window.innerHeight / 2, last = null;
@@ -1725,13 +2045,14 @@ SCRIPT = r"""
     }
     return last;
   }
+  // The moment in the middle of the screen becomes current while the reader scrolls on their own.
   function onScroll() {
     var now = performance.now();
-    if (heatOn() || S.clip || now < S.lock) return;
-    if (S.mode === "session" && (S.playing || now < S.hold)) return;
+    if (heatOn() || S.clip || S.playing || now < S.lock || !sticky()) return;
+    if (S.mode === "session" && now < S.hold) return;
     var r = centered();
     if (r) { setCur(r); return; }
-    if (S.mode !== "whole") { S.mode = "whole"; S.cur = null; S.clipT = null; render(); }
+    if (S.mode === "moment") toOverview();
   }
   var ticking = false;
   window.addEventListener("scroll", function () {
@@ -1743,46 +2064,98 @@ SCRIPT = r"""
   document.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest("a[href^='#']");
     if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
-    var id = a.getAttribute("href").slice(1), scroll = true;
-    if (id.indexOf("pin-") === 0) { id = id.slice(4); scroll = false; }
+    var id = a.getAttribute("href").slice(1);
+    if (id.indexOf("pin-") === 0) id = id.slice(4);
     var r = BY_ID[id];
     if (!r) return;
     e.preventDefault();
-    goTo(r, scroll);
+    goTo(r, true);
   });
 
+  // ---- The session: 10x between moments, each shown moment's clip at normal speed ----
   var last = 0, lastPoint = null;
+  function startSession(from) {
+    stopAll();
+    S.mode = "session"; S.cur = null;
+    S.t = Math.max(0, Math.min(DUR, from));
+    var list = shown(); S.stopIdx = list.length;
+    for (var i = 0; i < list.length; i++) if (list[i].t > S.t) { S.stopIdx = i; break; }
+    setPlaying(true);
+    last = performance.now();
+    requestAnimationFrame(tick);
+  }
   function tick(stamp) {
     if (!S.playing) return;
     S.t = Math.min(DUR, S.t + SPEED * (stamp - last) / 1000);
     last = stamp;
+    var list = shown(), stop = list[S.stopIdx];
+    if (stop && S.t >= startOf(stop)) { stopAt(stop); return; }
     var p = pointAt(S.t);
-    if (p !== lastPoint) { lastPoint = p; render(); } else renderTime(false, null, S.trail > 0 ? S.t - S.trail : -Infinity);
+    if (p !== lastPoint) { lastPoint = p; render(); } else { renderTime(false, S.trail > 0 ? S.t - S.trail : -Infinity); renderPanel(false, lastPassed(S.t), p); }
     if (S.t >= DUR) setPlaying(false); else requestAnimationFrame(tick);
   }
+  // The session reaches a moment: it becomes current and its clip plays from where the map is, then the session goes on.
+  function stopAt(r) {
+    setPlaying(false);
+    S.mode = "moment"; S.cur = r; S.clipT = null; S.resume = true;
+    render();
+    if (history.replaceState) history.replaceState(null, "", "#" + r.id);
+    scrollTo(r);
+    if (r.clip) { S.seek = Math.max(0, S.t - r.clip[0]); playStage(); }
+    else { S.wait = setTimeout(function () { if (S.cur === r && S.resume) resumeAfter(r); }, 1500); }
+  }
+  function resumeAfter(r) {
+    var list = shown(), i = list.indexOf(r);
+    S.resume = false;
+    startSession(r.clip ? r.clip[1] : r.t);
+    S.stopIdx = i + 1;
+  }
+  // Plays the stage's clip from S.seek. A clip whose metadata is still
+  // loading starts from the loadedmetadata handler instead; a clip the
+  // browser refuses to play (autoplay rules) lets the session go on.
+  function playStage() {
+    if (sv.readyState < 1) return;
+    if (S.seek != null) { sv.currentTime = S.seek; S.seek = null; }
+    var p = sv.play();
+    if (p && p.catch) p.catch(function () { if (S.resume && S.cur === S.stageFor) resumeAfter(S.cur); });
+  }
+
   playBtn.addEventListener("click", function () {
     if (S.playing) { setPlaying(false); S.hold = performance.now() + 400; render(); return; }
-    pauseClips(null); showTrail();
-    if (S.mode !== "session" || S.t >= DUR) S.t = 0;
-    S.mode = "session"; S.cur = null; S.clip = null; S.clipT = null;
-    setPlaying(true);
-    last = performance.now();
-    requestAnimationFrame(tick);
+    if (S.clip && S.clipEl === sv) { S.resume = false; sv.pause(); return; }
+    if (S.mode === "moment" && S.cur.clip && S.stageFor === S.cur && !sv.ended) { S.resume = true; playStage(); return; }
+    if (S.mode === "moment") { var r = S.cur; S.resume = false; startSession(r.clip ? r.clip[1] : r.t); S.stopIdx = shown().indexOf(r) + 1; return; }
+    startSession(S.mode === "session" && S.t < DUR ? S.t : 0);
   });
-  slider.addEventListener("input", function () { setPlaying(false); toSession(Number(slider.value)); });
+  bigPlay.addEventListener("click", function () { startSession(0); });
+  function step(dir) {
+    var list = shown();
+    if (!list.length) return;
+    var i = S.cur ? list.indexOf(S.cur) : -1, next = null;
+    var base = S.cur ? S.cur.t : (S.mode === "session" ? S.t : -Infinity);
+    if (dir > 0) next = i >= 0 ? list[i + 1] : list.filter(function (r) { return r.t > base; })[0];
+    else next = i >= 0 ? list[i - 1] : list.filter(function (r) { return r.t < base; }).pop();
+    if (next) goTo(next, true);
+  }
+  prevBtn.addEventListener("click", function () { step(-1); });
+  nextBtn.addEventListener("click", function () { step(1); });
+  nav.querySelector(".overview").addEventListener("click", toOverview);
   trailSel.addEventListener("change", function () { S.trail = Number(trailSel.value); render(); });
   each(pane.querySelectorAll("input[name=view]"), function (el) {
     el.addEventListener("change", function () {
-      setPlaying(false); pauseClips(null);
+      stopAll(true);
       if (heatOn()) { render(); return; }
       S.mode = "whole"; S.cur = null; render(); onScroll();
     });
   });
-  box.querySelector(".showall").addEventListener("click", function () {
-    setPlaying(false); S.mode = "whole"; S.cur = null; S.t = DUR; render(); onScroll();
+  each(pane.querySelectorAll("input[name=focus]"), function (el) {
+    el.addEventListener("change", function () {
+      page.setAttribute("data-focus", el.value);
+      if (S.cur && !visible(S.cur) && S.cur.kept) toOverview(); else render();
+    });
   });
 
-  // Clicking or dragging on the strip sets the map time.
+  // Clicking or dragging on the timeline sets the map time.
   if (tracks) {
     var dragging = false;
     function stripTime(e) { var b = tracks.getBoundingClientRect(); return (e.clientX - b.left) / b.width * DUR; }
@@ -1798,43 +2171,56 @@ SCRIPT = r"""
     tracks.addEventListener("pointercancel", function () { dragging = false; });
   }
 
-  // Left and right arrows step between kept moments.
+  // Space plays and pauses, left and right step between moments, Escape returns to the overview.
   document.addEventListener("keydown", function (e) {
     if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
     var tag = (e.target.tagName || "").toLowerCase();
     if (tag === "input" || tag === "select" || tag === "textarea" || tag === "video" || e.target.isContentEditable) return;
-    if (!KEPT.length) return;
-    var i = S.cur && S.cur.kept ? KEPT.indexOf(S.cur) : -1, next = null;
-    var base = S.cur ? S.cur.t : (S.mode === "session" ? S.t : -Infinity);
-    if (e.key === "ArrowRight") next = i >= 0 ? KEPT[i + 1] : KEPT.filter(function (r) { return r.t > base; })[0];
-    else next = i >= 0 ? KEPT[i - 1] : KEPT.filter(function (r) { return r.t < base; }).pop();
-    if (!next) return;
-    e.preventDefault();
-    goTo(next, true);
+    if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
+    else if (e.key === " " && tag !== "button") { e.preventDefault(); playBtn.click(); }
+    else if (e.key === "Escape" && S.mode !== "whole") { e.preventDefault(); toOverview(); }
   });
 
   // A playing clip holds the map on its moment and moves the dot:
-  // map time = clip.start_s + video.currentTime.
-  RECS.forEach(function (r) {
-    var v = r.video;
-    if (!v || r.clipStart == null) return;
+  // map time = clip.start_s + video.currentTime. The stage's video and
+  // each card's own video drive it the same way.
+  function wire(v, recOf) {
     function follow() {
-      if (S.clip !== r) return;
-      S.clipT = r.clipStart + v.currentTime;
+      var r = recOf();
+      if (!r || S.clip !== r || S.clipEl !== v) return;
+      S.clipT = r.clip[0] + v.currentTime;
       var p = pointAt(S.clipT);
-      if (p !== lastPoint) { lastPoint = p; render(); } else renderBox(false, r, -Infinity);
+      if (p !== lastPoint) { lastPoint = p; render(); } else renderPanel(false, r, p);
       if (!v.paused && !v.ended) requestAnimationFrame(follow);
     }
     v.addEventListener("play", function () {
-      pauseClips(r); setPlaying(false); showTrail();
-      S.mode = "moment"; S.cur = r; S.clip = r; lastPoint = null;
+      var r = recOf();
+      if (!r || !r.clip) return;
+      pauseClips(v); setPlaying(false); showTrail();
+      if (v !== sv) S.resume = false;
+      S.mode = "moment"; S.cur = r; S.clip = r; S.clipEl = v; lastPoint = null;
       follow();
     });
-    function stop() { if (S.clip === r) { S.clip = null; render(); } }
+    function stop(e) {
+      var r = recOf();
+      // A clip that ends fires pause first, then ended: let ended handle it.
+      if (e.type === "pause" && v.ended) return;
+      if (S.clip !== r || S.clipEl !== v) return;
+      S.clip = null; S.clipEl = null;
+      if (e.type === "ended" && v === sv && S.resume) { resumeAfter(r); return; }
+      render();
+    }
     v.addEventListener("pause", stop);
     v.addEventListener("ended", stop);
-    v.addEventListener("seeked", function () { if (S.cur === r) { S.clipT = r.clipStart + v.currentTime; render(); } });
+    v.addEventListener("seeked", function () { var r = recOf(); if (r && S.cur === r && r.clip) { S.clipT = r.clip[0] + v.currentTime; render(); } });
+  }
+  RECS.forEach(function (r) { if (r.video && r.clip) wire(r.video, function () { return r; }); });
+  wire(sv, function () { return S.stageFor; });
+  sv.addEventListener("loadedmetadata", function () {
+    if (S.seek == null) return;
+    sv.currentTime = S.seek; S.seek = null;
+    if (S.resume && S.cur === S.stageFor) playStage();
   });
 
   each(document.querySelectorAll("[data-needs-script]"), function (el) { el.removeAttribute("hidden"); });
@@ -1842,7 +2228,9 @@ SCRIPT = r"""
   var start = BY_ID[decodeURIComponent(location.hash.slice(1))];
   if (start) {
     S.mode = "moment"; S.cur = start; S.lock = performance.now() + 1200;
-    start.el.scrollIntoView({ block: "center", behavior: "instant" });
+    // After the browser's own jump to the fragment, which it repeats until the page has loaded.
+    var open = function () { (sticky() ? start.el : pane).scrollIntoView({ block: sticky() ? "center" : "start", behavior: "instant" }); };
+    if (document.readyState === "complete") setTimeout(open, 0); else window.addEventListener("load", function () { setTimeout(open, 0); });
   }
   render();
   if (!start) onScroll();
@@ -1885,8 +2273,10 @@ def render_html(data, maps_dir=None):
         title += ", " + _e(session["player"])
     if has_map:
         ratios = [meta["px_width"] / meta["px_height"] for meta, _uri in floors]
+        timeline, timeline_h = _render_timeline(data, kept, dropped, floor_count)
         page_open = (
-            f'<div class="page" style="--ars:{sum(ratios):.4f};--floors:{len(ratios)}">'
+            f'<div class="page" data-focus="all" '
+            f'style="--ars:{sum(ratios):.4f};--floors:{len(ratios)};--tl-h:{timeline_h}px">'
         )
     else:
         page_open = '<div class="page solo">'
@@ -1904,15 +2294,13 @@ def render_html(data, maps_dir=None):
         "<body>",
         SVG_DEFS,
         page_open,
-        '<main class="col">',
     ]
     parts.extend(_render_header(data))
+    parts.append('<main class="col">')
     if summary is not None and summary.get("problems"):
         parts.extend(_render_problems(summary["problems"], by_id))
     if summary is not None:
         parts.extend(_render_glance(summary, session["duration_s"]))
-    if has_map:
-        parts.extend(_render_strip(data, kept, dropped, floor_count))
     if data.get("cross_player"):
         parts.extend(_render_across(data["cross_player"], id_to_rank))
 
@@ -1930,6 +2318,7 @@ def render_html(data, maps_dir=None):
     parts.append("</main>")
     if has_map:
         parts.extend(_render_pane(data, floors, kept, dropped, markers, id_to_rank))
+        parts.extend(timeline)
     parts.append("</div>")
     if has_map:
         parts.append(f"<script>{SCRIPT}</script>")
