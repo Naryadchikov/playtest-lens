@@ -8,7 +8,7 @@ Playtest Lens watches the recording for you. Meta's Muse Spark watches the video
 
 ## How it works
 
-1. **Record.** The tester plays your Godot build and records the screen with their microphone on (Xbox Game Bar, OBS, or a stream). The [Playtest Lens add-on](https://github.com/Naryadchikov/cogito-playtest-lens/tree/playtest-lens/addons/playtest_lens) writes an event log as they play: inputs, position and view, rooms entered, doors, pickups, quest steps. It flashes white and beeps at New Game, so the video and the log line up to the frame.
+1. **Record.** The tester plays your Godot build and records the screen with their microphone on (Xbox Game Bar, OBS, or a stream). The [Playtest Lens add-on](godot/addons/playtest_lens/) writes an event log as they play: inputs, position and view, rooms entered, doors, pickups, quest steps. It flashes white and beeps at New Game, so the video and the log line up to the frame.
 2. **Find.** Muse Spark watches the video with its sound in 2-minute windows and lists moments worth a look, each with a time and a reason.
 3. **Check.** A second Spark call gets each moment's 20-second clip and that slice of the event log, and must keep or drop it with evidence. Muse Voice Transcribe writes down what the player said in the clip, and a quote reaches the page only when it is in that transcript. Dropped moments are listed with the reason, not hidden.
 4. **Report.** One page per session: the worst places first, both floors of the level with the route walked on each, every kept moment with its clip, the player's words, what the game was doing and the check's note, and the dropped candidates. Play runs the session on the map; scrolling to a moment lights it on the map, and playing its clip moves the player's dot.
@@ -47,7 +47,7 @@ To redo only the map data on an existing findings file, with no model call: `.ve
 
 ## The Godot add-on
 
-`addons/playtest_lens` in [cogito-playtest-lens](https://github.com/Naryadchikov/cogito-playtest-lens/tree/playtest-lens/addons/playtest_lens) is a standalone Godot 4 plugin: copy it into your game, enable it, set the player path. It only listens and writes; it never changes gameplay, timing or input, and it logs nothing that names a person or a machine. Telemetry volumes let a designer name rooms and puzzles, and the report groups moments by them. `tools/map_export.gd` in the same fork draws the top-down map of each floor.
+[`godot/addons/playtest_lens`](godot/addons/playtest_lens/) is a standalone Godot 4 plugin: copy it into your game, enable it, set the player path. It only listens and writes; it never changes gameplay, timing or input, and it logs nothing that names a person or a machine. Telemetry volumes let a designer name rooms and puzzles, and the report groups moments by them. [`godot/tools/map_export.gd`](godot/tools/map_export.gd) draws the top-down map of each floor of a level. `godot/` is a minimal project that runs the add-on's tests outside any game. The COGITO adapter (doors, keypads, pickups, quest steps) lives in the test game's fork, [cogito-playtest-lens](https://github.com/Naryadchikov/cogito-playtest-lens/tree/playtest-lens/addons/playtest_lens_cogito), with a copy of the add-on for the demo build.
 
 ## Built with
 

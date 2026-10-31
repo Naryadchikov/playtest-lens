@@ -104,7 +104,8 @@ Claude's limits came back on 2026-10-31, and Opus now writes the code. Spend Cla
 ## The Godot side
 
 - **Godot is the standard 4.7.2 build only:** `/Applications/Godot.app/Contents/MacOS/Godot`, never `Godot_mono.app`. Sasha, T3 Code chat, 2026-10-26: "this project uses only the standard 4.7.2 build, /Applications/Godot.app/Contents/MacOS/Godot, never Godot_mono.app."
-- The test game is Sasha's COGITO fork, a submodule. Our changes live only on its `playtest-lens` branch: the logging add-on wired in, and the in-game setup documents removed.
+- **The add-on's source is this repo:** `godot/addons/playtest_lens/`, with the map tool at `godot/tools/map_export.gd` and a minimal test project in `godot/`. Sasha, T3 Code chat, 2026-10-31: "I agree, lets do B, easier to judge. Once hackaton judging is fninished, we will move it as the seperate thing." Change the add-on here, then copy it to the fork in the same change; `tests/test_godot_addon_copy.py` fails if the two differ.
+- The test game is Sasha's COGITO fork, a submodule. Our changes live only on its `playtest-lens` branch: the add-on's copy and the COGITO adapter wired in, the telemetry volumes, and the in-game setup documents removed.
 - **The logging add-on is passive.** It listens and writes; it never changes gameplay, timing or input. The COGITO adapter subscribes to COGITO's signals and never edits COGITO's own scripts beyond wiring it in.
 - Use the `godot-addon-change` skill for the add-on and the adapter (`.claude/skills/godot-addon-change/SKILL.md`).
 - Letting an agent run the game for screenshots and input (the `godot-mcp-runtime` MCP server) is a dev aid that needs Sasha's yes before it's installed. It's never pass or fail evidence.

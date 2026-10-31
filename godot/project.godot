@@ -1,0 +1,17 @@
+; A minimal Godot 4.7 project that holds the Playtest Lens add-on and runs its
+; tests outside any game. The autoload line is what enabling the plugin writes.
+
+config_version=5
+
+[application]
+
+config/name="Playtest Lens add-on"
+config/features=PackedStringArray("4.7")
+
+[autoload]
+
+PlaytestLensLogger="*res://addons/playtest_lens/logger.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/playtest_lens/plugin.cfg")

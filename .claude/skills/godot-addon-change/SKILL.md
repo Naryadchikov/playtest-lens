@@ -8,7 +8,7 @@ Use for the add-on, the adapter, or the fork's branch.
 1. The general add-on knows nothing of COGITO: inputs, scene changes, player position by node path, the sync flash and beep (its code, and the flash at each level load). COGITO-only events (pickups, doors, keypads, quest steps, the New Game press) go in the adapter.
 2. Listen and write; never change gameplay, timing, input or saves. The adapter connects to COGITO's signals and edits none of COGITO's scripts beyond wiring the add-on in.
 3. Every line is JSON with a timestamp from one clock, the same one the sync flash marks, so the video and the log line up.
-4. Commit fork changes only on its `playtest-lens` branch, and list each one in docs/PRIOR_WORK.md.
+4. The add-on's source is `godot/addons/playtest_lens/` in this repo; change it there and copy it to `game/addons/playtest_lens/` in the same change (`tests/test_godot_addon_copy.py` checks they match). Run its headless tests in both projects: `--path godot` and `--path game`. Commit fork changes only on its `playtest-lens` branch, and list each one in docs/PRIOR_WORK.md.
 5. Check it headless: a Godot run of a test scene that fires the events and checks the lines written. Then launch the real demo, do the action, and show the log lines it wrote.
 6. Run the `validate-change` skill.
 
