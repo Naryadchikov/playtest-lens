@@ -1,14 +1,16 @@
 # Playtest guide
 
-Thank you for playing. It takes about 20 minutes.
+Thank you for playing. It takes about 20 minutes, on a Windows PC with a microphone.
 
 ## Before you start
 
-1. Read and agree to [CONSENT.md](CONSENT.md).
-2. Unzip the build and start the game.
-3. Start recording the screen **with your microphone on**:
-   - Windows: press **Win+Alt+R** (Xbox Game Bar). Press it again to stop. Check that the microphone is on in Game Bar's capture settings.
-   - Mac: press **Cmd+Shift+5**, choose "Record Entire Screen", and under Options pick your microphone.
+1. Read [CONSENT.md](CONSENT.md). You will reply "I agree" (and your choice there) when you send your recording.
+2. Unzip the build and double-click `PlaytestBuild.exe`. If Windows warns about an unknown app, choose "More info", then "Run anyway".
+3. Start recording **with your microphone on**, before you press New Game:
+   - **Xbox Game Bar** (built into Windows): press **Win+Alt+R** while the game is in front. Press it again to stop. Check that the microphone is on in Game Bar's capture settings (Win+G, then the gear). Videos are saved in `Videos\Captures`.
+   - **OBS**, if you already use it: record the game with your microphone.
+   - **Streaming** instead (Twitch, YouTube or Discord): tell Sasha before you start so he can record your stream. You still send the log file after.
+4. When you press New Game, the screen flashes white and beeps once. Keep that in the recording: it lines up your video with the game's log.
 
 ## While you play
 
@@ -16,11 +18,10 @@ Thank you for playing. It takes about 20 minutes.
 - Don't ask for help, and don't look anything up.
 - Your task: __THE TASK, IN SASHA'S WORDS__
 
-Stop when you finish the task, or after 15 minutes, whichever comes first.
+Stop when you finish the task, or after 20 minutes, whichever comes first.
 
 ## After
 
 1. Quit the game from its menu (this finishes the log), then stop the recording.
-2. Send the video file and the newest log file the way Sasha asked you to. The log files are named with the date and time and end in `.jsonl`:
-   - Windows: paste `%APPDATA%\Godot\app_userdata\Cogito\playtest_lens` into the address bar of a File Explorer window and press Enter.
-   - Mac: in Finder, choose Go, Go to Folder, and paste `~/Library/Application Support/Godot/app_userdata/Cogito/playtest_lens`.
+2. Find the newest log file. Its name is the date and time, and it ends in `.jsonl`. Paste `%APPDATA%\Godot\app_userdata\Cogito\playtest_lens` into the address bar of a File Explorer window and press Enter.
+3. Send the video and the log through a file link (Google Drive, Dropbox or WeTransfer; the video is too big for email), with "I agree" and your choice from CONSENT.md.
