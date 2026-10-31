@@ -18,9 +18,12 @@ Player 1's session (git-ignored): `recordings/cogito/cogito_person2.mkv` and `re
 
 ## In flight
 
-- Review 18, a fresh Grok 4.7 xhigh on `b36e564`: `docs/reviews/18-report-polish-grok.md` when it lands.
-- No analyzer or prompt change until he says a card is wrong. No third blended report, no editor ghost, no ripped pages.
-- The repo is still private. The 3-minute video is not recorded. "by design" is still Opus's proposal.
+- Task 30 (Opus subagent): the redesigned report, mockup B as base (two floors, sticky map that follows the moment, session strip, Play, problems block). Brief: docs/tasks/30-report-build.md. Then Grok reviews the code, Sonnet the captures.
+- Task 31 (Opus subagent): the add-on as a real Godot plugin, fork only. Brief: docs/tasks/31-addon-plugin.md. Then Grok reviews.
+- Fork `playtest-lens` has `1bd0281` (map export per floor), local, not pushed until reviewed with task 30. Main has both floor maps (`1cb117f`).
+- Sasha marks the 24 Spark cards on `runs/check/person2-marking.html` (git-ignored) and pastes the picks.
+- Her consent for the public video: he is asking her. Nothing of hers goes public before her yes.
+- No analyzer prompt change until he says a card is wrong. No third blended report, no editor ghost, no ripped pages.
 
 ## Remind Sasha
 
