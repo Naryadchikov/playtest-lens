@@ -7,5 +7,6 @@
 	"world_max_z": 18.0,
 	"world_min_x": -18.0,
 	"world_min_z": -25.0,
-	"y_cutoff": 2.4
+	"y_cutoff": 2.4,
+	"y_floor_min": null
 }
