@@ -52,3 +52,7 @@ One list for things found but not fixed: a pre-existing review finding, a case t
 ## Report page (review 18, Grok, 2026-10-31)
 
 - Print does not hide the clip: `@media print { .clip { display: none } }` loses to `.clip.video { display: block }` on specificity, so a printed page keeps the video box. Pre-existing; the task 29 redesign rewrites this CSS. From docs/reviews/18-report-polish-grok.md.
+
+## The one command (review 21, Grok, 2026-11-01)
+
+- A candidate reply that fails to parse is saved as a raw file under `runs/spark_test/`, not next to `--out`, so a run with `--out-dir` leaves that one debug file outside its folder and can overwrite an earlier one. From docs/reviews/21-one-command-addon-move-grok.md.

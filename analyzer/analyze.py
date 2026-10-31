@@ -20,7 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from analyzer import check, spark_test  # noqa: E402
+from analyzer import check, log_candidates, spark_test  # noqa: E402
 from report import render  # noqa: E402
 from tools.video import find_start_flash  # noqa: E402
 
@@ -43,6 +43,12 @@ def main(argv=None) -> int:
         return 1
     if not Path(args.log).exists():
         print(f"Log not found: {args.log}", file=sys.stderr)
+        return 1
+
+    # The check maps log times to video times through the first sync_flash line;
+    # without one, stop before the candidate pass spends a model call.
+    if not any(event.get("event") == "sync_flash" for event in log_candidates.load_log(args.log)):
+        print(f"{args.log} has no sync_flash line, so its times cannot be lined up with the video.", file=sys.stderr)
         return 1
 
     flash_s = args.video_flash_s
