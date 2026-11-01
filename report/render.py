@@ -217,6 +217,7 @@ STYLE = r"""
   --bar-h: 52px; --tl-h: 104px;
 }
 @media (prefers-color-scheme: dark) {
+  html .mk.k-confused b, html .tm.k-confused b { color: #1b1300; }
   :root {
     --bg: #0f131b; --surface: #171c27; --sunk: #202636;
     --ink: #e8ecf4; --ink2: #b0b8c8; --muted: #909ab0; --line: #2c3344;
@@ -247,7 +248,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 .mk .sh { width: 1.6rem; height: 1.6rem; }
 .mk b { position: absolute; font-size: .72rem; font-weight: 700; color: #fff; font-family: var(--mono); }
 .mk.k-bug b { top: .45rem; }
-.mk.k-confused b { color: #1b1300; }
+.mk.k-confused b { color: #fff; }
 .mk.hollow .sh { fill: none; stroke: currentColor; stroke-width: 1.6; }
 .k-stuck { --k: var(--k-stuck); --t: var(--t-stuck); --p: var(--p-stuck); } .k-confused { --k: var(--k-confused); --t: var(--t-confused); --p: var(--p-confused); }
 .k-surprised { --k: var(--k-surprised); --t: var(--t-surprised); --p: var(--p-surprised); } .k-bug { --k: var(--k-bug); --t: var(--t-bug); --p: var(--p-bug); }
@@ -366,6 +367,7 @@ a.chip:hover { border-color: var(--accent); }
 .bar .count { font-family: var(--mono); font-size: var(--fs-s); color: var(--ink2); text-align: center; font-variant-numeric: tabular-nums; }
 .bar .nav { justify-self: end; display: flex; gap: var(--s2); }
 .bar .nav button { border: 1px solid var(--line); background: var(--sunk); border-radius: 8px; padding: .4em .9em; font-weight: 600; }
+.bar .nav button:disabled { opacity: .4; cursor: default; }
 /* The main control keeps the accent: this rule outranks .bar .nav button. */
 .bar .nav .primary { border-color: transparent; min-width: 6em; background: var(--accent); color: var(--on-accent); }
 #play .when-playing { display: none; } .watch.playing #play .when-paused { display: none; } .watch.playing #play .when-playing { display: inline; }
@@ -440,7 +442,7 @@ a.chip:hover { border-color: var(--accent); }
 .r-marks { position: relative; height: calc(var(--rows) * 24px); margin-top: 6px; }
 .tm { position: absolute; top: calc(var(--row) * 24px); transform: translateX(-50%); width: 22px; height: 22px; padding: 0; border: 0; background: none; display: grid; place-items: center; color: var(--k); }
 .tm .sh { width: 22px; height: 22px; } .tm.soft .sh { width: 16px; height: 16px; }
-.tm b { position: absolute; font: 700 10px var(--mono); color: #fff; } .tm.k-confused b { color: #1b1300; } .tm.soft b { font-size: 9px; } .tm.k-bug b { top: 8px; }
+.tm b { position: absolute; font: 700 10px var(--mono); color: #fff; } .tm.k-confused b { color: #fff; } .tm.soft b { font-size: 9px; } .tm.k-bug b { top: 8px; }
 .tm.hollow .sh { fill: none; stroke: currentColor; stroke-width: 2; width: 14px; height: 14px; }
 .tm:hover, .tm.cur { transform: translateX(-50%) scale(1.25); }
 .tm.cur::after { content: ""; position: absolute; inset: -4px; border: 2px solid var(--ink); border-radius: 50%; }
@@ -451,12 +453,17 @@ a.chip:hover { border-color: var(--accent); }
 .cursor { position: absolute; top: -4px; bottom: 0; width: 2px; background: var(--accent); transform: translateX(-1px); display: none; pointer-events: none; }
 .cursor.on { display: block; }
 
+@media (max-width: 1100px) {
+  .main { grid-template-columns: minmax(0, 5fr) minmax(0, 2fr); gap: var(--s4); padding: var(--s3) var(--s4); }
+}
 @media (max-width: 900px) {
   .first { grid-template-columns: 1fr; }
   .ovmap .floor svg { max-height: 70vh; }
 }
 @media (max-width: 720px) {
   .main { grid-template-columns: 1fr !important; grid-auto-rows: auto; overflow: auto; }
+  .screen { grid-template-rows: auto auto; }
+  .caption { overflow: visible; }
   .side { grid-template-rows: auto 60vh auto; }
   .bar { grid-template-columns: auto 1fr auto; }
   .bar .count { display: none; }
@@ -1402,6 +1409,7 @@ SCRIPT = r"""
   if (!watch) return;
   var video = $("#clip"), travel = $("#travel"), caption = $("#caption"), count = $("#w-count");
   var where = $("#where"), lastev = $("#lastev"), offmap = $("#offmap"), beforeHead = $("#before-h");
+  var prevBtn = $("#prev"), nextBtn = $("#next");
   var playBtn = $("#play"), cursor = $("#cursor"), past = $("#past"), track = $("#track");
   var beforeNone = $("#before-none");
   var duration = +watch.dataset.duration, SPEED = 10, TRAIL = 30, EVENTS_SHOWN = 4;
@@ -1498,7 +1506,8 @@ SCRIPT = r"""
     var floorName = floors.length > 1 && p ? floors[p.floor].dataset.name : "";
     // A player outside the drawn map is said to be there, never put in a room.
     if (p && offMap(p)) room = W.offMap;
-    if (!rooms.length && !room) where.textContent = floorName;
+    if (S.cur && !S.travelling && S.cur.place) where.textContent = S.cur.place;
+    else if (!rooms.length && !room) where.textContent = floorName;
     else if (floorName) where.textContent = fmt(W.where, { room: room || W.between, floor: floorName });
     else where.textContent = room || W.between;
     offmap.hidden = !(S.cur && S.cur.off);
@@ -1535,11 +1544,12 @@ SCRIPT = r"""
     if (preview) caption.appendChild(el("p", "upnext", W.upNextHead));
     $$(sel, r.el).forEach(function (n) { caption.appendChild(n.cloneNode(true)); });
     var head = $(".mhead", caption);
-    if (head && r.place) head.appendChild(el("span", "place", r.place));
-    if (preview) return;
+    if (preview) { if (head && r.place) head.appendChild(el("span", "place", r.place)); return; }
     if (r.dropped) { var d = $("details", caption); if (d) d.open = true; }
     var list = r.dropped ? allDropped : kept;
-    count.textContent = fmt(r.dropped ? W.countDropped : W.count, { n: list.indexOf(r) + 1, of: list.length });
+    var at = list.indexOf(r);
+    count.textContent = fmt(r.dropped ? W.countDropped : W.count, { n: at + 1, of: list.length });
+    prevBtn.disabled = at <= 0; nextBtn.disabled = at >= list.length - 1;
   }
 
   // --- the one state ---
@@ -1596,6 +1606,7 @@ SCRIPT = r"""
     travel.hidden = false;
     if (next) fillCaption(next, true); else while (caption.firstChild) caption.removeChild(caption.firstChild);
     count.textContent = next ? W.walking : W.end;
+    prevBtn.disabled = false; nextBtn.disabled = !next;
     if (next && next.src) { video.setAttribute("src", next.src); video.load(); }
     else { video.removeAttribute("src"); video.load(); }
     S.last = 0;
@@ -1660,7 +1671,7 @@ SCRIPT = r"""
     if (loadedClip() && !atEnd) setPlayingFlag(false);
   });
   video.addEventListener("ended", function () {
-    if (!loadedClip()) return;
+    if (!video.ended || !loadedClip()) return;
     if (S.playing) startTravel(S.cur.clip ? S.cur.clip[1] : S.cur.t, S.cur.t);
     else setPlayingFlag(false);
   });
