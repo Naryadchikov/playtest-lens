@@ -55,7 +55,7 @@ The developer also judged the cards that changed between the last two versions o
 
 ## Use of Meta's models
 
-- **Muse Spark 1.2 (contributor)** watches the whole session with its sound and finds the candidates, then checks each one against its clip and the log. Two passes of the same model with different jobs: the first one proposes, the second one has to prove each claim with the clip, the player's words and the log, or drop it.
+- **Muse Spark 1.2 (contributor)** watches the whole session with its sound and finds the candidates, then checks each one against its clip and the log. Two passes of the same model with different jobs: the first one proposes, the second one has to back each claim with the clip, the player's words and the log, or drop it.
 - **Muse Voice Transcribe** writes down each clip's speech. The check reads the player's words as text, and the page shows only quotes the transcript holds.
 - **Muse Spark Open** on Baseten runs the same pipeline as a separate open-weights mode (below).
 

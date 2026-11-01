@@ -28,3 +28,8 @@ A judge reads the README, opens the live demo and maybe watches the GIF, in a fe
 
 - Read-only except your own report file. Do not commit. Do not call any t3-code tools. Never run rm. No model calls, no network beyond `127.0.0.1`, no Keychain. Never copy anything from `runs/` or `recordings/` into a tracked file. Only stop processes you started, never by name. No em dashes and no spaced en dashes.
 - Report: PASS or NOT PASS, findings ranked (blocking, should fix, nit), each with file and line or a capture path, and what you did not check. Short.
+
+## What came back (2026-11-01)
+
+- **A, the repo** (Grok 4.7 xhigh, review 33): PASS, 0 blocking, 4 should fix, 3 nits. Fixed in `763f102`: the README's log-candidates claim (the one command leaves them off), the New Game flash credited to the COGITO adapter, the current agent split in PLAN.md and PRIOR_WORK.md, no home paths, the deadline in CET. Left for Sasha: his quotes that name the two testers in task briefs 33 and 39 (PUBLIC_CHECKLIST step 8), and the fork's untracked `recordings/` with no ignore rule. Left as is: the cross-player summary is its own command (AGENTS.md wording).
+- **B, the judge view** (Claude Sonnet 5.5): round 1 (review 34) NOT PASS at 8.3; fixed in `7e32700` and the demo repo (a shorter GIF on the keypad moment, Meta's models and the held-out result on the README's first screen, two players named everywhere, a preview image and social tags, model names in tab titles). Round 2 (review 35) **PASS at 8.6**. After it: "has to prove" became "has to back", and the front page says to turn the clip's sound on. Known and open: the video link, the URLs live only after the green light, the GIF's small text and its Play half ending before a stop.
