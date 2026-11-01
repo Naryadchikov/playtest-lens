@@ -491,7 +491,6 @@ a.chip:hover { border-color: var(--accent); }
 }
 @media (max-width: 420px) {
   .bar { padding: 0 var(--s2); gap: var(--s2); }
-  .bar button { padding: .4em .6em; }
 }
 @media print { .watch { display: none !important; } .watchbtn, .playglyph { display: none; } .m, .d { grid-template-columns: 1fr; } }
 """
