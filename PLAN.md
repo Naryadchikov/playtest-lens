@@ -12,7 +12,7 @@ You give it playtest recordings (the screen plus the player thinking out loud) a
 
 ## What we build
 
-1. **Record.** A tester plays the build and records the screen and mic (Xbox Game Bar on Windows, Cmd+Shift+5 on a Mac). The game writes an event log as it runs, and flashes white and beeps when the player presses New Game and at each level load, so the video and the log can be lined up.
+1. **Record.** A tester plays the build and records the screen and mic (OBS or any screen recorder). The game writes an event log as it runs, and flashes white and beeps when the player presses New Game and at each level load, so the video and the log can be lined up.
 2. **Find candidates, two ways.** Muse Spark watches the video and listens to the player in one pass and lists moments with a time and a reason. The event log flags its own signals: deaths, retries, long idle stretches, walking back the way you came.
 3. **Check each candidate.** A second Spark call gets a 20-second clip, the player's words and that slice of the event log, and must answer keep or drop, with evidence. Dropped moments are listed, not hidden.
 4. **Combine across players**, for example: "3 of 4 players stuck at the lab door, for 2:10 on average."

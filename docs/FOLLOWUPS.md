@@ -57,3 +57,10 @@ One list for things found but not fixed: a pre-existing review finding, a case t
 
 - A candidate reply that fails to parse is saved as a raw file under `runs/spark_test/`, not next to `--out`, so a run with `--out-dir` leaves that one debug file outside its folder and can overwrite an earlier one. From docs/reviews/21-one-command-addon-move-grok.md.
 - Review 22 round 2 (Sonnet), smaller: the black clip box after a scrub has no caption (S3); the overview names moment 11 while nothing on the map is current (S4); the event chips scroll with no cue (S5); the heat view leaves a blank band under the floors (S6); the map time trails a clip by about half a second to a second at its start (S7).
+
+## The report and the analyzer at the freeze (2026-11-01)
+
+- At 960 x 1080 about 300 px under the Watch caption stay empty (the map is width-limited); timeline pins pile up on a phone. From task 37, "Known, not fixed".
+- On the held-out session (Player 2) the check called three moments blocked where Sasha saw no one stuck; for the code door his word is "a problem, but not a blocker". Not tuned: the session is held out and Sasha chose polish over tuning ("I think I am ok with not tweaking it further", 2026-11-01).
+- The pipeline cannot see an interaction a player never tried (Player 2 never opened a drawer, so never found the lockpicks or the code note). A log line for "looked at but never used" objects could feed it. Idea only.
+- Player 1's clips show Godot's embedded game toolbar at the top (she played from the editor's game view). Game UI only, nothing private.

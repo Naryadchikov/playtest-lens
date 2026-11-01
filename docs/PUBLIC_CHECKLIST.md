@@ -12,8 +12,8 @@ The repo is private for now (Sasha, 2026-10-27, DECISIONS.md: "I'll make it publ
 
 ## Do before the visibility flip
 
-1. **LICENSE:** the copyright line still reads `__AUTHOR__`. Sasha gives the name to use.
-2. **README:** replace the "How to run it comes here once it runs" line and the stale agent list with the real run steps, the three modes, the open-weights result, the demo video link, and the score table. Problem first, then the solution.
+1. **LICENSE:** done (Aleksandr Nariadchikov).
+2. **README:** rewritten on 2026-11-01 (problem first, three playtests, the held-out check, Meta's models, open-weights mode, run it, the add-on, how it was built). Left: the demo video link in the comment under the GIF.
 3. **Hackathon rules** (verified from the Participant Guide Sasha sent on 2026-10-28; the Internshala deadline I found earlier was wrong):
    - Submission due **Wed 2026-11-04, 9:00 PM Eastern (EST)** on the Cerebral Valley platform. Late submissions are not considered. Building period 2026-10-27 to 2026-11-04; kickoff was Mon 2026-10-26, 12:00 ET. Our first commit is 2026-10-26 20:39 CET, a planning commit made after the kickoff and before the building period: answered: Sasha, T3 Code chat, 2026-10-31: "It was said both on discord and FQA that dev starts once first stream is finished or something along those lines, so we made all good".
    - The repository must be public; the video link must be reachable; everyone who worked on it is listed on the submission page (solo here).
@@ -29,13 +29,17 @@ The repo is private for now (Sasha, 2026-10-27, DECISIONS.md: "I'll make it publ
    - `git ls-files | grep -Ei '\.(mp4|mov|mkv|webm|wav|m4a|zip|key|pem|env)$|recordings/|runs/'` shows nothing outside the fork's licensed game audio;
    - `git log --all --format=%ae | sort -u` lists only noreply addresses;
    - `git check-ignore -v recordings runs .env .claude/skills/modal` matches every path.
-5. **Tester privacy:** no tester video, audio, name or message anywhere in the repo or the docs. Sasha's own recordings stay out too. The demo's clips are shown in the video only, or added only with Sasha's yes.
+5. **Tester privacy:** no tester video, audio, name or message anywhere in the repo or the docs. Sasha's own recordings stay out too. The demo's clips live only in the separate demo repo, with all three players' yes (Sasha, 2026-11-01: "all 3 players are ok with sharing their data"); this repo holds none, and the README's GIF loads from the demo site.
 6. **PRIOR_WORK.md:** complete. COGITO and its assets, Montserrat and OFL, every CC0 sound, the dev tools (DeepSeek on Modal, Grok, Claude), and any new add-on or library added since.
 7. **The fork's `playtest-lens` branch** holds every logger change that main relies on, pushed, and a fresh `git clone --recursive` of the public repo builds and runs the offline tests.
 8. **Docs that go public:** docs/tasks, docs/reviews, AGENTS.md, docs/PRIOR_WORK.md and STATUS.md quote Sasha's chat in places (AGENTS.md, PRIOR_WORK.md and the task 18 brief carry his verbatim quotes). Sasha reads them once and says yes or names lines to cut. Tidy STATUS.md's day-to-day notes.
 9. **Remove DECISIONS.md from the public history** (Sasha, 2026-10-28, wants it gone from the public release and its commits cleaned): do it while the repo is still private, then flip. See "DECISIONS.md removal" below.
-10. **Visibility:** Sasha makes `playtest-lens` public in GitHub settings, sets the repo description and topics, and checks that the fork is public too. Open the public URL in a signed-out browser.
-11. **Submit** only after step 10, with the public URL.
+10. **The demo site** (`Naryadchikov/playtest-lens-demo`, private, pushed 2026-11-01 from `runs/demo-site/site/`, its own git repo; Pages off). GitHub Pro can build Pages from a private repo, but the published site is public anyway (access control for Pages is Enterprise Cloud only), so Pages is switched on only at the green light:
+    - `gh repo edit Naryadchikov/playtest-lens-demo --visibility public --accept-visibility-change-consequences`
+    - `gh api -X POST repos/Naryadchikov/playtest-lens-demo/pages -f 'source[branch]=main' -f 'source[path]=/'`
+    - open https://naryadchikov.github.io/playtest-lens-demo/ signed out: the front page, the three reports, a clip playing, and the README's GIF (it loads from the site).
+11. **Visibility:** Sasha makes `playtest-lens` public in GitHub settings, sets the repo description and topics, and checks that the fork is public too. Open the public URL in a signed-out browser.
+12. **Submit** only after steps 10 and 11, with the public URL and the video link.
 
 ## DECISIONS.md removal
 

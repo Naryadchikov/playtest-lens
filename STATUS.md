@@ -4,35 +4,28 @@ The orchestrator keeps this file up to date at each milestone and at the end of 
 
 ## Roles (Sasha, 2026-10-31, DECISIONS.md)
 
-Claude Opus 5.5 orchestrates and writes the code. Claude Fable 5.1 designs and builds the report when Sasha asks for it. A fresh Grok 4.7 xhigh through Cursor reviews code; a fresh Claude Sonnet 5.5 judges captures, the UX and the README. Muse Wonder is not called. The Meta pool is for the product's video and audio only. Normal mode: Contributor Spark 1.2. Open mode: Muse Spark Open on Baseten. Table: AGENTS.md.
+Claude Opus 5.5 orchestrates and writes the code. Claude Fable 5.1 designs the report when Sasha asks. A fresh Grok 4.7 xhigh through Cursor reviews code; a fresh Claude Sonnet 5.5 judges captures, the UX and the README. Effort high for every Claude agent, xhigh for Grok. The Meta pool is for the product's video and audio only. Table: AGENTS.md.
 
-## Where things stand (2026-11-01, evening)
+## Where things stand (2026-11-01, late evening)
 
-- **The report** is the mix Sasha picked (task 37, Fable; fixes in task 38 and by Opus): Read (the verdict, top problems beside the map, every moment with a still under its place heading, the dropped candidates) and Watch (the clip about two thirds with the quote as headline, the summary and "Likely cause"; the map with the place line and the 30 s trail; Play stops only at unplanned moments; "Up next" while walking; Back to where you came from). It holds from 360 px to 1920 px. UX loop: 7.4, 8.6, 8.4, then **8.9 PASS** (review 29); code PASS (reviews 25 and 30). A half-screen rearrangement was tried and reverted (review 31). Latest `f397f7e`.
-- **The check prompt** is v2 with the friction guard (`6c4953c`), one prompt for both modes. Final findings and pages for both sessions in both modes: `runs/final/` (from the cache, $0).
-- **Staged, not published, not committed** (his words: nothing is published while we iterate): the demo site `runs/demo-site/site/` (his session, `index.html` Spark and `open.html` Open, the new layout); the README GIF `runs/demo-site/report.gif` (20 s, 960 px, 8.8 MB, his session). The old layout's copies are kept beside them (`*-old-layout*`).
-- **The Godot add-on** in `godot/addons/playtest_lens/` with the map tool and a test project; the fork keeps the COGITO adapter and a checked copy.
-- **One command:** `tools/run-analyzer.sh analyzer/analyze.py <recording> --log <jsonl>`.
-- **Tester kit:** `runs/tester-build/PlaytestLens-Cogito-Windows.zip`; needs his task line and one Windows run.
-
-## Remind Sasha
-
-- Before testers get the build: the consent text says Meta may train on contributor-mode recordings; a tester who objects gets `muse-spark-1.2`. Sasha, 2026-10-28: "add it for now, and remind me about it once we do testing."
-
-## Open questions for Sasha (asked 2026-11-01, evening)
-
-1. The 21 changed cards on `runs/check/prompt33/guard-judge.html` (before and now side by side), and whether the yellow "Cutscene Trigger" box at 5:17 in her session is meant to be visible.
-2. Her consent: may her session be public (README numbers, video, her voice in the clips)?
-3. Testers: send the kit (his task line, one Windows run) or ship on the two sessions.
-4. Words on the page (proposals): "Analyzed with {model}." and whether the model needs a clearer tag; the page title "Session cogito"; the raw volume name "CUBICLE_AREA" in his session.
-5. Publish: the demo site on GitHub Pages (new public repo) and the GIF in the README, now that the layout is done.
+- **No more tuning** (Sasha: "I think I am ok with not tweaking it further and polsih things indtead, and review the polished bundle as it is."). The check prompt is v2 with the friction guard (`6c4953c`).
+- **Three playtests, all consented:** Player 1 (21:21, first time, the demo), Player 2 (6:04, first time, held out, cut where the Laboratory loads), and his own run (8:32). Findings and pages in both modes: `runs/final/` (`cogito_person2`, `cogito_person3`, `cogito`), and under readable names in `runs/demo/` (`lobby-player-1`, `lobby-player-2`). All from cache.
+- **The held-out check:** it found where Player 2 was slowed (the code door, the CEO door, the toilet duct) and a freeze he calls a possible bug; it overrated friction (three blocked); it cannot see the drawers he never opened. Sasha's answers in DECISIONS.md.
+- **The demo site**, staged in `runs/demo-site/site/` (front page, Player 1 Spark and Open, Player 2 Spark, the GIF), checked in Chromium and WebKit over a local server. Pushed to `Naryadchikov/playtest-lens-demo`, **private, Pages off**. Older staging: `site-his-session/`, `site-old-layout/`.
+- **The GIF**: `runs/demo-site/site/report.gif` (21 s, 960 px, 6.8 MB, Player 1: Read, her code lock moment, Back, Play). The README loads it from the site, so this repo holds no tester media.
+- **README** rewritten; **docs/VIDEO_PLAN.md** rewritten for the new page, with where the video goes.
 
 ## Next
 
-1. His answers above; then: README final (numbers from `runs/final/`, the GIF, the card check), the marking page for the final cards, VIDEO_PLAN for the new layout, the X clip.
-2. Tue 3 Nov: freeze review (Grok on the whole repo, Sonnet on README and captures); he records the video.
-3. Wed 4 Nov: PUBLIC_CHECKLIST (DECISIONS.md removed with no history, scans), repo public, Pages live, submit by 18:00 CET (deadline 9:00 PM Eastern), X post.
+1. The freeze review of the polished bundle: a fresh Grok (whole repo, public rules) and a fresh Sonnet (README, site, GIF); fix, round 2 at most.
+2. Sasha records and edits the video (docs/VIDEO_PLAN.md); its link goes into the README, the site's front page and the submission form.
+3. At his green light (PUBLIC_CHECKLIST): DECISIONS.md out of the history, both repos public, Pages on, signed-out check, submit by 18:00 CET on Wed 4 Nov (deadline 9:00 PM Eastern), X post.
+
+## Open questions for Sasha
+
+- Docs that go public quote his chat (PUBLIC_CHECKLIST step 8): he reads them once.
+- The DECISIONS.md history rewrite needs his word for that one force-push (PUBLIC_CHECKLIST, "DECISIONS.md removal").
 
 ## Credits used
 
-`runs/costs.jsonl` sums to $29.27 on 2026-11-01: Meta pool $14.78, Baseten $14.49. The Meta pool figure of about $23.90 left was his, on 2026-10-28, not rechecked against Meta's dashboard.
+`runs/costs.jsonl` sums to $30.40 on 2026-11-01. The Meta pool figure of about $23.90 left was his, on 2026-10-28, not rechecked against Meta's dashboard.
