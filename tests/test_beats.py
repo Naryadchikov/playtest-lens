@@ -343,6 +343,33 @@ def test_assign_beats_zone_reentry_is_a_new_attempt():
     assert [f["beat"]["attempt"] for f in findings] == [1, 2]
 
 
+def test_a_step_out_and_back_within_seconds_is_one_visit():
+    events = [
+        {"t": 1.0, "event": "sync_flash"},
+        {"t": 11.0, "event": "zone_enter", "zone": "Archive", "puzzle": "Code Lock"},
+        {"t": 21.0, "event": "zone_exit", "zone": "Archive", "puzzle": "Code Lock"},
+        {"t": 21.2, "event": "zone_enter", "zone": "Archive", "puzzle": "Code Lock"},
+        {"t": 41.0, "event": "zone_exit", "zone": "Archive", "puzzle": "Code Lock"},
+    ]
+    zones = zone_intervals(events, 101.0)
+    assert [(z["start_s"], z["end_s"]) for z in zones] == [(111.0, 141.0)]
+    findings = [_finding("f1", 115.0), _finding("f2", 135.0)]
+    assign_beats(findings, zones=zones)
+    assert [f["beat"]["attempt"] for f in findings] == [1, 1]
+
+
+def test_a_moment_just_before_a_puzzle_volume_joins_it():
+    events = [
+        {"t": 1.0, "event": "sync_flash"},
+        {"t": 11.0, "event": "zone_enter", "zone": "Archive", "puzzle": "Code Lock"},
+        {"t": 21.0, "event": "zone_exit", "zone": "Archive", "puzzle": "Code Lock"},
+    ]
+    zones = zone_intervals(events, 101.0)
+    findings = [_labelled("f1", 110.5, "Archive", "Code Lock"), _labelled("f2", 115.0, "Archive", "Code Lock")]
+    assign_beats(findings, zones=zones)
+    assert [(f["beat"]["puzzle"], f["beat"]["attempt"]) for f in findings] == [("Code Lock", 1), ("Code Lock", 1)]
+
+
 def test_colourless_area_wording_joins_the_most_recent_colour_room():
     findings = [
         _labelled("f1", 10.0, "Yellow Temple Ruins", "green sigil plinth"),
