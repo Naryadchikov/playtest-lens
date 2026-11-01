@@ -36,7 +36,7 @@ The arrangement from 2026-10-31 (Sasha's words are quoted in [DECISIONS.md](DECI
 | Who | Model and harness | What |
 |---|---|---|
 | Orchestrator and main author | Claude Opus 5.5 (high effort), Claude Code in T3 Code | Plans, writes the analyzer, the report page, the tools and their tests, keeps STATUS.md and DECISIONS.md, brings Sasha results and questions |
-| Code reviewer | Grok 4.7 (high, fast) through Cursor, started by T3 `delegate_task` on the `cursor` provider, a fresh reviewer every round | Reviews Opus-authored code at milestones and at the freeze |
+| Code reviewer | Grok 4.7 (xhigh, fast) through Cursor, started by T3 `delegate_task` on the `cursor` provider, a fresh reviewer every round | Reviews Opus-authored code at milestones and at the freeze |
 | Final design pass on the report | Claude Fable 5.1 (high effort), a Claude Code subagent (Sasha, 2026-10-31) | Design improvements and UX suggestions on the built page; Grok reviews its code |
 | Look reviewer | Claude Sonnet 5.5 (high effort), a fresh subagent every round | Judges captures of the report page and the README (the UX review in docs/REVIEW.md), and reviews any code Grok authors. The look itself is Sasha's call |
 | Grok bot on its own VM | Sasha's bot, briefed by prompts Sasha pastes | Parallel work on files nobody else touches, such as the Godot telemetry tool. It has no recordings, no Keychain and no secrets |
@@ -45,7 +45,7 @@ The arrangement from 2026-10-31 (Sasha's words are quoted in [DECISIONS.md](DECI
 | Sasha's Windows machine | His volume placement, play session and recording | OBS, not Game Bar (Sasha, 2026-10-28). Steps in docs/COGITO_VOLUMES.md. Agents on the Mac still use `/Applications/Godot.app` |
 | Sasha | | Decides; judges the findings, the report and the video; plays the build |
 
-Effort: high for the orchestrator and every subagent (Sasha, T3 Code chat, 2026-11-01: "also lets move orchestration work to high effort as well as all subagents."); a brief sets it in `delegate_task` options (`effort: high` for Claude, `reasoning_effort: high` for Grok). Sasha named Opus as planner and author and left the reviewer split to the orchestrator; the split above is Opus's pick (DECISIONS.md, 2026-10-31). Grok runs only through Cursor (Sasha's rule for his projects; it may change), and Cursor is close to unlimited. DeepSeek, GLM 5.3 and Kimi K3 on Modal are idle.
+Effort: high for the orchestrator and every subagent (Sasha, T3 Code chat, 2026-11-01: "also lets move orchestration work to high effort as well as all subagents."); Grok stays at xhigh (Sasha, same chat: "sorry, grok should stay on xhigh"). A brief sets it in `delegate_task` options (`effort: high` for Claude, `reasoning_effort: xhigh` for Grok). Sasha named Opus as planner and author and left the reviewer split to the orchestrator; the split above is Opus's pick (DECISIONS.md, 2026-10-31). Grok runs only through Cursor (Sasha's rule for his projects; it may change), and Cursor is close to unlimited. DeepSeek, GLM 5.3 and Kimi K3 on Modal are idle.
 
 Backup mode ran from 2026-10-28 to 2026-10-31. If Claude's usage runs out again, docs/BACKUP_ORCHESTRATOR.md is the fallback, and Sasha starts it.
 

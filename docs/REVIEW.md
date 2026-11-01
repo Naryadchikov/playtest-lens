@@ -7,7 +7,7 @@ Proposed by Claude Opus 5.5 in Sasha's claude.ai chat, 2026-10-26; Sasha confirm
 - **Every task:** the orchestrator reads the whole diff and runs the checks before it commits (AGENTS.md, "Working with the authors").
 - **A milestone,** not every commit: the end of a piece in PLAN.md's days (the Spark test, the add-on, the checking pass, the report page, the summary). A fresh code reviewer reviews it, on a different model than the author (AGENTS.md, "Who does what"). For the checking pass and the score, the review also checks that no tuning read the held-out notes. The orchestrator tags the reviewed commit `review/NN` so the next round can diff from it.
 - **One UX review of the report page's captures and the README,** by the look reviewer in AGENTS.md (Claude Sonnet 5.5 from 2026-10-31).
-- **The freeze** (PLAN.md, Tue Nov 3): one fresh code reviewer on the whole repo (Grok 4.7 at high effort, since Opus authors from 2026-10-31) and the look reviewer on the README and the page captures. Not the orchestrator's thread: after nine days it's anchored on its own work.
+- **The freeze** (PLAN.md, Tue Nov 3): one fresh code reviewer on the whole repo (Grok 4.7 xhigh, since Opus authors from 2026-10-31) and the look reviewer on the README and the page captures. Not the orchestrator's thread: after nine days it's anchored on its own work.
 
 ## The loop
 
