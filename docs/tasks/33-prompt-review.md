@@ -51,3 +51,14 @@ Change as little as the evidence needs. Several small prompt edits tested togeth
 ## Report (short)
 
 The prompt diffs and why each; the comparison table; the reference-card and 2026-10-28 checklist; the spend; the page paths for Sasha (before and after, both sessions, both modes); your recommendation, labeled as yours; what you did not check.
+
+## What came back (Claude Opus 5.5 subagent, 2026-11-01)
+
+Not merged: Sasha picks. The change sits uncommitted in the task's worktree (`t3/prompt-review-task-33`), and every page is in `runs/check/prompt33/` (git-ignored).
+
+- **Changed: the check prompt only** (v2). A "cause" line: what in the level likely caused the moment, one short phrase, only when the clip or log shows it, never where a sought object is or what an object can do unless shown (v1 had invented both). The summary starts with the thing in the level, never "Player", at most 20 words. Minimal code: `check.py` keeps `check.cause`, `findings.py` validates it, the page shows a "Likely cause" line (label: a proposal). The candidate prompt is unchanged.
+- **Rejected with evidence:** a sharper candidate rule (would cut cards he called on point; the check already tags 16 of 24 as learning); zone names for the candidate pass (every wrong area label falls where no volume was open); Open's extra cards are about half duplicates, a few real (5:49, 21:00, 17:10).
+- **Noise:** rerunning the unchanged check on her Spark candidates flips 3 of 24 cards by chance.
+- **Results (same candidates everywhere):** her Spark 24 kept before, 24 after (22 matched, the 8:19 vending surprise lost, as in the noise rerun; 5:17 becomes a suspected bug: a debug trigger volume visible in the build); summaries 19 to 13 words; causes on 21 of 24. His session: the lobby door, the CEO door and the lockpick cards he called wrong are gone in Spark before and after; Open v2 rates the lobby door and the key behind glass "blocked", which he called no real struggle.
+- **Spend:** $5.87 (Baseten $5.48, Meta about $0.40). Project total $24.00.
+- **Its recommendation:** v2 for Spark; the risk to judge is the tilt from "learning" toward "stuck" or "blocked".
