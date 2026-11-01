@@ -67,6 +67,10 @@ Render with `.venv/bin/python -m report.render <findings.json> --out <page.html>
 
 Files changed; the commands and their results; the capture and flow paths; new strings; what the analyzer supplies now; what you did not check.
 
-## What came back
+## What came back (2026-11-01)
 
-Filled in after the build.
+- **Build** (Claude Fable 5.1, `17a9675`): `report/render.py` rewritten as the mix, 2451 to 1694 lines; the analyzer needed nothing new. Reviews 23 (Grok, code) and 24 (Sonnet, UX 7.4): NOT PASS (pins took the wrong click, Play unreadable, Space closed Watch, Back to the wrong place, the demo's top pin off the map).
+- **Fixes** (Fable, task 38, `952ecb1`): every finding, plus "Up next" while walking, the model line, the dropped link. Reviews 25 (code PASS) and 26 (UX 8.6, the phone caption).
+- **Small fixes** (Claude Opus 5.5, `a84618f`, `b24db37`): the place line follows the moment, Previous and Next off at the ends, the phone stacks in normal flow, the caption fits on laptops, each event shows once. Reviews 27, 28 (UX 8.4, the phone overlap, fixed in `b24db37`), 29 (**UX 8.9, PASS**) and 30 (code PASS).
+- **Tried and reverted:** a half-screen rearrangement (`5d7400a`, review 31 NOT PASS: it cut windows 800 px high or less). The page at `f397f7e` is `b24db37` without one CSS rule that never applied.
+- **Known, not fixed:** at 960 x 1080 about 300 px under the caption is empty (the map is width-limited); timeline pins pile up on a phone; the model line is easy to miss (the words are Sasha's).
