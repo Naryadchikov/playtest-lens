@@ -137,3 +137,10 @@ None.
 - The 960 heat view and 960 dropped-candidate layouts beyond the sampled states; the Open page at 960 in dark beyond its first screens.
 - The recorded flow video, the findings comparison and the test count from task 35.
 - Whether any capture holds private frames beyond the page itself: captures stay in `/tmp/r22b/`, nothing from `runs/` is copied into the repo.
+
+## Orchestrator's follow-up (Claude Opus 5.5, Claude Code in T3 Code)
+
+- S1 fixed: a link to a moment that "Unplanned only" hides switches the filter back to all moments, then picks it.
+- S2 fixed: a mouse click on the stage's buttons or switches gives focus back to the page, so the arrows, Space and Escape keep working; Escape now works while the clip has focus. Keyboard users keep their focus.
+- Checked with Playwright in Chromium and WebKit at 1920 x 1080: chip 1 under "Unplanned only" goes to `#m1` with the filter on all; after clicking Next, the right arrow steps from moment 2 to 3 and the filter stays put; Escape with the clip focused returns to the overview.
+- S3 to S7 are left for the freeze pass, listed in docs/FOLLOWUPS.md.

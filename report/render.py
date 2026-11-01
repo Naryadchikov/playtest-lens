@@ -2077,6 +2077,12 @@ SCRIPT = r"""
   }
   // From a pin, a mark, a problem, a card number, Previous or Next: light it and bring its card to the middle.
   function goTo(r, scroll) {
+    // A link to a moment that "Unplanned only" hides shows every moment again.
+    if (r.kept && !visible(r)) {
+      page.setAttribute("data-focus", "all");
+      var all = pane.querySelector("input[name=focus][value=all]");
+      if (all) all.checked = true;
+    }
     stopAll();
     S.mode = "moment"; S.cur = r; S.clipT = null;
     render();
@@ -2263,11 +2269,20 @@ SCRIPT = r"""
   document.addEventListener("keydown", function (e) {
     if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     var tag = (e.target.tagName || "").toLowerCase();
+    if (e.key === "Escape" && S.mode !== "whole") { e.preventDefault(); toOverview(true); return; }
     if (tag === "input" || tag === "select" || tag === "textarea" || tag === "video" || e.target.isContentEditable) return;
     if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
     else if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
     else if (e.key === " " && tag !== "button") { e.preventDefault(); playBtn.click(); }
-    else if (e.key === "Escape" && S.mode !== "whole") { e.preventDefault(); toOverview(true); }
+  });
+  // A mouse click on the stage's own buttons and switches gives focus back to
+  // the page, so the keys above keep working; keyboard users keep their focus.
+  pane.addEventListener("click", function (e) {
+    if (e.detail === 0 || !e.target.closest("button, label")) return;
+    setTimeout(function () {
+      var f = document.activeElement;
+      if (f && pane.contains(f) && f.matches("button, input[type=radio]")) f.blur();
+    }, 0);
   });
 
   // A playing clip holds the map on its moment and moves the dot:

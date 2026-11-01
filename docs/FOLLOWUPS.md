@@ -56,3 +56,4 @@ One list for things found but not fixed: a pre-existing review finding, a case t
 ## The one command (review 21, Grok, 2026-11-01)
 
 - A candidate reply that fails to parse is saved as a raw file under `runs/spark_test/`, not next to `--out`, so a run with `--out-dir` leaves that one debug file outside its folder and can overwrite an earlier one. From docs/reviews/21-one-command-addon-move-grok.md.
+- Review 22 round 2 (Sonnet), smaller: the black clip box after a scrub has no caption (S3); the overview names moment 11 while nothing on the map is current (S4); the event chips scroll with no cue (S5); the heat view leaves a blank band under the floors (S6); the map time trails a clip by about half a second to a second at its start (S7).
