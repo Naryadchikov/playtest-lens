@@ -63,3 +63,77 @@ Captures are in `/tmp/r22/shots/` (outside the repo). Pages re-rendered from the
 - Contrast was judged by eye, not measured.
 - The recorded flow video from task 32 and the numbers in the findings comparison.
 - Whether any capture contains the tester's private video frames beyond what the page itself shows; the captures stay in `/tmp/r22/` and are not committed.
+
+## Round 2
+
+Reviewer: Claude Sonnet 5.5, Claude Code. Commit 5b2c281 (task 35 by Claude Fable 5.1). Look and UX review; the look and the wording are Sasha's call.
+
+**PASS: 0 blocking defects.** Both round 1 blocking defects and the heat view are fixed in Chromium and WebKit, on the Spark and the Open page, at every size. Seven smaller defects remain, two of them worth fixing before the video (S1 and S2).
+
+Pages re-rendered from the two findings files into `runs/check/r22b-spark.html` and `r22b-open.html` (git-ignored, the clips linked from `runs/check/cogito_person2-clips`). Captures and scripts are in `/tmp/r22b/` (outside the repo). Sizes 1920 x 1080, 1440 x 900, 960 x 1080 and 400 px, light and dark. No page errors in any run, and no sideways scroll at any size in any state I opened. A sampler read the page state every 40 ms during each jump, so a flicker cannot hide between my readings.
+
+### Round 1 items
+
+- **B1 (flicker while a jump scrolls): fixed.** Clicking each Top problem and the first Dropped moment, from the top of the page: one state for the whole smooth scroll (card, counter, lit floor, clip, panel agree from the first sample to the last; 70 to 78 samples per jump, scroll ranges up to 14000 px). Chromium and WebKit; Spark at 1920, 960 and 400; Open at 960 and 1440. Round 1 saw 11, 11, 11, 10, 11 on the same click. A reader's own wheel scroll after a jump moves "now" with the middle card again, and scrolling back to the top by hand returns to the overview. Escape in the middle of a jump lands on the overview. Two fast Right presses land on moment 13 from 11 (correct).
+- **B2 (stage keeps the previous moment's clip): fixed.** Right (moment 1), then a click on the timeline at 16:46 (on the events row, the rooms row and the axis): the stage shows a black box with no controls and no source, the panel reads "16:46, Ground floor, Last moment: Moment 19", the counter is empty, the list stays where it was. Same from the overview, and for a scrub to 9:59 from moment 11. Right after a scrub goes to the next moment after the map time (15), Left to the last one before it (19). `b2-spark-chromium-scrub_track_r-events.png`.
+- **Heat view hides the timeline: fixed.** The bar is invisible at 1920 and 1440 (the floors keep their size), gone at 400. A click where the bar was does nothing. Picking a problem in the heat view switches back to the timeline view and shows the bar, which is sensible. `heat-spark-chromium-1920.png`.
+- **1 (960 problems below the fold): fixed.** The four problems end at 575 px (Open: five, 652 px), "Play the session" is at 661 px, the stage follows. Pressing Play or picking a problem scrolls so the whole stage (floors, side panel, clip, timeline) fits in one 960 x 1080 screen (`play-spark-webkit-960-15s.png`).
+- **2 (blank foot box): fixed.** The overview shows the first problem's moment on its own frame, captioned "Moment 11, Confused, 6:17", with the legend beside it. Playing it makes that moment current, scrolls the list, and the map follows.
+- **3 (clip thumbnail): fixed.** 292 x 164 px at 1920, 1440 and 1080-tall; 309 x 174 at 960 (was 206 x 112); the native controls no longer cover it (they appear on hover).
+- **4 (chips cut off): fixed with a caveat.** Chips scroll when they overflow; see S5.
+- **5 (label beside the dot): fixed.** I played the session over events at five start times, Spark and Open, 1920 and 960: every label ("Kitchen sink opened (Break room)", "Desk opened (Meeting room)") stayed inside its floor. The words read well.
+- **6 (Overview and Escape leave the list): fixed.** Both return to scroll 0 at every size. See S2 for a case where Escape is ignored.
+- **8 (dropped candidate never says so): fixed.** The panel carries a "Dropped by the check" tag, the reason, and the counter "Dropped 2 of 5". `dropped-spark-chromium-1920.png`.
+- **9, 10 (400 px, mid-word breaks): fixed.** No sideways scroll on either page at 400 (first screen, a moment, session play, heat). The moment panel grows. I checked every moment and every dropped candidate of both pages for a word split across two lines in the panel at 1920, 1440, 960 and 400: only hyphenated words wrap at the hyphen ("wall-mounted"), nothing like "Cabine/tDoor". No panel is clipped.
+- **11, 12, 13 (spacing, "24 24 kept", small type): fixed.** 24 px between the problems and the tiles; "24 kept" with "5 dropped" under it; room names and axis are larger (12 and 11 px).
+- **14, 15:** out of scope, unchanged.
+
+### The five tests
+
+1. **Worst first and where: pass at 960, 1440 and 1920.** Problems come first at 960 (and at 400).
+2. **Where to start: pass.** One blue "Play the session"; at 960 it sits under the problems.
+3. **One current moment: pass.** Panel, outlined floor, timeline shading, list outline, counter and clip agree after a problem, a pin, a rank chip, a timeline mark, Next, Previous, arrows, a dropped mark, a scrub and the session play. During the session the clip and the map time agree to about a second (S7).
+4. **One click there, one click back: pass.** Overview, Escape and Left at the first moment all behave; Next at the last moment is disabled.
+5. **The check is visible: pass.** Tile, Dropped section, hollow marks, and now the tag and counter in the stage.
+
+### Blocking
+
+None.
+
+### Smaller defects
+
+**S1. In "Unplanned only", a problem or rank chip that points at a hidden moment does nothing (fix before the video).**
+- Size and state: any size, both pages. Spark: switch to "Unplanned only", click problem 4 "Lobby" (its first moment, 1, is "by design" and hidden): the page stays on the overview, no message. Open: problems 4 and 5 do the same. Rank chips of hidden moments (Spark 1, 2, 3, 12, 15, 16; Open 5, 10, 29, 31, 32) are dead too, though they look the same as live ones.
+- Why it matters: the UX pass recommends "Unplanned only" for the video, and the problem list is the first thing a presenter clicks.
+- Fix: when the target is hidden by the filter, switch the filter back to "All moments" and then jump (or hide those chips and link a problem's place to its first visible moment).
+
+**S2. Keyboard shortcuts are swallowed after you click the stage's own controls.** `keys.py`, Chromium (WebKit does not focus them).
+- After clicking "Unplanned only" (or any switch), Right and Left move the radio selection, not the moment: Right flips the filter back to "All moments". After clicking Next or Previous, Space presses the button again (moment 1 to 2) instead of pausing. After playing the stage clip with its native Play, Escape and the arrows do nothing until you click elsewhere; Escape does work after the video loses focus.
+- Fix: on the page's key handler, `preventDefault` and handle Left, Right, Escape for the switch radios, and let Escape and the arrows through when the target is the stage's video; or blur the control after a click.
+
+**S3. A black box says nothing.** `b2-...scrub...png`, `dropped-spark-chromium-1920.png`. While the session travels, after a scrub and for a dropped candidate the stage clip is a 292 x 164 black rectangle with no caption. It reads as a broken video for the ten seconds of a run. Fix: a short line inside it ("The clip plays at the next moment", "No clip for a dropped candidate").
+
+**S4. The overview names a moment the map does not show.** The foot's frame is captioned "Moment 11, Confused, 6:17" while nothing is current and the map has no outline on 11. Small, but test 3 says one current moment. Fix: add "First problem" or outline pin 11 on the map in the overview.
+
+**S5. The event chips scroll, with no cue.** At 1440 (and 400 for Open, none) the list is 200 px tall in a 127 px box; the last chips ("Picked up Energy Drink", 7:48) are cut by the box edge and the scrollbar is hidden on macOS. Long labels end in "..." ("Kitchen cabinet 4 opened (Break ..."). Fix: a fade or "+n more" at the bottom edge, and a `title` with the full text.
+
+**S6. The heat view leaves a blank band under the floors at 1920 and 1440** (about 380 px, the bar's row). Intended ("its row stays"), but it reads as unfinished. Fix: show the heat legend there, or let the floors grow. Also without script the foot is an empty 200 px panel with only the legend (`noscript-spark.png`).
+
+**S7. Map time trails the clip by about half a second to a second at the start of a clip.** At moment 1 (clip 0:29-0:49) the readout showed 0:29, 0:31, 0:32, 0:34, 0:35, 0:37 while the video time was 1.5, 3.0, 4.5, 6.0, 7.5, 9.0 s (the whole-second readout floors). Inside the 1-second bar, but I did not measure the dot against frames.
+
+### What works (new in this round)
+
+- 960 x 1080 now reads in one screen after a click: floors, panel, a 309 x 174 clip with the game events, the timeline, the two tiles.
+- The overview's own frame plays in place and moves the list; Overview and Escape come back to the problems.
+- Event labels read as words, with the room in brackets; the chips and the dot label match.
+- Open (Muse Spark Open): same behavior in every flow above, five problems, 33 moments; its first-problem frame is moment 4.
+
+### What I did not check
+
+- `prefers-reduced-motion`, a screen reader, touch input at 400 px, and Safari proper (WebKit through Playwright only).
+- Contrast by measurement (the dimmed "later" chips on the light theme look low but legible).
+- Whether the dot sits on the right frame (only the readout against the video clock).
+- A full session run to the last moment; I ran about 40 s of it, plus Unplanned only for 9 s.
+- The 960 heat view and 960 dropped-candidate layouts beyond the sampled states; the Open page at 960 in dark beyond its first screens.
+- The recorded flow video, the findings comparison and the test count from task 35.
+- Whether any capture holds private frames beyond the page itself: captures stay in `/tmp/r22b/`, nothing from `runs/` is copied into the repo.
