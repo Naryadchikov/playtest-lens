@@ -133,6 +133,7 @@ def test_zones_events_and_a_dropped_pin_are_optional(tmp_path):
             "soon",
             "findings[0].check.resolved_after_s",
         ),
+        (["findings", 0, "check", "cause"], 5, "findings[0].check.cause"),
     ],
 )
 def test_load_rejects_bad_new_field(tmp_path, path, value, field):

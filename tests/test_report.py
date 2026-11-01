@@ -522,6 +522,14 @@ def test_missing_quote_shows_the_label(redesign):
     assert '<p class="quote none">No spoken comment.</p>' in _card(page, 7)
 
 
+def test_a_cause_shows_on_its_card_and_nowhere_else(redesign):
+    redesign["findings"][0]["check"]["cause"] = "the lever <hint> is out of sight"
+    page = render_html(redesign)
+    first = redesign["findings"][0]["rank"]
+    assert "<dt>Likely cause</dt><dd>the lever &lt;hint&gt; is out of sight</dd>" in _card(page, first)
+    assert page.count("<dt>Likely cause</dt>") == 1
+
+
 def test_span_with_one_time_at_both_ends_reads_as_one_time():
     assert render._span(39.2, 39.8) == "0:39"
     assert render._span(39, 54) == "0:39-0:54"

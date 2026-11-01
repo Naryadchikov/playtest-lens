@@ -70,6 +70,12 @@ def parse_check(text: str):
         raise ValueError("Checker reply has an invalid puzzle.")
     if "area" not in data or not (data["area"] is None or isinstance(data["area"], str)):
         raise ValueError("Checker reply has an invalid area.")
+    # The likely cause in the level. A reply cached before the prompt asked
+    # for it has none, which reads as null.
+    cause = data.get("cause")
+    if not (cause is None or isinstance(cause, str)):
+        raise ValueError("Checker reply has an invalid cause.")
+    data["cause"] = (cause or "").strip() or None
     return data
 
 
@@ -225,7 +231,7 @@ def run_checks(candidates, *, model, clip_for, transcript_for, call_for, templat
                 "clip": {"path": str(clip_path), "start_s": clip_start, "end_s": clip_end},
                 "game_state": verdict["game_state"],
                 "sources": [candidate.get("_source", "spark")],
-                "check": {"verdict": verdict["verdict"], "note": verdict["note"], "model": model, "friction": verdict["friction"], "resolved": verdict["resolved"], "puzzle": verdict["puzzle"], "area": verdict["area"]},
+                "check": {"verdict": verdict["verdict"], "note": verdict["note"], "model": model, "friction": verdict["friction"], "resolved": verdict["resolved"], "puzzle": verdict["puzzle"], "area": verdict["area"], "cause": verdict["cause"]},
             }
         )
     return findings

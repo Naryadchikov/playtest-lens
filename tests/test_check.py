@@ -8,6 +8,7 @@ from analyzer import log_candidates
 from analyzer.check import build_prompt, clamp_time, engine_name, log_slice_text, merge_candidates, merge_same_moment, parse_check, run_checks, store_clip_path, verified_quote
 
 FIXTURE = Path(__file__).parent / "fixtures" / "check_reply.json"
+CAUSE_FIXTURE = Path(__file__).parent / "fixtures" / "check_reply_cause.json"
 TEMPLATE = (Path(__file__).parent.parent / "analyzer" / "prompts" / "check.md").read_text(
     encoding="utf-8"
 )
@@ -71,6 +72,27 @@ def test_run_checks_keeps_and_drops_into_valid_findings(tmp_path):
         encoding="utf-8",
     )
     assert findings_module.load(path)["findings"][0]["quote"] == "I can't take it from here"
+
+
+def test_cause_is_kept_from_the_reply_and_null_when_missing_or_blank(tmp_path):
+    reply = json.loads(CAUSE_FIXTURE.read_text(encoding="utf-8"))
+    assert parse_check(reply["output_text"])["cause"] == "the gate the lever opens is out of sight from the lever"
+    old = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    assert parse_check(old["output_text"])["cause"] is None
+    blank = old["output_text"][:-1] + ', "cause": "  "}'
+    assert parse_check(blank)["cause"] is None
+    with pytest.raises(ValueError, match="invalid cause"):
+        parse_check(old["output_text"][:-1] + ', "cause": ["gate"]}')
+
+    findings = run_checks(
+        CANDIDATES[:1],
+        model="muse-spark-1.2-contributor",
+        clip_for=lambda c: (tmp_path / "c.mp4", c["time_s"] - 10, c["time_s"] + 10),
+        transcript_for=lambda clip: "did that do anything",
+        call_for=lambda clip, prompt: reply,
+        template=TEMPLATE,
+    )
+    assert findings[0]["check"]["cause"] == "the gate the lever opens is out of sight from the lever"
 
 
 def test_store_clip_path_is_relative_to_findings_dir():

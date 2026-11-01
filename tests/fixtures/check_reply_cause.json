@@ -1,0 +1,9 @@
+{
+  "id": "resp_check_cause_fixture",
+  "model": "muse-spark-1.2-contributor",
+  "output_text": "{\"verdict\": \"keep\", \"note\": \"Player pulls the lever twice, looks around and says nothing moved.\", \"summary\": \"Gate lever by the bridge: pulled it twice, saw nothing open and walked away.\", \"quote\": \"did that do anything\", \"game_state\": \"The gate behind the player opens out of view.\", \"kind\": \"confused\", \"friction\": \"stuck\", \"resolved\": \"abandoned\", \"puzzle\": null, \"area\": \"bridge\", \"cause\": \"the gate the lever opens is out of sight from the lever\"}",
+  "usage": {
+    "input_tokens": 100,
+    "output_tokens": 60
+  }
+}

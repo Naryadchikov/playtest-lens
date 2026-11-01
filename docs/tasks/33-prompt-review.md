@@ -62,3 +62,23 @@ Not merged: Sasha picks. The change sits uncommitted in the task's worktree (`t3
 - **Results (same candidates everywhere):** her Spark 24 kept before, 24 after (22 matched, the 8:19 vending surprise lost, as in the noise rerun; 5:17 becomes a suspected bug: a debug trigger volume visible in the build); summaries 19 to 13 words; causes on 21 of 24. His session: the lobby door, the CEO door and the lockpick cards he called wrong are gone in Spark before and after; Open v2 rates the lobby door and the key behind glass "blocked", which he called no real struggle.
 - **Spend:** $5.87 (Baseten $5.48, Meta about $0.40). Project total $24.00.
 - **Its recommendation:** v2 for Spark; the risk to judge is the tilt from "learning" toward "stuck" or "blocked".
+
+## Sasha's pick and the guard (orchestrator, Claude Opus 5.5, 2026-11-01)
+
+Sasha, T3 Code chat, 2026-11-01: "ok, agree with your recomendations, do it this way." The recommendation: one check prompt for both modes, v2 plus a friction guard, because v2 alone pushed moments toward stuck (her Spark 4 to 9 of 24, his Spark 3 to 6 of 8), against his earlier reads (her toilet at 20:04, his fake laptop at 3:03).
+
+- **Ported to main:** the v2 prompt, `check.py` keeps `check.cause`, `findings.py` validates it, one "Likely cause" line on the card in today's `report/render.py` (label a proposal), with the worktree's tests and fixture.
+- **The guard** (in `analyzer/prompts/check.md`): friction is judged from what the player does in the clip; learning also covers getting to know a menu or a control, looking around a room out of curiosity, and making sense of a twist the game staged; the cause never changes the friction.
+- **First try, discarded:** it also reworded stuck ("repeated failure at the way forward"), and every blocked became stuck (her Spark and Open 0 blocked), which on the page turns High into Medium. Stuck's sentence went back to the original; that run is kept as `*-guard.json`.
+- **Final run** (`runs/check/prompt33/*-guard2.json`, same candidates), kept and friction (learning / stuck / blocked):
+
+| Session, mode | Before | Rerun of before (noise) | v2 | v2 with the guard |
+|---|---|---|---|---|
+| Her Spark | 24: 16 / 4 / 4 | 23: 15 / 5 / 3 | 24: 12 / 9 / 3 | 24: 15 / 7 / 2 |
+| Her Open | 33: 24 / 6 / 3 | | 35: 25 / 8 / 2 | 32: 27 / 5 / 0 |
+| His Spark | 7: 3 / 3 / 1 | 7: 2 / 4 / 1 | 8: 1 / 6 / 1 | 8: 5 / 2 / 1 |
+| His Open | 14: 4 / 8 / 2 | | 12: 2 / 6 / 4 | 13: 6 / 5 / 2 |
+
+  Summaries average 12 to 14 words (19 to 21 before); most kept moments have a cause. Back to by design: her toilet (Open, 20:02), his fake laptop (Open, 3:04 and 3:10), his key in the display case (Open, 1:55), which he called no real struggle. New: her Break Room counters trapping her (Open, 13:11, stuck). Lost: her vending machine surprise (Spark, 8:19), which the noise rerun also lost.
+- **Spend:** $2.68 for the first guard run, $2.59 for the final one. Project total $29.27.
+- **Waiting for Sasha:** the 21 cards that changed, on `runs/check/prompt33/guard-judge.html` (copy my picks).

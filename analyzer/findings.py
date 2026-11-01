@@ -374,6 +374,9 @@ def check(data):
             _require(check, "model", f"{where}.check"), f"{where}.check.model"
         )
 
+        if "cause" in check:
+            _check_string_or_null(check["cause"], f"{where}.check.cause")
+
         if "resolved_after_s" in check and check["resolved_after_s"] is not None:
             _check_number(
                 check["resolved_after_s"], f"{where}.check.resolved_after_s"

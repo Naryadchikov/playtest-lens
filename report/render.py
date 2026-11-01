@@ -131,6 +131,8 @@ LABELS = {
     },
     "card": {
         "game": "Game",
+        # Proposal (Claude Opus 5.5, 2026-10-31, task 33), not Sasha's wording.
+        "cause": "Likely cause",
         "checker": "Checker",
         "no_quote": "No spoken comment.",
         "f9": "Player pressed F9 at {time}",
@@ -1580,6 +1582,8 @@ def _render_card(finding, markers_by_moment, floor_count, has_map):
         parts.append(_render_clip(clip))
 
     facts = []
+    if check.get("cause"):
+        facts.append(f'<dt>{LABELS["card"]["cause"]}</dt><dd>{_breakable(check["cause"])}</dd>')
     if finding.get("game_state") is not None:
         facts.append(f'<dt>{LABELS["card"]["game"]}</dt><dd>{_breakable(finding["game_state"])}</dd>')
     facts.append(f'<dt>{LABELS["card"]["checker"]}</dt><dd>{_breakable(check["note"])}</dd>')
