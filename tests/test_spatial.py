@@ -1,3 +1,4 @@
+import re
 import copy
 import json
 import math
@@ -279,9 +280,10 @@ def test_markers_render_as_f9_pins_linked_to_the_card():
     )
     assert [marker["floor"] for marker in data["markers"]] == [0, 0]
     page = render_html(data)
-    assert page.count('class="pin f9"') == 2
-    assert 'class="pin f9" id="pin-f1" href="#m1"' in page
-    assert '<g class="pin f9" id="pin-f2"' in page
+    # Each marker is a pin on the overview map and one in Watch.
+    assert page.count('class="pin f9"') == 4
+    assert page.count('class="pin f9" href="#m1" data-open="f1"') == 2
+    assert page.count('<g class="pin f9"') == 2
     assert 'class="f9line"' in page
 
 
@@ -373,12 +375,13 @@ def test_enriched_file_loads_and_renders(tmp_path):
 
     page = render_html(data)
     assert 'id="where"' in page
-    assert 'class="tiles"' in page
-    assert 'class="timeline"' in page
-    assert page.count('<figure class="floor"') == 2
+    assert 'class="ovmap multi"' in page
+    assert 'class="tl" id="tl"' in page
+    assert page.count('<div class="floor" data-floor="0"') == 2
+    assert page.count('<div class="floor" data-floor="1"') == 2
     assert 'fill="url(#heat-blob)"' in page
     assert "<polyline" in page
-    assert 'id="pin-m1"' in page
+    assert len(re.findall(r'class="pin k-[a-z]+" href="#m1" data-open="f1"', page)) == 2
     assert "3 moments worth a look: 1 stuck, 1 confused, 1 surprised." in page
 
 

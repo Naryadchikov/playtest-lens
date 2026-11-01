@@ -121,3 +121,50 @@ Not changed: "by design" (not decided), the two Play buttons (review 22's defect
 - Flows (play, stop, Escape, a problem, Next, arrows, scrub, filter, scroll by hand, a card's clip, a dropped mark, heat, Overview), both pages, both browsers: `/tmp/t35/flow-{spark,open}-{chromium,webkit}.log`, 0 fails.
 - The smaller defects, both pages, both browsers: `/tmp/t35/probes-spark.txt`, `/tmp/t35/probes-open.txt`.
 - Captures at 1920 x 1080, 1440 x 900, 960 x 1080 and 400 px, light and dark, Chromium and WebKit, Spark and Open: `/tmp/t35/shots/` (100 files).
+
+## Task 37: the mix, built
+
+Implementer: Claude Fable 5.1, a Claude Code subagent, 2026-11-01, on base commit 89abf7f. Brief in `docs/tasks/37-report-build-mix.md`; the layout is the one Sasha picked ("I agree with all, go mix, build it fully and properly"). Everything here is a proposal unless it quotes him. "by design" stays (his decided word).
+
+### What the page is now
+
+Two modes, never both on screen.
+
+- **Read** is a document to scroll. The verdict, one line of counts, Play the session. Then the first screen: the top problems on the left, the level's map on the right with every moment pinned by rank (by design smaller, dropped hollow), the whole route faint, the counts per kind as the legend, a floor switch (radios) and a "Time spent" switch that lays the heat over the plan. Then Across players when a file has it, then every kept moment in time order under its place headings (Area, Puzzle, Attempt, as before) with a still frame each (the clip paused on the moment's own frame), the summary in bold, the quote, the likely cause, the friction meter and the outcome, and "Game state and the checker's note" one click away. Then the dropped candidates in their own section, each with its reason. The footer names the model and the recording.
+- **Watch** is the player, opened by any still frame, a problem, a pin, a timeline mark or Play. The clip is about two thirds of the screen; under it the player's words as the headline, the summary, the likely cause, the meter and the outcome, the note one click away. The map is the other third: one floor at a time following the player (the other a click away until the player changes floor), the last 30 s strong over the whole route faint, the room, the floor and the last game event above it, "Before this moment" (the four game events up to the map time) under it. A slim timeline along the bottom: the rooms, the moments by rank, the dropped candidates hollow, the axis; a click sets the map's time. Back or Escape returns to the same place in Read with focus on the moment's still frame.
+- **Play the session** runs at 10x between moments and stops only at the unplanned ones (friction stuck or blocked), passing by-design moments and dropped candidates; while it walks, the map takes two thirds, the next clip's first frame sits dimmed under the running time, "Up next: moment 16 at 14:02, Archive, Ground floor" and a progress bar, and the bar reads "Walking to the next unplanned moment". Previous, Next and the arrow keys reach every kept moment.
+- `#m<rank>` and `#d-<id>` open Watch on that moment, paused; Back clears the hash. Without script the page is Read alone (every moment, every still frame, the floor and heat switches still work through CSS).
+
+### What was cut
+
+The side panel, the clip row, the event chips, the two floors side by side, the toolbars, the trail select, "Unplanned only", the separate heat view and its legend, the counts tiles, the header's meta list, the five-row timeline, the card's link to its pin, and their LABELS. The time-spent heat lives on the first-screen map only.
+
+### New strings (proposals, Claude Fable 5.1, 2026-11-01; Sasha decides the wording)
+
+- Header: "{length} recording, {kept} moments kept, {dropped} dropped." and "{time} stuck or blocked."; the hint "Runs at 10x between moments and stops at each unplanned one to play its clip. Previous and Next reach every moment."
+- Overview map: "Floor" (the switch's label), "Time spent" (his answer 1 says "time spent"), "Each number is the time spent at that spot.", "{n} dropped", "{time} stuck or blocked", the alt text "Top-down plan of the level, {floor}: every moment pinned by rank, the player's whole route faint."
+- Rows: "Game state and the checker's note", "Watch moment {rank}", "Watch the dropped candidate at {time}".
+- Footer: "How this page was made: {model} proposed moments from the video and the transcript; each was checked against its clip and the event log, and the page shows the file that check wrote."
+- Watch: "Back", "Clip" (the clip column's label), "Before this moment", "{room}, {floor}", "Between rooms", "Up next: moment {rank} at {time}, {place}", "Walking to the next unplanned moment", "End of the session", "Paused. Press Play or pick a moment.", "Space plays and pauses. Left and right arrows step between moments. Escape goes back.", the timeline's aria text, the map's alt text.
+- Kept from today: "Top problems" and its sub line, "The moments" and its sub line, "Dropped moments", "{n} candidates the check did not keep", "Reason: {note}", "Dropped by the check", "Play the session", "Previous", "Next", "Play", "Pause", "Moment {n} of {of}", "Dropped {n} of {of}", "Game events so far", "No game events yet.", "Game", "Checker", "Likely cause", "No spoken comment.", "Clip {span}", "{time} stuck", "Partly resolved", "Resolved", "Resolved after {time}", "Abandoned", "by design", "unplanned", "Ground floor", "Upper floor", "Across players" and its lines, "Player pressed F9 at {time}", "F9 marker at {time}", the pin and room bar words, "Puzzle {n}: {name}", "Attempt {n} ({span})" and the group notes.
+
+### What the analyzer supplies
+
+Nothing new: `analyzer/spatial.py` and `analyzer/findings.py` are unchanged. The page prints the verdict, the counts, `lost_s`, the problems, the moments, the reasons, the zones, the events, the heat and the route as the file holds them. It derives only presentation: the still frame's seek (`time_s - clip.start_s` as a media fragment), the place label from `beat` (or `check.area`), the attempt and the floor name, the room at a time from `zones`, the floor at a time from the route point, the last event and the four events before a time, the next unplanned moment after a time, and world to map pixels.
+
+### Known gaps and what I did not check
+
+- Inside Chromium's own media control buttons (Tab twice into the clip) the browser keeps the Escape key; Tab out first, or press Back. From the clip itself and everywhere else Escape works in both engines.
+- WebKit's Tab skips links (its default), so the pins and the problem places are reached by Tab only in Chromium; the still frames, the bar's buttons and the timeline marks are buttons everywhere.
+- Both engines pause a clip that is seeked within its first moments after loading. The page avoids its own seek on arrival and, when a reader seeks while the session plays, resumes after the seek.
+- Timeline marks are 22 px and pins about 30 px on screen, under the 44 px target, as before.
+- The map is portrait, so the wider column while the session walks does not make it taller at 16:9; the clip still steps back to a third.
+- Not checked: Firefox, Safari proper, VoiceOver, print, 200 percent zoom, a session with one floor or without a route (the test fixtures only), the Open pages beyond their first screen and one moment, the whole session at real speed (the probe jumped each clip to its end), the palette validator (no node here).
+
+### Evidence
+
+- Tests: `.venv/bin/python -m pytest -q`, 237 passed, no model call. `tests/test_report.py` is rewritten for the new page; `tests/test_spatial.py` has two page assertions updated.
+- The four final pages: `runs/final/*-report.html`, rendered with `.venv/bin/python -m report.render <findings.json> -o <page.html>`; no console errors in Chromium or WebKit.
+- Captures: `/tmp/t37/shots/` (her Spark page at 1920 x 1080 dark and light, 1440 x 900 light, 960 x 1080 dark in WebKit, 400 px light; states: first screen, time spent on, scrolled to the moments, a moment mid-clip, the Read page after Back, a dropped candidate, the session walking; his page first and moment at 1920 x 1080 dark and 960 x 1080 dark; the Open pages first and moment).
+- Flow: `/tmp/t37/flow.webm` (about 35 s at 1920 x 1080, her page: the first screen and the time-spent switch, the top problem's clip, the floor switch, Next to a by-design moment, Escape back to the same place, a dropped candidate and its reason, Play the session walking the map and stopping at an unplanned moment).
+- Probes (keyboard, focus, every kept moment by Next, the stops of Play, one floor at a time, the heat switch, deep links, three random moments read the same in Watch as in the file, no script): `/tmp/t37/a11y-chromium.log`, `/tmp/t37/a11y-webkit.log`.
