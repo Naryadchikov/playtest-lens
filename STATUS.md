@@ -15,16 +15,16 @@ Claude Opus 5.5 orchestrates and writes the code. Claude Fable 5.1 designs the r
 - **The GIF**: `runs/demo-site/site/report.gif` (21 s, 960 px, 6.8 MB, Player 1: Read, her code lock moment, Back, Play). The README loads it from the site, so this repo holds no tester media.
 - **README** rewritten; **docs/VIDEO_PLAN.md** rewritten for the new page, with where the video goes.
 
-## Next
+## Next (aim: finish on Tuesday, Sasha 2026-11-01: "lets aim to finihs all on Tuesday")
 
-1. The freeze review of the polished bundle: a fresh Grok (whole repo, public rules) and a fresh Sonnet (README, site, GIF); fix, round 2 at most.
-2. Sasha records and edits the video (docs/VIDEO_PLAN.md); its link goes into the README, the site's front page and the submission form.
-3. At his green light (PUBLIC_CHECKLIST): DECISIONS.md out of the history, both repos public, Pages on, signed-out check, submit by 18:00 CET on Wed 4 Nov (his own target; the deadline is 9:00 PM Eastern, 03:00 CET on Thu 5 Nov), X post.
-
-## Open questions for Sasha
-
-- Docs that go public quote his chat (PUBLIC_CHECKLIST step 8): he reads them once.
-- The DECISIONS.md history rewrite needs his word for that one force-push (PUBLIC_CHECKLIST, "DECISIONS.md removal").
+1. Done: the freeze review passed (Grok, repo: PASS; Sonnet, judge view: 8.6 PASS). docs/tasks/39-freeze-review.md.
+2. Sasha records and edits the video (docs/VIDEO_PLAN.md) and sends the link and the submission form's fields. The link goes under the GIF in the README and on the site's front page.
+3. Cleanup and green light, Monday or Tuesday (Sasha: "remember your recommendations, we will return to it all once I am ready either monday or tuesday"). The orchestrator's recommendations (Claude Opus 5.5), not yet decided:
+   - **Public docs, one pass with a diff for his yes** (PUBLIC_CHECKLIST step 8): keep the facts, drop the chat voice. In docs/PRIOR_WORK.md: "the author" instead of "Sasha" (lines 7, 65, 88; keep line 88's disclosure that the process rules adapt his rules from other projects); replace "To decide (Sasha): done" and its quote with one line ("The five files with unknown or non-commercial licenses were replaced or cut on `playtest-lens` in `1a381f1`."). Same pattern in AGENTS.md and the task briefs. His verbatim quotes that name the two testers (task briefs 33 and 39) are his call.
+   - **DECISIONS.md out of the history** (step 9): back up, rewrite while private, replace the links in the 27 files that point to it, his word for the one force-push of `main`, then flip. Also reword the 11 "Decisions:" commit messages in the same pass (one names Player 1's session).
+   - **The demo repo gets a short README** (what it is, the site and main repo links, the players' consent, COGITO as prior work). Offered, not yet asked for.
+   - **The front page keeps the still image**, not the GIF (load time, one action per page, link previews need a still).
+   - Then both repos public, Pages on (step 10), signed-out check of the README GIF and the site, submit, X post. Submit by 18:00 CET on Wed 4 Nov at the latest (his own target; the deadline is 9:00 PM Eastern, 03:00 CET on Thu 5 Nov).
 
 ## Credits used
 
