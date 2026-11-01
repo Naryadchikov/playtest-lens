@@ -2,9 +2,11 @@
 
 Watching a playtest takes as long as the playtest. A 20-minute session is 20 minutes of video, so small teams skip it or skim it, and the moment a player got lost is never seen by the person who built the room.
 
-Playtest Lens watches it for you. Meta's Muse Spark watches the recording and listens to the player thinking out loud, a second Spark pass has to prove every moment against its clip and the game's own event log, and you get one page: where the player was confused, stuck or surprised, on the level's map, with the clip and the player's own words.
+Playtest Lens watches it for you. Meta's Muse Spark watches the recording and listens to the player thinking out loud, a second Spark pass has to check every moment against its clip and the game's own event log, and you get one page: where the player was confused, stuck or surprised, on the level's map, with the clip and the player's own words.
 
-**[Open the live demo](https://naryadchikov.github.io/playtest-lens-demo/)**: three real playtests of the same level, no install.
+Muse Spark 1.2 takes each 2-minute window of the recording as video with its sound in one request, so the finding step needs no frame sampling and no separate speech model, and a 21-minute playtest costs about $0.18. On a playtest nothing was tuned on, it found the places where the developer saw the player slowed, flagged a possible bug, and rated the friction higher than he did.
+
+**[Open the live demo](https://naryadchikov.github.io/playtest-lens-demo/)**: two real playtests of the same level, no install.
 
 ![The report: the top problem, its clip with the player's words, the map with the route walked](https://naryadchikov.github.io/playtest-lens-demo/report.gif)
 
@@ -28,7 +30,7 @@ Each moment says whether the friction was **by design** (learning the controls, 
 
 ## On three real playtests
 
-Three playtests of the Lobby level of the COGITO demo, each player thinking out loud: two testers who had never seen it, and the developer's own run.
+Three playtests of the Lobby level of the COGITO demo, each player thinking out loud: two testers who had never seen it, and the developer's own run (in the numbers only, not on the demo site).
 
 | | Player 1 | Player 2 (held out) | The developer |
 |---|---|---|---|
@@ -40,7 +42,7 @@ Three playtests of the Lobby level of the COGITO demo, each player thinking out 
 
 Spark is Muse Spark 1.2 (contributor) through the Meta Model API; Open is Muse Spark Open on Baseten. The costs include Voice Transcribe.
 
-**Player 1** kept coming back to the Archive's code lock, three attempts in all. The page puts it first, "Archive, Code Lock", with the moment she says "I still still don't know what is the code", and shows that she got into the Archive through the toilet duct instead.
+**Player 1** kept coming back to the Archive's code lock, three attempts in all. The Spark page puts it first, "Archive, Code Lock", with the moment she says "I still still don't know what is the code", and shows that she got into the Archive through the toilet duct instead.
 
 **Player 2 was held out.** Nothing was tuned on this session. The developer watched him play and wrote notes blind, then compared them with the page:
 

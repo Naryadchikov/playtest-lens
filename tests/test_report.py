@@ -121,9 +121,14 @@ def test_model_line_names_the_model_the_file_holds(redesign):
     model = sorted({f["check"]["model"] for f in redesign["findings"]})
     names = ", ".join(render.LABELS["head"]["model_names"].get(m, m) for m in model)
     assert f'<p class="model" title="{html.escape(", ".join(model))}">Analyzed by <b>{html.escape(names)}</b></p>' in head
+    # The tab title names the model too, so a Spark tab and an Open tab of one session differ.
+    title = page[page.index("<title>") + 7:page.index("</title>")]
+    assert title.endswith(", " + html.escape(names))
     for finding in redesign["findings"]:
         finding["check"]["model"] = None
-    assert 'class="model"' not in render_html(redesign)
+    page = render_html(redesign)
+    assert 'class="model"' not in page
+    assert not page[page.index("<title>") + 7:page.index("</title>")].endswith(html.escape(names))
 
 
 def test_visible_words_come_from_labels(redesign, monkeypatch):

@@ -687,6 +687,11 @@ def _models(findings):
     return ", ".join(sorted({f["check"]["model"] for f in findings if f["check"].get("model")}))
 
 
+# The checker models as readers know them ("Muse Spark 1.2"), for the header and the tab title.
+def _model_names(models):
+    return ", ".join(LABELS["head"]["model_names"].get(m, m) for m in models.split(", ")) if models else ""
+
+
 def _render_meter(friction):
     rule = LABELS["friction"].get(friction)
     if rule is None:
@@ -753,7 +758,7 @@ def _render_header(data, kept, dropped):
     parts = ['<header class="head">', f"<h1>{heading}</h1>"]
     models = _models(data["findings"])
     if models:
-        names = ", ".join(words["model_names"].get(m, m) for m in models.split(", "))
+        names = _model_names(models)
         model_line = _e(words["model"]).replace("{model}", f"<b>{_e(names)}</b>")
         parts.append(f'<p class="model" title="{_e(models)}">{model_line}</p>')
     if summary.get("verdict"):
@@ -1778,6 +1783,9 @@ def render_html(data, maps_dir=None):
     title = _e(LABELS["title"].format(id=session["id"]))
     if session.get("player"):
         title += ", " + _e(session["player"])
+    model_names = _model_names(_models(data["findings"]))
+    if model_names:
+        title += ", " + _e(model_names)
     images = "".join(
         f'<image id="map-img-{i}" href="{uri}" x="0" y="0" width="{meta["px_width"]}" height="{meta["px_height"]}"/>'
         for i, (meta, uri) in enumerate(floors)
