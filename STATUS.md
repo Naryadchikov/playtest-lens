@@ -19,7 +19,7 @@ Claude Opus 5.5 orchestrates and writes the code. Claude Fable 5.1 designs the r
 
 1. The freeze review of the polished bundle: a fresh Grok (whole repo, public rules) and a fresh Sonnet (README, site, GIF); fix, round 2 at most.
 2. Sasha records and edits the video (docs/VIDEO_PLAN.md); its link goes into the README, the site's front page and the submission form.
-3. At his green light (PUBLIC_CHECKLIST): DECISIONS.md out of the history, both repos public, Pages on, signed-out check, submit by 18:00 CET on Wed 4 Nov (deadline 9:00 PM Eastern), X post.
+3. At his green light (PUBLIC_CHECKLIST): DECISIONS.md out of the history, both repos public, Pages on, signed-out check, submit by 18:00 CET on Wed 4 Nov (his own target; the deadline is 9:00 PM Eastern, 03:00 CET on Thu 5 Nov), X post.
 
 ## Open questions for Sasha
 

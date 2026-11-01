@@ -4,7 +4,7 @@ Author of this brief: Claude Opus 5.5 (orchestrator, Claude Code in T3 Code), 20
 
 ## Why (Sasha's words, verbatim, T3 Code chat, 2026-11-01; DECISIONS.md holds them)
 
-He looked at today's page (`runs/demo-site/site/index.html#m1`, his own session; his screenshot is `/Users/sashanaria/.t3/userdata/attachments/c7ffa864-1b65-4b94-83e6-9bcac395992a-2d6dae7b-b86b-4034-b1e4-6e95aa76e78a.png`) and said:
+He looked at today's page (`runs/demo-site/site/index.html#m1`, his own session; his screenshot is a T3 Code chat attachment, not in the repo) and said:
 
 - "lets iterate on the layout more, ask fable to improve redability and remove not needed elemnts, it is too busy now. as I said, dont hesitate to pivot on some desitions and make things from sratch, I think we are ok to do couple of new mocks and choose the best UX wise."
 - "also I think once the reviewed beat is reached on timeline, the most important thing on the screen should be the video, and it should be in one place, not in 2 as it is now, then map should be the second prio thing, kinda like 2/3 of the screen is video with players quote and possible problem, another 1/3 is the map with the context around seing where the player is, what was doing before, etc. and maybe lower side still can be timeline."

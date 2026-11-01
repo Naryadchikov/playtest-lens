@@ -35,7 +35,7 @@ Change as little as the evidence needs. Several small prompt edits tested togeth
 
 ## Protocol
 
-1. **Worktree setup:** in your worktree root, `ln -s /Users/sashanaria/Documents/CodeProjects/meta-hackathon-v2/runs runs`, the same for `recordings` and `.venv`. The model client caches in `runs/cache/` and logs to `runs/costs.jsonl`, so a call made before is free. Write every new output under `runs/check/prompt33/` and `runs/spark_test/prompt33/` with names that say session, mode and before or after; never overwrite an existing file in `runs/`.
+1. **Worktree setup:** in your worktree root, `ln -s <main checkout>/runs runs`, the same for `recordings` and `.venv`. The model client caches in `runs/cache/` and logs to `runs/costs.jsonl`, so a call made before is free. Write every new output under `runs/check/prompt33/` and `runs/spark_test/prompt33/` with names that say session, mode and before or after; never overwrite an existing file in `runs/`.
 2. **Baselines with today's prompts:** hers already exist (`runs/check/person2-findings.json`, `-open.json`; a rerun should come from the cache at $0: confirm). His need one run per mode with today's prompts (his older findings files used older prompts).
 3. **After:** edit the prompts (and the minimal code for item 2 if you test it), then run both sessions in both modes.
 4. **Compare, per session and mode:** candidates, kept, dropped, kinds, friction; moments matched before and after within 15 s, added, removed; for her Spark run, each reference card kept or lost; for his session, each of his 2026-10-28 points fixed or not. Render before and after pages with `.venv/bin/python -m report.render` into `runs/check/prompt33/`.

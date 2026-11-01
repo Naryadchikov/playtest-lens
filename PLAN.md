@@ -13,13 +13,13 @@ You give it playtest recordings (the screen plus the player thinking out loud) a
 ## What we build
 
 1. **Record.** A tester plays the build and records the screen and mic (OBS or any screen recorder). The game writes an event log as it runs, and flashes white and beeps when the player presses New Game and at each level load, so the video and the log can be lined up.
-2. **Find candidates, two ways.** Muse Spark watches the video and listens to the player in one pass and lists moments with a time and a reason. The event log flags its own signals: deaths, retries, long idle stretches, walking back the way you came.
+2. **Find candidates, two ways.** Muse Spark watches the video and listens to the player in one pass and lists moments with a time and a reason. The event log flags its own signals: deaths, retries, long idle stretches, walking back the way you came. (Built in `analyzer/log_candidates.py`; the one command leaves it off, so the candidates come from Spark and the check reads the log slice.)
 3. **Check each candidate.** A second Spark call gets a 20-second clip, the player's words and that slice of the event log, and must answer keep or drop, with evidence. Dropped moments are listed, not hidden.
 4. **Combine across players**, for example: "3 of 4 players stuck at the lab door, for 2:10 on average."
 5. **Report.** One web page: a timeline per session, findings ranked, each with clip, quote, game state and check note, plus the summary across players.
 6. **Score.** Compare the findings with Sasha's notes. He watches each recording once, blind, before seeing the report, and marks where the player struggled. The demo shows how many of his notes the tool found, and what else it found.
 
-**Open-weights mode**, only if there's time: the same pipeline on Muse Spark Open (sampled frames plus audio), through Baseten or Modal credits, or locally if it fits.
+**Open-weights mode**, only if there's time: the same pipeline on Muse Spark Open, through Baseten or Modal credits, or locally if it fits. Built on Baseten: each request sends the clip as video plus a separate wav.
 
 ## The test game
 
@@ -40,7 +40,7 @@ An AI that plays the game; anything for Unreal; anything from Sasha's other game
 
 ## Who builds what
 
-The split changed twice; the current one is in AGENTS.md, "Who does what", with Sasha's quotes in DECISIONS.md (2026-10-26, 2026-10-27, 2026-10-28). Since 2026-10-28: Claude Sonnet orchestrates, DeepSeek V4.1 Flash 1017 on Modal writes the analyzer and report, Grok 4.7 through Cursor reviews and builds the Godot side and tools, Muse Wonder is not called. Each task is briefed and recorded in `docs/tasks/`.
+The split changed twice; the current one is in AGENTS.md, "Who does what", with Sasha's quotes in DECISIONS.md (2026-10-26, 2026-10-27, 2026-10-28). From 2026-10-28 to 2026-10-31: Claude Sonnet orchestrated, DeepSeek V4.1 Flash 1017 on Modal wrote parts of the analyzer and report, Grok 4.7 through Cursor reviewed and built the Godot side and tools. Since 2026-10-31: Claude Opus 5.5 orchestrates and writes the code, Claude Fable 5.1 designed the report page, Grok 4.7 reviews the code and Claude Sonnet 5.5 reviews the page. Muse Wonder is not called. Each task is briefed and recorded in `docs/tasks/`.
 
 ## Which Meta models the product uses
 

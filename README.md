@@ -23,8 +23,8 @@ Each moment says whether the friction was **by design** (learning the controls, 
 
 ## How it works
 
-1. **Record.** The tester plays your Godot build and records the screen with the microphone on, with OBS or any screen recorder. The [Playtest Lens add-on](godot/addons/playtest_lens/) writes an event log as they play: inputs, position and view, rooms and puzzles entered, doors, pickups, quest steps. It flashes white and beeps at New Game and at each level load, so the video and the log line up to the frame.
-2. **Find.** Muse Spark watches the video with its sound in 2-minute windows and lists moments worth a look, each with a time and a reason. The log adds its own signals: retries, long idle stretches, walking back the way you came.
+1. **Record.** The tester plays your Godot build and records the screen with the microphone on, with OBS or any screen recorder. The [Playtest Lens add-on](godot/addons/playtest_lens/) writes an event log as they play: inputs, position and view, rooms and puzzles entered, doors, pickups, quest steps. It flashes white and beeps at each level load (and the COGITO adapter also at New Game), so the video and the log line up to the frame.
+2. **Find.** Muse Spark watches the video with its sound in 2-minute windows and lists moments worth a look, each with a time and a reason.
 3. **Check.** For each moment, a second Spark call gets the 20-second clip, the player's words and that slice of the event log, and must keep or drop it with evidence: what happened, the friction, whether the player got past it, and the likely cause in the level. Muse Voice Transcribe writes down what the player said, and a quote reaches the page only when it is in that transcript. Dropped moments are listed with the reason, not hidden.
 4. **Report.** The findings file is the single truth: it holds every moment, the route, the rooms and the summary, and the page only draws it. One command runs it all, and every model reply is cached, so a rerun costs nothing.
 
