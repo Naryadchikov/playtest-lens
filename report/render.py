@@ -456,6 +456,18 @@ a.chip:hover { border-color: var(--accent); }
 @media (max-width: 1100px) {
   .main { grid-template-columns: minmax(0, 5fr) minmax(0, 2fr); gap: var(--s4); padding: var(--s3) var(--s4); }
 }
+/* Half a screen, at a moment: the events before it fill the space under the
+   caption, and the map takes the whole right column. */
+@media (max-width: 1100px) and (min-width: 721px) {
+  .watch:not(.travelling) .main { grid-template-rows: auto auto auto minmax(0, 1fr); grid-template-areas: "clip ctx" "clip map" "cap map" "ev map"; row-gap: var(--s3); }
+  .watch:not(.travelling) .screen, .watch:not(.travelling) .side { display: contents; }
+  .watch:not(.travelling) .clipbox { grid-area: clip; align-self: start; }
+  .watch:not(.travelling) .caption { grid-area: cap; overflow: visible; }
+  .watch:not(.travelling) .context { grid-area: ctx; }
+  .watch:not(.travelling) .maps { grid-area: map; align-self: start; }
+  .watch:not(.travelling) .maps .floor svg { width: 100%; height: auto; max-height: none; }
+  .watch:not(.travelling) .before { grid-area: ev; }
+}
 @media (max-width: 900px) {
   .first { grid-template-columns: 1fr; }
   .ovmap .floor svg { max-height: 70vh; }
