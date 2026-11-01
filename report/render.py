@@ -76,10 +76,20 @@ LABELS = {
     # Proposals (Claude Opus 5.5, 2026-11-01, from mockup B), not Sasha's wording.
     "floors": ("Ground floor", "Upper floor"),
     "floor_n": "Floor {n}",
+    # Single words the counts and the pins use; pluralised by _plural.
+    "words": {
+        "attempt": "attempt",
+        "visit": "visit",
+        "moment": "moment",
+        # Proposal (Claude Fable 5.1, 2026-11-01), not Sasha's wording. Links to the Dropped section.
+        "dropped": "{n} dropped",
+        "f9": "F9",
+    },
     "head": {
         # Proposals (Claude Fable 5.1, 2026-11-01), not Sasha's wording.
-        "line": "{length} recording, {kept} moments kept, {dropped} dropped.",
+        "line": "{length} recording, {kept} moments kept, {dropped}.",
         "lost": "{time} stuck or blocked.",
+        "model": "Analyzed with {model}.",
         "play_session": "Play the session",
         "play_hint": "Runs at 10x between moments and stops at each unplanned one to play its clip. Previous and Next reach every moment.",
     },
@@ -87,9 +97,6 @@ LABELS = {
     "problems": {
         "title": "Top problems",
         "sub": "Places where the player was stuck or blocked, worst first.",
-        "attempt": "attempt",
-        "visit": "visit",
-        "moment": "moment",
         # Proposal (Claude Fable 5.1, 2026-11-01), not Sasha's wording.
         "lost": "{time} stuck",
         "mixed": "Partly resolved",
@@ -101,7 +108,6 @@ LABELS = {
         "floor_switch": "Floor",
         "heat": "Time spent",
         "heat_note": "Each number is the time spent at that spot.",
-        "dropped": "{n} dropped",
         "lost": "{time} stuck or blocked",
     },
     "across": {
@@ -138,6 +144,8 @@ LABELS = {
         "f9": "Player pressed F9 at {time}",
         "pin": "Moment {rank}, {kind}, {time}",
         "drop_pin": "Dropped, {kind}, {time}",
+        # Proposal (Claude Fable 5.1, 2026-11-01), not Sasha's wording: a pin clamped to the map's edge.
+        "edge_pin": "{label}, outside the mapped area",
         "clip": "Clip {span}",
         # Proposals (Claude Fable 5.1, 2026-11-01), not Sasha's wording.
         "more": "Game state and the checker's note",
@@ -173,8 +181,11 @@ LABELS = {
         "none_yet": "No game events yet.",
         "where": "{room}, {floor}",
         "between": "Between rooms",
+        "off_map": "Outside the mapped area",
+        "off_map_note": "This moment is outside the mapped area. Its pin sits at the map's edge.",
         "floor_switch": "Floor",
         "up_next": "Up next: moment {rank} at {time}, {place}",
+        "up_next_head": "Up next",
         "walking": "Walking to the next unplanned moment",
         "end": "End of the session",
         "paused": "Paused. Press Play or pick a moment.",
@@ -263,11 +274,12 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 /* ------------------------------------------------------------ Read */
 .read { max-width: 1180px; margin: 0 auto; padding: var(--s6) var(--s5) 80px; }
 .head h1 { font-size: var(--fs-l); font-weight: 700; color: var(--ink2); }
+.head .model { color: var(--muted); font-size: var(--fs-s); margin-top: var(--s1); }
 .head .verdict { font-size: var(--fs-xl); font-weight: 700; line-height: 1.2; margin-top: var(--s3); letter-spacing: -.01em; max-width: 36ch; }
 .head .meta { color: var(--muted); margin-top: var(--s2); }
 .head .start { margin-top: var(--s5); display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap; }
 .head .hint { color: var(--muted); font-size: var(--fs-s); max-width: 44em; }
-.read h2 { font-size: var(--fs-m); font-weight: 700; margin-top: var(--s6); }
+.read h2 { font-size: var(--fs-m); font-weight: 700; margin-top: var(--s6); scroll-margin-top: var(--s4); }
 .read .sub { color: var(--muted); font-size: var(--fs-s); margin-top: var(--s1); }
 /* The first screen: the problems with the level beside them. */
 .first { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 36%); gap: var(--s5) var(--s6); align-items: start; margin-top: var(--s4); }
@@ -354,7 +366,8 @@ a.chip:hover { border-color: var(--accent); }
 .bar .count { font-family: var(--mono); font-size: var(--fs-s); color: var(--ink2); text-align: center; font-variant-numeric: tabular-nums; }
 .bar .nav { justify-self: end; display: flex; gap: var(--s2); }
 .bar .nav button { border: 1px solid var(--line); background: var(--sunk); border-radius: 8px; padding: .4em .9em; font-weight: 600; }
-.bar .nav .primary { border-color: transparent; min-width: 6em; }
+/* The main control keeps the accent: this rule outranks .bar .nav button. */
+.bar .nav .primary { border-color: transparent; min-width: 6em; background: var(--accent); color: var(--on-accent); }
 #play .when-playing { display: none; } .watch.playing #play .when-paused { display: none; } .watch.playing #play .when-playing { display: inline; }
 .main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--s5); padding: var(--s4) var(--s5); min-height: 0; }
 .screen { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--s3); min-width: 0; min-height: 0; }
@@ -371,22 +384,29 @@ a.chip:hover { border-color: var(--accent); }
 .caption .quote:not(.none) { order: -1; font-size: clamp(1.15rem, 1.7vw, 1.6rem); font-weight: 700; font-style: normal; line-height: 1.3; color: var(--ink); border-left: 4px solid var(--accent); }
 .caption .summary { font-size: var(--fs-m); font-weight: 500; color: var(--ink2); }
 .caption .quote.none { font-size: var(--fs-s); }
+/* While the session walks, the column previews the next stop. */
+.caption .upnext { order: -3; font-size: var(--fs-s); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
 .side { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--s3); min-height: 0; min-width: 0; }
 .context { display: grid; gap: 2px; }
 .context .where { font-weight: 700; font-size: var(--fs-m); min-height: 1.3em; }
 .context .lastev { font-size: var(--fs-s); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.3em; }
 .context .lastev time { font-family: var(--mono); margin-right: .6em; }
+.context .offmap { font-size: var(--fs-s); color: var(--ink2); border-left: 3px dashed var(--line); padding-left: var(--s2); margin-top: var(--s1); }
 .context .floors-switch { margin-top: var(--s1); justify-self: start; }
 .maps { min-height: 0; display: grid; }
 .maps .floor { margin: 0; min-height: 0; background: var(--map-bg); border-radius: 10px; overflow: hidden; display: grid; place-items: center; }
 .maps .floor svg { max-height: 100%; max-width: 100%; height: 100%; width: auto; display: block; }
-.route .case { fill: none; stroke: #000; stroke-opacity: .5; stroke-width: 16; stroke-linejoin: round; stroke-linecap: round; }
-.route .line { fill: none; stroke: #c9d2ea; stroke-opacity: .32; stroke-width: 7; stroke-linejoin: round; stroke-linecap: round; }
+/* The whole route recedes (no casing, thin and faint); the 30 s trail stays loud. */
+.route .line { fill: none; stroke: #c9d2ea; stroke-opacity: .22; stroke-width: 5; stroke-linejoin: round; stroke-linecap: round; }
 .strong polyline { fill: none; stroke: #fff; stroke-width: 14; stroke-linejoin: round; stroke-linecap: round; }
 .strong .case { stroke: #000; stroke-opacity: .6; stroke-width: 24; }
+/* Only a pin's own disc takes a click: the decoration never does. */
+.route, .strong, .dot, .heat, .pin .ring, .pin .edge-mark { pointer-events: none; }
+.pin .hit { fill: transparent; stroke: none; }
 .pin { cursor: pointer; color: var(--p); opacity: .6; }
 .pin use { fill: var(--p); stroke: #000; stroke-opacity: .55; stroke-width: 2; }
 .pin .ring { fill: none; stroke: #fff; stroke-width: 6; opacity: 0; }
+.pin .edge-mark { fill: none; stroke: #fff; stroke-width: 4; stroke-dasharray: 10 8; opacity: .9; }
 .pin text { font: 700 44px var(--mono); fill: #10131a; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
 .pin.soft text { font-size: 34px; }
 .pin.hollow use { fill: none; stroke: var(--p); stroke-width: 4; }
@@ -440,6 +460,8 @@ a.chip:hover { border-color: var(--accent); }
   .side { grid-template-rows: auto 60vh auto; }
   .bar { grid-template-columns: auto 1fr auto; }
   .bar .count { display: none; }
+  /* Half the axis labels on a narrow track, so they never collide. */
+  .r-axis span:nth-child(even) { display: none; }
 }
 @media (max-width: 640px) {
   .m, .d { grid-template-columns: 1fr; }
@@ -677,6 +699,18 @@ def _render_friction_line(check):
 
 # ------------------------------------------------------------------ Read
 
+# The counts the page prints: the summary's when the file has one, else
+# the lists' lengths (a file without a summary has no other count).
+def _counts(data, kept, dropped):
+    summary = data.get("summary") or {}
+    return summary.get("kept", len(kept)), summary.get("dropped", len(dropped))
+
+
+# "{n} dropped" as a link to the Dropped section (a scroll, never Watch).
+def _dropped_link(count):
+    return f'<a href="#dropped">{_e(LABELS["words"]["dropped"].format(n=count))}</a>'
+
+
 def _render_header(data, kept, dropped):
     session = data["session"]
     summary = data.get("summary") or {}
@@ -685,12 +719,18 @@ def _render_header(data, kept, dropped):
     if session.get("player"):
         heading += f": {_e(session['player'])}"
     parts = ['<header class="head">', f"<h1>{heading}</h1>"]
+    models = _models(data["findings"])
+    if models:
+        model_line = _e(words["model"]).replace("{model}", f'<span class="mono">{_e(models)}</span>')
+        parts.append(f'<p class="model">{model_line}</p>')
     if summary.get("verdict"):
         parts.append(f'<p class="verdict">{_e(summary["verdict"])}</p>')
-    line = words["line"].format(length=_mss(session["duration_s"]), kept=len(kept), dropped=len(dropped))
+    kept_count, dropped_count = _counts(data, kept, dropped)
+    line = _e(words["line"].format(length=_mss(session["duration_s"]), kept=kept_count, dropped="{dropped}"))
+    line = line.replace("{dropped}", _dropped_link(dropped_count) if dropped else _e(LABELS["words"]["dropped"].format(n=dropped_count)))
     if summary.get("lost_s"):
-        line += " " + words["lost"].format(time=_mss(summary["lost_s"]))
-    parts.append(f'<p class="meta">{_e(line)}</p>')
+        line += " " + _e(words["lost"].format(time=_mss(summary["lost_s"])))
+    parts.append(f'<p class="meta">{line}</p>')
     if any(f.get("clip") is not None for f in kept):
         parts.append(
             f'<p class="start" data-needs-script hidden><button type="button" class="primary" id="play-session">'
@@ -716,8 +756,8 @@ def _render_problems(problems, by_id):
         is_puzzle = bool(first and (first.get("beat") or {}).get("puzzle"))
         bits = [
             _render_meter(problem["friction"]),
-            _e(_plural(problem["attempts"], words["attempt" if is_puzzle else "visit"])),
-            _e(_plural(len(problem["moments"]), words["moment"])),
+            _e(_plural(problem["attempts"], LABELS["words"]["attempt" if is_puzzle else "visit"])),
+            _e(_plural(len(problem["moments"]), LABELS["words"]["moment"])),
         ]
         if problem["lost_s"]:
             bits.append(_e(words["lost"].format(time=_mss(problem["lost_s"]))))
@@ -772,8 +812,8 @@ def _route_runs(points):
     return runs
 
 
-# One floor's share of the route: each run drawn as a casing and a line;
-# the line carries the run's times for the script's dot and trail.
+# One floor's share of the route: each run drawn as one faint line that
+# carries the run's times for the script's dot and trail.
 def _render_route(runs, floor, meta):
     parts = ['<g class="route" aria-hidden="true">']
     for run_floor, points in runs:
@@ -781,10 +821,40 @@ def _render_route(runs, floor, meta):
             continue
         pixels = " ".join("{:.1f},{:.1f}".format(*world_to_px(meta, p[1], p[2])) for p in points)
         stamps = " ".join(str(p[0]) for p in points)
-        parts.append(f'<polyline class="case" points="{pixels}"/>')
         parts.append(f'<polyline class="line" data-t="{stamps}" points="{pixels}"/>')
     parts.append("</g>")
     return parts
+
+
+# Where a pin is drawn: its own pixels on the map, or, for a point outside
+# the drawn area (another scene at the map's edge), clamped just inside
+# the edge and marked, so the moment is visible and says so.
+def _pin_spot(meta, at, radius):
+    x, y = world_to_px(meta, at["x"], at["z"])
+    width, height = meta["px_width"], meta["px_height"]
+    outside = x < 0 or y < 0 or x > width or y > height
+    if outside:
+        margin = radius + 8
+        x = min(max(x, margin), width - margin)
+        y = min(max(y, margin), height - margin)
+    return x, y, outside
+
+
+# A pin: a transparent disc first (the one thing that takes the click, so
+# a hollow pin and a pin under a neighbour's ring still hit their own
+# <a>), the focus ring, the edge mark when clamped, then the shape.
+def _pin_open(css, href, finding, label, radius, meta):
+    x, y, outside = _pin_spot(meta, finding["at"], radius)
+    if outside:
+        css += " edge"
+        label = LABELS["card"]["edge_pin"].format(label=label)
+    body = f'<circle class="hit" r="{radius}"/><circle class="ring" r="{radius + 14}"/>'
+    if outside:
+        body += f'<circle class="edge-mark" r="{radius + 6}"/>'
+    return (
+        f'<a class="{css}" href="{href}" data-open="{_e(finding["id"])}" '
+        f'aria-label="{_e(label)}" transform="translate({x:.1f} {y:.1f})">{body}'
+    )
 
 
 def _render_pins(kept, dropped, markers, floor, meta, id_to_rank):
@@ -794,12 +864,9 @@ def _render_pins(kept, dropped, markers, floor, meta, id_to_rank):
         if at is None or at["floor"] != floor:
             continue
         info = _kind(finding["kind"])
-        x, y = world_to_px(meta, at["x"], at["z"])
         parts.append(
-            f'<a class="pin hollow k-{info["class"]}" href="#d-{_e(finding["id"])}" data-open="{_e(finding["id"])}" '
-            f'aria-label="{_e(_drop_words(finding))}" transform="translate({x:.1f} {y:.1f})">'
-            f'<circle class="ring" r="{DROP_R + 12}"/><use href="#sh-{info["class"]}" x="-{DROP_R}" y="-{DROP_R}" '
-            f'width="{2 * DROP_R}" height="{2 * DROP_R}"/></a>'
+            _pin_open(f'pin hollow k-{info["class"]}', f'#d-{_e(finding["id"])}', finding, _drop_words(finding), DROP_R, meta)
+            + f'<use href="#sh-{info["class"]}" x="-{DROP_R}" y="-{DROP_R}" width="{2 * DROP_R}" height="{2 * DROP_R}"/></a>'
         )
     for finding in kept:
         at = finding.get("at")
@@ -807,16 +874,14 @@ def _render_pins(kept, dropped, markers, floor, meta, id_to_rank):
             continue
         info = _kind(finding["kind"])
         rank = finding["rank"]
-        x, y = world_to_px(meta, at["x"], at["z"])
         soft = _is_soft(finding)
         radius = SOFT_R if soft else PIN_R
         dy = (6 if soft else 8) if info["class"] == "bug" else 2
         css = f'pin k-{info["class"]}' + (" soft" if soft else "")
         parts.append(
-            f'<a class="{css}" href="#m{rank}" data-open="{_e(finding["id"])}" '
-            f'aria-label="{_e(_pin_words(finding))}" transform="translate({x:.1f} {y:.1f})">'
-            f'<circle class="ring" r="{radius + 14}"/><use href="#sh-{info["class"]}" x="-{radius}" y="-{radius}" '
-            f'width="{2 * radius}" height="{2 * radius}"/><text y="{dy}">{rank}</text></a>'
+            _pin_open(css, f"#m{rank}", finding, _pin_words(finding), radius, meta)
+            + f'<use href="#sh-{info["class"]}" x="-{radius}" y="-{radius}" width="{2 * radius}" height="{2 * radius}"/>'
+            f'<text y="{dy}">{rank}</text></a>'
         )
     for marker in markers:
         if marker["floor"] != floor:
@@ -825,7 +890,8 @@ def _render_pins(kept, dropped, markers, floor, meta, id_to_rank):
         target = id_to_rank.get(marker.get("moment")) if marker.get("moment") else None
         label = _e(LABELS["watch"]["marker"].format(time=_mss(marker["t"])))
         body = (
-            f'<use href="#sh-f9" x="-{F9_R}" y="-{F9_R}" width="{2 * F9_R}" height="{2 * F9_R}"/><text>F9</text>'
+            f'<circle class="hit" r="{F9_R}"/><use href="#sh-f9" x="-{F9_R}" y="-{F9_R}" width="{2 * F9_R}" height="{2 * F9_R}"/>'
+            f'<text>{_e(LABELS["words"]["f9"])}</text>'
         )
         at = f'transform="translate({x:.1f} {y:.1f})"'
         if target is not None:
@@ -905,7 +971,7 @@ def _render_overview_map(data, floors, kept, dropped, markers, id_to_rank):
     if dropped:
         legend.append(
             f'<li><span class="mk hollow k-{_kind(dropped[0]["kind"])["class"]}">{_shape(dropped[0]["kind"])}</span>'
-            f'{_e(words["dropped"].format(n=len(dropped)))}</li>'
+            f'{_dropped_link(_counts(data, kept, dropped)[1])}</li>'
         )
     if summary.get("lost_s"):
         legend.append(f'<li class="lost">{_e(words["lost"].format(time=_mss(summary["lost_s"])))}</li>')
@@ -1039,7 +1105,7 @@ def _render_moment(finding, markers_by_moment, floor_count):
     if fric:
         body.append(fric)
     for marker in markers_by_moment.get(finding["id"], []):
-        body.append(f'<p class="f9line"><b>F9</b>{_e(words["f9"].format(time=_mss(marker["t"])))}</p>')
+        body.append(f'<p class="f9line"><b>{_e(LABELS["words"]["f9"])}</b>{_e(words["f9"].format(time=_mss(marker["t"])))}</p>')
     facts = []
     if finding.get("game_state") is not None:
         facts.append(f'<dt>{_e(words["game"])}</dt><dd>{_breakable(finding["game_state"])}</dd>')
@@ -1124,12 +1190,12 @@ def _render_moments(kept, markers_by_moment, floor_count):
         start, end = _group_span(group["findings"])
         if any(key[0] is not None for key in attempt_keys):
             note = words["attempt_note"].format(
-                attempts=_plural(len(attempt_keys), "attempt"),
-                moments=_plural(len(group["findings"]), "moment"),
+                attempts=_plural(len(attempt_keys), LABELS["words"]["attempt"]),
+                moments=_plural(len(group["findings"]), LABELS["words"]["moment"]),
                 span=_span(start, end),
             )
         else:
-            note = words["note"].format(moments=_plural(len(group["findings"]), "moment"), span=_span(start, end))
+            note = words["note"].format(moments=_plural(len(group["findings"]), LABELS["words"]["moment"]), span=_span(start, end))
         out.append(f'<section class="moments-group" aria-labelledby="g{index}">')
         out.append(f'<h3 id="g{index}">{_e(_group_title(beat))}<span class="note">{_e(note)}</span></h3>')
         for attempt_key in attempt_keys:
@@ -1145,7 +1211,7 @@ def _render_moments(kept, markers_by_moment, floor_count):
     return out
 
 
-def _render_dropped(dropped, floor_count):
+def _render_dropped(dropped, floor_count, dropped_count):
     words = LABELS["card"]
     items = []
     for finding in dropped:
@@ -1170,7 +1236,7 @@ def _render_dropped(dropped, floor_count):
     return [
         '<section class="dropped" aria-labelledby="dropped">',
         f'<h2 id="dropped">{_e(LABELS["dropped"]["title"])}</h2>',
-        f'<p class="sub">{_e(LABELS["dropped"]["note"].format(n=len(dropped)))}</p>',
+        f'<p class="sub">{_e(LABELS["dropped"]["note"].format(n=dropped_count))}</p>',
         *items,
         "</section>",
     ]
@@ -1269,7 +1335,7 @@ def _render_watch(data, floors, kept, dropped, markers, id_to_rank):
     session = data["session"]
     attrs = " ".join(
         f'data-w-{key.replace("_", "-")}="{_e(words[key])}"'
-        for key in ("count", "count_dropped", "where", "between", "up_next", "walking", "end", "paused", "before", "so_far")
+        for key in ("count", "count_dropped", "where", "between", "off_map", "up_next", "up_next_head", "walking", "end", "paused", "before", "so_far")
     )
     parts = [
         f'<div class="watch" id="watch" role="dialog" aria-modal="true" aria-labelledby="w-count" '
@@ -1292,6 +1358,7 @@ def _render_watch(data, floors, kept, dropped, markers, id_to_rank):
         "</section>",
         '<aside class="side">',
         '<div class="context"><p class="where" id="where"></p><p class="lastev" id="lastev"></p>',
+        f'<p class="offmap" id="offmap" hidden>{_e(words["off_map_note"])}</p>',
     ]
     if len(floors) > 1:
         buttons = "".join(
@@ -1334,10 +1401,10 @@ SCRIPT = r"""
   $$("[data-needs-script]").forEach(function (el) { el.removeAttribute("hidden"); });
   if (!watch) return;
   var video = $("#clip"), travel = $("#travel"), caption = $("#caption"), count = $("#w-count");
-  var where = $("#where"), lastev = $("#lastev"), beforeHead = $("#before-h");
+  var where = $("#where"), lastev = $("#lastev"), offmap = $("#offmap"), beforeHead = $("#before-h");
   var playBtn = $("#play"), cursor = $("#cursor"), past = $("#past"), track = $("#track");
   var beforeNone = $("#before-none");
-  var duration = +watch.dataset.duration, SPEED = 10, TRAIL = 30, EVENTS_SHOWN = 4, EVENT_FRESH = 60;
+  var duration = +watch.dataset.duration, SPEED = 10, TRAIL = 30, EVENTS_SHOWN = 4;
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var W = {};
   Object.keys(watch.dataset).forEach(function (k) { if (k.indexOf("w") === 0 && k.length > 1) W[k.charAt(1).toLowerCase() + k.slice(2)] = watch.dataset[k]; });
@@ -1346,8 +1413,10 @@ SCRIPT = r"""
   function fmt(s, o) { return s.replace(/\{(\w+)\}/g, function (m, k) { return k in o ? o[k] : m; }); }
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
 
-  // The floors and the route, read back from the drawn polylines.
+  // The floors, their drawn size, and the route, read back from the drawn polylines.
   var floors = $$(".maps .floor", watch);
+  var boxes = floors.map(function (f) { var vb = $("svg", f).getAttribute("viewBox").split(" "); return { w: +vb[2], h: +vb[3] }; });
+  function offMap(p) { var b = boxes[p.floor]; return !b || p.x < 0 || p.y < 0 || p.x > b.w || p.y > b.h; }
   var points = [];
   $$(".route polyline.line", watch).forEach(function (line) {
     var floor = +line.closest(".floor").dataset.floor;
@@ -1365,7 +1434,8 @@ SCRIPT = r"""
       clip: a.dataset.clip ? a.dataset.clip.split(" ").map(Number) : null,
       src: still ? still.getAttribute("src").replace(/#t=.*$/, "") : null,
       floor: a.dataset.floor ? +a.dataset.floor : 0, dropped: a.classList.contains("d"),
-      stop: a.hasAttribute("data-stop"), place: a.dataset.place };
+      stop: a.hasAttribute("data-stop"), place: a.dataset.place,
+      off: !!$('.maps .pin.edge[data-open="' + a.dataset.id + '"]', watch) };
   });
   var byId = {}; recs.forEach(function (r) { byId[r.id] = r; });
   var kept = recs.filter(function (r) { return !r.dropped; }).sort(function (a, b) { return a.t - b.t; });
@@ -1373,7 +1443,7 @@ SCRIPT = r"""
   var allDropped = recs.filter(function (r) { return r.dropped; }).sort(function (a, b) { return a.t - b.t; });
 
   var S = { open: false, cur: null, t: points.length ? points[0].t : 0, playing: false, travelling: false, nextRec: null, from: 0,
-    opener: null, floor: 0, hold: null, holdFloor: null, raf: null, last: 0 };
+    opener: null, y: 0, floor: 0, hold: null, holdFloor: null, raf: null, last: 0 };
 
   // --- the map ---
   // The last route point at or before t: the dot never sits between points.
@@ -1404,14 +1474,17 @@ SCRIPT = r"""
       if (!p || p.floor !== i) { dot.setAttribute("visibility", "hidden"); return; }
       dot.setAttribute("visibility", "visible");
       dot.setAttribute("transform", "translate(" + p.x + " " + p.y + ")");
-      var pts = [];
+      // The last 30 s on this floor, one run per stay: a floor change starts a new run.
+      var runs = [], pts = [];
       for (var k = 0; k < points.length; k++) {
         var q = points[k];
         if (q.t < S.t - TRAIL || q.t > S.t) continue;
-        if (q.floor !== i) { pts = []; continue; }
+        if (q.floor !== i) { if (pts.length) runs.push(pts); pts = []; continue; }
         pts.push(q.x + "," + q.y);
       }
-      if (pts.length > 1) { strong.appendChild(polyline("case", pts)); strong.appendChild(polyline("", pts)); }
+      if (pts.length) runs.push(pts);
+      runs.forEach(function (run) { if (run.length > 1) strong.appendChild(polyline("case", run)); });
+      runs.forEach(function (run) { if (run.length > 1) strong.appendChild(polyline("", run)); });
     });
     $$(".pin.cur, .tm.cur", watch).forEach(function (n) { n.classList.remove("cur"); });
     if (S.cur) $$('[data-open="' + S.cur.id + '"]', watch).forEach(function (n) { n.classList.add("cur"); });
@@ -1423,9 +1496,12 @@ SCRIPT = r"""
   function drawContext() {
     var p = pointAt(S.t), room = roomAt(S.t);
     var floorName = floors.length > 1 && p ? floors[p.floor].dataset.name : "";
-    if (!rooms.length) where.textContent = floorName;
+    // A player outside the drawn map is said to be there, never put in a room.
+    if (p && offMap(p)) room = W.offMap;
+    if (!rooms.length && !room) where.textContent = floorName;
     else if (floorName) where.textContent = fmt(W.where, { room: room || W.between, floor: floorName });
     else where.textContent = room || W.between;
+    offmap.hidden = !(S.cur && S.cur.off);
     beforeHead.textContent = S.travelling ? W.soFar : W.before;
     var shown = 0, last = null;
     for (var i = events.length - 1; i >= 0; i--) {
@@ -1435,8 +1511,9 @@ SCRIPT = r"""
       if (last === null && t <= S.t) last = i;
     }
     beforeNone.hidden = shown > 0;
+    // The latest game event at or before the map time, however old: its time says when.
     while (lastev.firstChild) lastev.removeChild(lastev.firstChild);
-    if (last !== null && S.t - +events[last].dataset.t <= EVENT_FRESH) {
+    if (last !== null) {
       var tm = el("time", "", mss(+events[last].dataset.t)); lastev.appendChild(tm);
       lastev.appendChild(document.createTextNode(events[last].lastChild.textContent));
     }
@@ -1450,11 +1527,16 @@ SCRIPT = r"""
   function render() { drawMap(); drawContext(); drawTimeline(); }
 
   // --- the caption: clones of the moment's own nodes ---
-  function fillCaption(r) {
+  // While the session walks, the same column previews the next stop: its
+  // head, quote, summary and likely cause under "Up next".
+  function fillCaption(r, preview) {
     while (caption.firstChild) caption.removeChild(caption.firstChild);
-    $$(".body > *", r.el).forEach(function (n) { caption.appendChild(n.cloneNode(true)); });
+    var sel = preview ? ".body > .mhead, .body > .summary, .body > .quote, .body > .cause" : ".body > *";
+    if (preview) caption.appendChild(el("p", "upnext", W.upNextHead));
+    $$(sel, r.el).forEach(function (n) { caption.appendChild(n.cloneNode(true)); });
     var head = $(".mhead", caption);
     if (head && r.place) head.appendChild(el("span", "place", r.place));
+    if (preview) return;
     if (r.dropped) { var d = $("details", caption); if (d) d.open = true; }
     var list = r.dropped ? allDropped : kept;
     count.textContent = fmt(r.dropped ? W.countDropped : W.count, { n: list.indexOf(r) + 1, of: list.length });
@@ -1462,20 +1544,29 @@ SCRIPT = r"""
 
   // --- the one state ---
   function setPlayingFlag(on) { S.playing = on; watch.classList.toggle("playing", on); playBtn.setAttribute("aria-pressed", String(on)); }
+  // Opening remembers where the reader was. Focus lands on Play, so Space
+  // plays or pauses and never presses Back.
   function openWatch(opener) {
     if (S.open) return;
-    S.open = true; S.opener = opener || document.activeElement;
+    S.open = true; S.opener = opener || null; S.y = window.scrollY;
     watch.hidden = false; read.inert = true; read.setAttribute("aria-hidden", "true");
     document.documentElement.classList.add("watching");
-    $("#back").focus();
+    playBtn.focus();
   }
+  // Back returns to where the reader came from: a problem, a badge, a pin or
+  // Play on the first screen gets that scroll position and focus back; a still
+  // in the list, a chip or a link lands on the current moment's row.
   function closeWatch() {
     stopTravel(); video.pause(); setPlayingFlag(false);
     watch.hidden = true; read.inert = false; read.removeAttribute("aria-hidden");
     document.documentElement.classList.remove("watching");
     S.open = false;
     if (history.replaceState) history.replaceState(null, "", location.pathname + location.search);
-    if (S.cur && S.cur.el) {
+    var fromFirst = S.opener && read.contains(S.opener) && !S.opener.closest("article.m, article.d");
+    if (fromFirst) {
+      window.scrollTo(0, S.y);
+      S.opener.focus({ preventScroll: true });
+    } else if (S.cur && S.cur.el) {
       S.cur.el.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
       var b = $(".watchbtn", S.cur.el); (b || S.opener || document.body).focus({ preventScroll: true });
     } else if (S.opener) S.opener.focus();
@@ -1484,7 +1575,7 @@ SCRIPT = r"""
     stopTravel();
     S.cur = r; S.travelling = false; watch.classList.remove("travelling"); travel.hidden = true;
     S.t = r.clip ? r.clip[0] : r.t; S.hold = null;
-    fillCaption(r);
+    fillCaption(r, false); video.controls = true;
     if (history.replaceState) history.replaceState(null, "", "#" + r.key);
     if (r.src) {
       // A seek on a clip that just loaded makes both engines pause it a moment later.
@@ -1501,14 +1592,15 @@ SCRIPT = r"""
     var next = nextStop(afterT != null ? afterT : fromT);
     if (next && S.playing && target(next) <= fromT) { showMoment(next, true); return; }
     S.t = fromT; S.from = fromT; S.cur = null; S.travelling = true; S.nextRec = next;
-    watch.classList.add("travelling"); video.pause();
-    travel.hidden = false; while (caption.firstChild) caption.removeChild(caption.firstChild);
+    watch.classList.add("travelling"); video.pause(); video.controls = false;
+    travel.hidden = false;
+    if (next) fillCaption(next, true); else while (caption.firstChild) caption.removeChild(caption.firstChild);
     count.textContent = next ? W.walking : W.end;
     if (next && next.src) { video.setAttribute("src", next.src); video.load(); }
     else { video.removeAttribute("src"); video.load(); }
     S.last = 0;
-    if (S.playing) S.raf = requestAnimationFrame(tick); else drawTravel();
-    render();
+    drawTravel(); render();
+    if (S.playing) S.raf = requestAnimationFrame(tick);
   }
   function stopTravel() { if (S.raf) cancelAnimationFrame(S.raf); S.raf = null; }
   function drawTravel() {
@@ -1537,32 +1629,38 @@ SCRIPT = r"""
     else if (S.cur && S.cur.src) { if (on) { var p = video.play(); if (p && p.catch) p.catch(function () {}); } else video.pause(); }
     else if (on) startTravel(S.t);
   }
-  // Previous and Next step through every kept moment, by design or not.
+  // Previous and Next step through the list the counter names: every kept
+  // moment, by design or not, or every dropped candidate from one of those.
+  // Between moments they step through the kept ones by time.
   function step(dir) {
-    if (!kept.length) return;
+    var list = S.cur && S.cur.dropped ? allDropped : kept;
+    if (!list.length) return;
     var i;
-    if (S.cur && !S.cur.dropped) i = kept.indexOf(S.cur) + dir;
-    else { i = 0; while (i < kept.length && kept[i].t <= S.t) i++; if (dir < 0) i--; }
-    i = Math.max(0, Math.min(kept.length - 1, i));
-    showMoment(kept[i], S.playing);
+    if (S.cur) i = list.indexOf(S.cur) + dir;
+    else { i = 0; while (i < list.length && list[i].t <= S.t) i++; if (dir < 0) i--; }
+    i = Math.max(0, Math.min(list.length - 1, i));
+    showMoment(list[i], S.playing);
   }
 
   // --- the video drives the map: map time = clip.start_s + currentTime ---
-  function follow() { if (S.cur && S.cur.clip && !S.travelling) { S.t = S.cur.clip[0] + video.currentTime; render(); } }
+  // An event counts only for the clip showMoment loaded: a late event from the
+  // clip before it (Next while it ran) must not move the session on.
+  function loadedClip() { return !!(S.cur && S.cur.src && !S.travelling && video.currentSrc === new URL(S.cur.src, location.href).href); }
+  function follow() { if (loadedClip() && S.cur.clip) { S.t = S.cur.clip[0] + video.currentTime; render(); } }
   video.addEventListener("timeupdate", follow);
   // A seek within the first moments of a freshly loaded clip makes both engines
   // pause it; when the reader meant to keep playing, resume.
   video.addEventListener("seeked", function () {
     follow();
-    if (S.playing && S.cur && !S.travelling && video.paused && !video.ended) { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
+    if (S.playing && loadedClip() && video.paused && !video.ended) { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
   });
-  video.addEventListener("play", function () { if (!S.travelling && S.cur) setPlayingFlag(true); });
+  video.addEventListener("play", function () { if (loadedClip()) setPlayingFlag(true); });
   video.addEventListener("pause", function () {
     var atEnd = video.ended || (video.duration && video.currentTime >= video.duration - 0.1);
-    if (!S.travelling && S.cur && !atEnd) setPlayingFlag(false);
+    if (loadedClip() && !atEnd) setPlayingFlag(false);
   });
   video.addEventListener("ended", function () {
-    if (!S.cur || S.travelling) return;
+    if (!loadedClip()) return;
     if (S.playing) startTravel(S.cur.clip ? S.cur.clip[1] : S.cur.t, S.cur.t);
     else setPlayingFlag(false);
   });
@@ -1673,7 +1771,7 @@ def render_html(data, maps_dir=None):
         parts.extend(_render_across(data["cross_player"], id_to_rank))
     parts.extend(_render_moments(kept, markers_by_moment, floor_count))
     if dropped:
-        parts.extend(_render_dropped(dropped, floor_count))
+        parts.extend(_render_dropped(dropped, floor_count, _counts(data, kept, dropped)[1]))
     parts.extend(_render_footer(data))
     parts.append("</div>")
     parts.extend(_render_watch(data, floors, kept, dropped, markers, id_to_rank))

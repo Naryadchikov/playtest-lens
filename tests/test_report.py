@@ -92,10 +92,142 @@ def test_read_then_watch_in_the_layout_order(redesign):
 
 def test_header_line_counts_the_file_and_the_time_stuck(redesign):
     page = render_html(redesign)
-    assert '<p class="meta">14:20 recording, 9 moments kept, 3 dropped. 4:45 stuck or blocked.</p>' in page
+    assert '<p class="meta">14:20 recording, 9 moments kept, <a href="#dropped">3 dropped</a>. 4:45 stuck or blocked.</p>' in page
     redesign["summary"]["lost_s"] = 0
     page = render_html(redesign)
     assert "stuck or blocked" not in _read(page).split('<div class="first">')[0]
+
+
+def test_header_and_dropped_counts_print_the_summary(redesign):
+    redesign["summary"]["kept"] = 99
+    redesign["summary"]["dropped"] = 7
+    page = render_html(redesign)
+    assert "99 moments kept" in page
+    assert page.count('<a href="#dropped">7 dropped</a>') == 2  # the header line and the map's legend
+    assert "7 candidates the check did not keep" in page
+    assert '<a href="#dropped">3 dropped</a>' not in page and ", 9 moments kept" not in page
+    # The link scrolls to the section; it never opens Watch.
+    assert '<a href="#dropped" data-open' not in page
+    assert 'scroll-margin-top' in page[page.index(".read h2 {"):page.index(".read .sub")]
+    # A file without a summary falls back to the lists.
+    del redesign["summary"]
+    page = render_html(redesign)
+    assert "9 moments kept" in page and "3 dropped" in page
+
+
+def test_model_line_names_the_model_the_file_holds(redesign):
+    page = render_html(redesign)
+    head = page[page.index('<header class="head">'):page.index("</header>")]
+    assert re.search(r'<h1>[^<]*</h1>\n<p class="model">Analyzed with <span class="mono">[^<]+</span>\.</p>', head)
+    model = sorted({f["check"]["model"] for f in redesign["findings"]})
+    assert f'<span class="mono">{html.escape(", ".join(model))}</span>' in head
+    for finding in redesign["findings"]:
+        finding["check"]["model"] = None
+    assert 'class="model"' not in render_html(redesign)
+
+
+def test_visible_words_come_from_labels(redesign, monkeypatch):
+    monkeypatch.setitem(render.LABELS, "words", {"attempt": "try", "visit": "stop", "moment": "beat", "dropped": "{n} out", "f9": "KEY"})
+    page = render_html(redesign)
+    assert "3 trys" in page and "5 beats" in page  # the problems line, pluralised from LABELS
+    assert "1 try, 2 beats, 1:05-2:40" in page  # a group note
+    assert "1 attempt" not in page and " moments, " not in page[page.index('<section class="moments"'):]
+    assert "<b>KEY</b>" in _row(page, 5) and "<text>KEY</text>" in page and ">F9<" not in page
+    assert '<a href="#dropped">3 out</a>' in page
+
+
+def test_pins_take_their_own_click_and_nothing_else_does(redesign):
+    page = render_html(redesign)
+    # Decoration is out of the pointer path; the pin's own disc is the hit target.
+    assert ".route, .strong, .dot, .heat, .pin .ring, .pin .edge-mark { pointer-events: none; }" in page
+    assert ".pin .hit { fill: transparent; stroke: none; }" in page
+    pins = re.findall(r'<a class="pin[^"]*"[^>]*>(<circle class="[a-z]+" r="(\d+)"/>)', page)
+    assert pins and all(first.startswith('<circle class="hit"') for first, _r in pins)
+    radii = {int(r) for _first, r in pins}
+    assert radii == {render.PIN_R, render.SOFT_R, render.DROP_R, render.F9_R}
+    assert '<g class="pin f9" aria-label' not in page or '<circle class="hit"' in page
+    # The whole route has no casing any more; the 30 s trail keeps its own.
+    assert '<polyline class="case"' not in page
+    assert ".route .case" not in page and ".strong .case {" in page
+
+
+def _hex_luminance(color):
+    channels = [int(color[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+    linear = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in channels]
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+
+def _contrast(a, b):
+    la, lb = _hex_luminance(a), _hex_luminance(b)
+    return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+
+
+def test_play_pause_keeps_the_accent_and_reads_in_both_schemes():
+    style = render.STYLE
+    light, dark = style.split("@media (prefers-color-scheme: dark)")
+    for block in (light, dark):
+        accent = re.search(r"--accent: (#[0-9a-f]{6})", block).group(1)
+        on_accent = re.search(r"--on-accent: (#[0-9a-f]{6})", block).group(1)
+        assert _contrast(accent, on_accent) >= 4.5, (accent, on_accent)
+    # The nav rule that paints the buttons sunk is outranked by the primary's own rule.
+    nav = re.search(r"\.bar \.nav button \{[^}]*\}", style).group(0)
+    assert "background: var(--sunk)" in nav
+    primary = re.search(r"\.bar \.nav \.primary \{[^}]*\}", style).group(0)
+    assert "background: var(--accent)" in primary and "color: var(--on-accent)" in primary
+    assert style.index(nav) < style.index(primary)
+
+
+def test_a_moment_outside_the_map_is_clamped_to_the_edge_and_says_so(redesign):
+    meta = _meta("lobby")
+    finding = next(f for f in redesign["findings"] if f["id"] == "f1")
+    finding["at"] = {"x": meta["world_min_x"] - 0.2, "z": 0.0, "floor": 0}
+    page = render_html(redesign)
+    pins = re.findall(r'<a class="pin k-stuck edge" href="#m1" data-open="f1" aria-label="([^"]*)" transform="translate\(([\d.]+) ([\d.]+)\)">(.*?)</a>', page)
+    assert len(pins) == 2
+    label, x, y, body = pins[0]
+    assert label == "Moment 1, Stuck, 5:45, outside the mapped area"
+    assert float(x) == render.PIN_R + 8
+    assert float(y) == round(_map_px(meta, 0, 0.0)[1], 1)
+    assert f'<circle class="edge-mark" r="{render.PIN_R + 6}"/>' in body
+    # The line above Watch's map, and the words the script uses for it.
+    note = html.escape("This moment is outside the mapped area. Its pin sits at the map's edge.")
+    assert f'<p class="offmap" id="offmap" hidden>{note}</p>' in page
+    assert 'data-w-off-map="Outside the mapped area"' in page
+    script = _script(page)
+    assert "function offMap(p)" in script and "if (p && offMap(p)) room = W.offMap;" in script
+    # A pin inside the map keeps its exact pixels and no mark.
+    finding["at"] = {"x": 0.0, "z": 0.0, "floor": 0}
+    page = render_html(redesign)
+    assert "edge" not in re.search(r'<a class="pin k-stuck" href="#m1"[^>]*>', page).group(0)
+    assert '<circle class="edge-mark"' not in page
+
+
+def test_watch_script_rules_from_reviews_23_and_24(redesign):
+    script = _script(render_html(redesign))
+    # 13: a floor change inside the 30 s window starts a new trail run.
+    assert 'if (q.floor !== i) { if (pts.length) runs.push(pts); pts = []; continue; }' in script
+    # 14: the line above the map always shows the latest event at or before the map time.
+    assert "EVENT_FRESH" not in script and "if (last !== null) {" in script
+    # 17: clip events count only for the clip showMoment loaded.
+    assert "function loadedClip()" in script and "video.currentSrc === new URL(S.cur.src, location.href).href" in script
+    for event in ("timeupdate", "play", "pause", "ended"):
+        assert f'video.addEventListener("{event}"' in script
+    assert script.count("loadedClip()") >= 5
+    # 3: focus lands on Play when Watch opens. 4: Back restores the first screen's position.
+    assert "playBtn.focus();" in script and "S.y = window.scrollY;" in script
+    assert "window.scrollTo(0, S.y);" in script and 'S.opener.closest("article.m, article.d")' in script
+    # 9 and 10: the column previews the next stop, the clip's controls hide, the frame draws at once.
+    assert "if (next) fillCaption(next, true);" in script and "video.controls = false;" in script
+    assert "drawTravel(); render();\n    if (S.playing) S.raf = requestAnimationFrame(tick);" in script
+    # 11: Previous and Next stay in the list the counter names.
+    assert "var list = S.cur && S.cur.dropped ? allDropped : kept;" in script
+    assert 'data-w-up-next-head="Up next"' in render_html(redesign)
+
+
+def test_narrow_watch_halves_the_axis_labels(redesign):
+    page = render_html(redesign)
+    narrow = page[page.index("@media (max-width: 720px)"):page.index("@media (max-width: 640px)")]
+    assert ".r-axis span:nth-child(even) { display: none; }" in narrow
 
 
 def test_page_shows_every_kept_finding_once(redesign):
@@ -269,7 +401,7 @@ def test_play_stops_only_at_unplanned_moments(redesign):
     assert "var stops = kept.filter(function (r) { return r.stop; });" in script
     assert "for (var i = 0; i < stops.length; i++)" in script
     # Previous and Next step through every kept moment.
-    assert "showMoment(kept[i], S.playing)" in script
+    assert "showMoment(list[i], S.playing)" in script
 
 
 def test_dropped_candidates_are_a_visible_section_with_their_reasons(redesign):

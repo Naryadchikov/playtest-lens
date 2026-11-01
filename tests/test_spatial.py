@@ -381,7 +381,8 @@ def test_enriched_file_loads_and_renders(tmp_path):
     assert page.count('<div class="floor" data-floor="1"') == 2
     assert 'fill="url(#heat-blob)"' in page
     assert "<polyline" in page
-    assert len(re.findall(r'class="pin k-[a-z]+" href="#m1" data-open="f1"', page)) == 2
+    # f1 happened past the map's right edge: its pin is clamped to the edge and marked.
+    assert len(re.findall(r'class="pin k-[a-z]+ edge" href="#m1" data-open="f1"', page)) == 2
     assert "3 moments worth a look: 1 stuck, 1 confused, 1 surprised." in page
 
 

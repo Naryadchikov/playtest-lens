@@ -168,3 +168,40 @@ Nothing new: `analyzer/spatial.py` and `analyzer/findings.py` are unchanged. The
 - Captures: `/tmp/t37/shots/` (her Spark page at 1920 x 1080 dark and light, 1440 x 900 light, 960 x 1080 dark in WebKit, 400 px light; states: first screen, time spent on, scrolled to the moments, a moment mid-clip, the Read page after Back, a dropped candidate, the session walking; his page first and moment at 1920 x 1080 dark and 960 x 1080 dark; the Open pages first and moment).
 - Flow: `/tmp/t37/flow.webm` (about 35 s at 1920 x 1080, her page: the first screen and the time-spent switch, the top problem's clip, the floor switch, Next to a by-design moment, Escape back to the same place, a dropped candidate and its reason, Play the session walking the map and stopping at an unplanned moment).
 - Probes (keyboard, focus, every kept moment by Next, the stops of Play, one floor at a time, the heat switch, deep links, three random moments read the same in Watch as in the file, no script): `/tmp/t37/a11y-chromium.log`, `/tmp/t37/a11y-webkit.log`.
+
+## Task 38: the fixes after reviews 23 and 24
+
+Implementer: Claude Fable 5.1, a Claude Code subagent, 2026-11-01, on base commit ded2110 (the page from 17a9675). Brief in `docs/tasks/38-report-review-fixes.md`; the findings are in `docs/reviews/23-report-mix-grok.md` and `docs/reviews/24-report-mix-ux-sonnet.md`. Everything here is a proposal unless it quotes Sasha. "by design" stays (his decided word).
+
+### What changed
+
+- **A pin takes its own click, and nothing else does.** Every pin's first child is a transparent disc of its own radius (`.hit`), the one thing that answers to the pointer; the focus ring, the edge mark, the whole route, the 30 s trail, the dot and the heat are `pointer-events: none`. A hollow dropped pin and a pin under a neighbour's ring now open their own moment, on the overview and in Watch (one `_render_pins` draws both).
+- **Play/Pause reads.** `.bar .nav .primary` now sets the accent background and the on-accent colour itself, so the nav rule no longer sinks it. Contrast is 4.5:1 or better in both schemes and both states.
+- **Space plays or pauses right after Watch opens.** Focus lands on Play, not Back. Enter and a click on Back still close.
+- **Back returns to where the reader came from.** Opening remembers the scroll position and the opener. A top problem, a badge, a map pin or Play the session on the first screen gets that position and the opener's focus back; a still frame in the list, a chip or a deep link lands on the current moment's row, as before.
+- **A moment outside the drawn map is visible and says so.** A pin whose point falls outside the map's pixels is clamped just inside the edge (radius plus 8 px) with a dashed edge mark, and its name ends in "outside the mapped area". In Watch, the line above the map reads "Outside the mapped area, Ground floor" whenever the player's route point is off the map, instead of a room or "Between rooms", and a dashed note under it says the moment is outside the mapped area with its pin at the edge. His demo's top problem (the Laboratory door at the Lobby map's edge) is the case; the spatial test fixture has another.
+- **The whole route recedes.** No black casing under the whole route any more, the line is 5 px at 22 percent. The 30 s trail keeps its casing and its 14 px white line.
+- **The model under the session name.** "Analyzed with {model}." prints the model the file holds, so the Open page and the Spark page differ above the fold.
+- **"{n} dropped" is a link** to the Dropped section, in the header line and in the map's legend. It scrolls (the h2 has a scroll margin); it never opens Watch.
+- **Walking between moments.** The clip's native controls hide while the session walks (the overlay no longer sits on them), and the left column previews the next stop under "Up next": its head, quote, summary and likely cause, cloned from its row. The travel frame draws at once when a walk starts, so no stale clock or stop from the earlier walk shows.
+- **Previous and Next stay in the list the counter names.** From a dropped candidate they step through the dropped candidates ("Dropped 2 of 4"); from a kept moment through the kept ones. Why: the counter promises a list, and jumping lists on Next changed the counter without a hint. Back reaches the other list.
+- **400 px Watch** hides every other axis label, so they never collide.
+- **Review 23's smaller findings.** A floor change inside the 30 s window starts a new trail run instead of dropping the earlier points. The line above the map always shows the latest game event at or before the map time (its time says how old it is). The header and the dropped counts print `summary.kept` and `summary.dropped` when the file has a summary. "F9", "attempt", "visit", "moment" and "{n} dropped" live in `LABELS["words"]`. `timeupdate`, `seeked`, `play`, `pause` and `ended` act only when the clip element's current source is the clip `showMoment` loaded.
+
+### New strings (proposals, Claude Fable 5.1, 2026-11-01; Sasha decides the wording)
+
+- Header: "Analyzed with {model}."
+- Pins: "{label}, outside the mapped area".
+- Watch: "Outside the mapped area" (the room slot of the line above the map), "This moment is outside the mapped area. Its pin sits at the map's edge.", "Up next" (the column's heading while walking).
+- Moved, not changed: "attempt", "visit", "moment", "F9" and "{n} dropped" into `LABELS["words"]`; the header line is now "{length} recording, {kept} moments kept, {dropped}." with the linked "{n} dropped" filled in.
+
+### Evidence
+
+- Tests: `.venv/bin/python -m pytest -q`, 245 passed, no model call. Nine new tests in `tests/test_report.py` (pins and the pointer path, the Play/Pause rule and its contrast, the off-map pin, the summary counts, the model line, the words in LABELS, the script rules for reviews 23 and 24, the narrow axis); all nine fail on the base page.
+- Probe, Chromium and WebKit, 0 fails each: `/tmp/t38/probe-chromium.log`, `/tmp/t38/probe-webkit.log` (`/tmp/t38/probe.py`). It clicks all 28 overview pins on both floors of her Spark page (4 and 17, the hollow f13, f18, f26, f32 included) and the 22 Watch pins on the shown floor with moment 4 open, each opening its own moment; Space after opening keeps Watch open and toggles play; Back from a problem, a badge and a pin restores the scroll and the opener's focus, from a still the row; Play/Pause contrast 7.88:1 dark and 7.51:1 light in both states; two trail runs at 840 s; the event at 0:16 shown at 100 s; the walk's text drawn at once, controls hidden, "Up next" in the column; Next from a dropped candidate stays in the dropped list; the dropped link scrolls; his edge pin and the off-map lines; no label collisions and no overflow at 400 px; no console or page errors on the four pages.
+- The four pages re-rendered in `runs/final/` with `.venv/bin/python -m report.render <findings> -o <page>`.
+- Captures: `/tmp/t38/shots/` (45 files: her Spark page at 1920 x 1080 dark and light, 1440 x 900 light, 960 x 1080 dark in WebKit, 400 px light, the task 37 states; his page first, top problem in Watch and walking at 1920 x 1080 dark and 960 x 1080 dark; the Open pages first and moment). Flow: `/tmp/t38/flow.webm` (her page, about 35 s).
+
+### What I did not check
+
+Firefox, Safari proper, VoiceOver, print, 200 percent zoom, a real phone, the whole session at real speed, the Open pages beyond their first screen and one moment. The pin positions of the clamped case are presentation (the file's point is unchanged). The wording of the new strings is Sasha's call.
