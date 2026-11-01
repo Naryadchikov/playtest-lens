@@ -17,8 +17,9 @@ Claude Opus 5.5 orchestrates and writes the code. Claude Fable 5.1 made the repo
 ## In flight
 
 - Reviews 20 (Grok, code) and 22 (Sonnet, captures): both PASS on round 2; Sonnet's S1 and S2 fixed (`877d6ad`), S3 to S7 in FOLLOWUPS.md for the freeze pass.
+- Task 36, three new layout mocks by Claude Fable 5.1 (his ask, 2026-11-01: the clip big and in one place at a moment, the map second, nothing twice): one-screen, watch-read, scroll-snap, in `runs/check/mock36/`. Then a side-by-side page for his pick, the build, reviews, and a new GIF.
 - Task 33, the prompt review: done, not merged. v2 of the check prompt adds a "Likely cause" line and shorter summaries; his picks go on `runs/check/prompt33/compare.html` (copy my picks). The change waits in worktree `t3/prompt-review-task-33`. After his pick: port it to the new page, rerun the final reports, README numbers, then he marks the cards.
-- Live demo staged (not published): `runs/demo-site/site/` (95 MB): `index.html` is his own Lobby session in Spark, `open.html` the same in Open, 33 clips; both came from the cache at $0. He checks the clips for anything private on his editor screen before it goes public.
+- Live demo staged, not published while the layout changes (his words, 2026-11-01): `runs/demo-site/site/` (95 MB): `index.html` is his own Lobby session in Spark, `open.html` the same in Open, 33 clips; both came from the cache at $0. He checks the clips for anything private on his editor screen before it goes public.
 - README GIF staged (not committed): `runs/demo-site/report.gif` (18 s, 960 px, 7.6 MB) from his session's page.
 
 ## Remind Sasha
@@ -34,10 +35,10 @@ Claude Opus 5.5 orchestrates and writes the code. Claude Fable 5.1 made the repo
 
 ## Open questions for Sasha
 
-1. "expected" in place of "by design"? (Fable's "consider"; he agreed with Fable's answers, the swap waits for his yes.)
-2. The prompt review: before or after, per session and mode (when task 33 lands).
-3. Her consent: public or private, and contributor mode.
-4. The live demo: publish `runs/demo-site/site/` (his own Lobby session, both modes) on GitHub Pages, and commit the README GIF, after he looks at both.
+1. The prompt review: before or after, per session and mode (he is on it, 2026-11-01).
+2. Her consent: public or private, and contributor mode.
+3. The tester task line and one run of the zip on Windows.
+4. The layout pick, once the three mocks are back. ("by design" stays; nothing is published while we iterate: both his words, 2026-11-01.)
 
 ## Credits used
 
