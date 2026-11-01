@@ -72,6 +72,8 @@ With the Skill tool, if your session lists them: `design:design-critique` on tod
 
 The folder; the three pages; the shots and `flow.webm`; the notes' headings in one line each; what you did not check.
 
-## What came back
+## What came back (2026-11-01)
 
-Filled in after the three return.
+All three delivered in `runs/check/mock36/<direction>/`: `render_mock.py`, her Spark and Open pages and his, shots in Chromium and WebKit, a 30 s `flow.webm`, `NOTES.md`. All three converged on the same moment screen (the clip about two thirds with the words under it, one floor with the trail and the events just before, a slim timeline) and differ in how you move: one-screen has no list, watch-read has a calm list and a player, scroll-snap snaps one moment per screen. All three dropped the heat map, "Unplanned only", the trail select and the side-by-side floors, and listed them as questions. Skills: design-critique, accessibility-review in all three; dataviz and ux-copy in two (the palette validator needs node, not installed).
+
+Sasha's side-by-side page: `runs/check/mock36/compare.html` (copy my picks). The orchestrator's recommendation (Claude Opus 5.5): watch-read as the base, with scroll-snap's overview map and quote headline and one-screen's context line.
