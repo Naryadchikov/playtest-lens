@@ -361,19 +361,20 @@ a.chip:hover { border-color: var(--accent); }
 .foot { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--line); color: var(--muted); font-size: var(--fs-s); display: grid; gap: var(--s2); }
 
 /* ----------------------------------------------------------- Watch */
-.watch { position: fixed; inset: 0; background: var(--bg); display: grid; grid-template-rows: var(--bar-h) minmax(0, 1fr) var(--tl-h); z-index: 10; }
+.watch { position: fixed; inset: 0; background: var(--bg); display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--bar-h) minmax(0, 1fr) var(--tl-h); z-index: 10; }
 .bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 var(--s4); border-bottom: 1px solid var(--line); background: var(--surface); gap: var(--s3); }
 .bar .back { justify-self: start; border: 1px solid var(--line); background: var(--sunk); border-radius: 8px; padding: .4em .9em .4em .7em; font-weight: 600; }
 .bar .count { font-family: var(--mono); font-size: var(--fs-s); color: var(--ink2); text-align: center; font-variant-numeric: tabular-nums; }
 .bar .nav { justify-self: end; display: flex; gap: var(--s2); }
 .bar .nav button { border: 1px solid var(--line); background: var(--sunk); border-radius: 8px; padding: .4em .9em; font-weight: 600; }
 .bar .nav button:disabled { opacity: .4; cursor: default; }
+.bar button { white-space: nowrap; }
 /* The main control keeps the accent: this rule outranks .bar .nav button. */
 .bar .nav .primary { border-color: transparent; min-width: 6em; background: var(--accent); color: var(--on-accent); }
 #play .when-playing { display: none; } .watch.playing #play .when-paused { display: none; } .watch.playing #play .when-playing { display: inline; }
 .main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--s5); padding: var(--s4) var(--s5); min-height: 0; }
 .screen { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: var(--s3); min-width: 0; min-height: 0; }
-.clipbox { position: relative; background: #000; border-radius: 10px; overflow: hidden; width: min(100%, calc((100vh - var(--bar-h) - var(--tl-h) - 200px) * 16 / 9)); aspect-ratio: 16 / 9; justify-self: center; }
+.clipbox { position: relative; background: #000; border-radius: 10px; overflow: hidden; width: min(100%, calc((100vh - var(--bar-h) - var(--tl-h) - 256px) * 16 / 9)); aspect-ratio: 16 / 9; justify-self: center; }
 .clipbox video { width: 100%; height: 100%; display: block; background: #000; }
 .travel { position: absolute; inset: 0; background: rgba(8, 10, 16, .78); color: #fff; display: grid; align-content: center; justify-items: center; gap: var(--s2); text-align: center; padding: var(--s4); }
 .travel .big { font: 700 clamp(2rem, 6vw, 4rem)/1 var(--mono); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
@@ -422,7 +423,6 @@ a.chip:hover { border-color: var(--accent); }
 .before h2 { font-size: var(--fs-s); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
 .events { list-style: none; margin: var(--s1) 0 0; padding: 0; font-size: var(--fs-s); color: var(--ink2); display: grid; gap: 2px; }
 .events time { font-family: var(--mono); color: var(--muted); margin-right: .7em; }
-.events li.last { color: var(--ink); font-weight: 600; }
 .before .none { font-size: var(--fs-s); color: var(--muted); margin-top: var(--s1); }
 /* Between moments the map is the thing: the columns trade places in width. */
 .watch.travelling .main { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
@@ -461,10 +461,12 @@ a.chip:hover { border-color: var(--accent); }
   .ovmap .floor svg { max-height: 70vh; }
 }
 @media (max-width: 720px) {
-  .main { grid-template-columns: 1fr !important; grid-auto-rows: auto; overflow: auto; }
-  .screen { grid-template-rows: auto auto; }
+  /* One column in normal flow: the clip, the words, then the map, never on top of each other. */
+  .main, .watch.travelling .main { display: block; overflow: auto; }
+  .screen { display: flex; flex-direction: column; gap: var(--s3); }
+  .clipbox, .watch.travelling .clipbox { width: 100%; flex: none; }
   .caption { overflow: visible; }
-  .side { grid-template-rows: auto 60vh auto; }
+  .side { grid-template-rows: auto 60vh auto; margin-top: var(--s4); }
   .bar { grid-template-columns: auto 1fr auto; }
   .bar .count { display: none; }
   /* Half the axis labels on a narrow track, so they never collide. */
@@ -474,6 +476,10 @@ a.chip:hover { border-color: var(--accent); }
   .m, .d { grid-template-columns: 1fr; }
   .read { padding: var(--s5) var(--s4) 60px; }
   .head .verdict { font-size: var(--fs-l); }
+}
+@media (max-width: 420px) {
+  .bar { padding: 0 var(--s2); gap: var(--s2); }
+  .bar button { padding: .4em .6em; }
 }
 @media print { .watch { display: none !important; } .watchbtn, .playglyph { display: none; } .m, .d { grid-template-columns: 1fr; } }
 """
@@ -1512,12 +1518,15 @@ SCRIPT = r"""
     else where.textContent = room || W.between;
     offmap.hidden = !(S.cur && S.cur.off);
     beforeHead.textContent = S.travelling ? W.soFar : W.before;
+    // The latest event at or before the map time goes in the line above the map;
+    // the list holds the ones before it, so no event shows twice.
     var shown = 0, last = null;
     for (var i = events.length - 1; i >= 0; i--) {
-      var t = +events[i].dataset.t, ok = t <= S.t && shown < EVENTS_SHOWN;
-      events[i].hidden = !ok; events[i].classList.toggle("last", ok && shown === 0);
+      var t = +events[i].dataset.t, past = t <= S.t;
+      if (past && last === null) { last = i; events[i].hidden = true; continue; }
+      var ok = past && shown < EVENTS_SHOWN;
+      events[i].hidden = !ok;
       if (ok) shown++;
-      if (last === null && t <= S.t) last = i;
     }
     beforeNone.hidden = shown > 0;
     // The latest game event at or before the map time, however old: its time says when.
