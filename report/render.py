@@ -56,7 +56,8 @@ KIND_ORDER = ("stuck", "confused", "surprised", "suspected_bug")
 # A line marked "Proposal" is not Sasha's wording.
 LABELS = {
     "title": "Playtest Lens: session {id}",
-    "session": "Session {id}",
+    # Proposal (Claude Opus 5.5, 2026-11-01, words delegated by Sasha), not his wording.
+    "session": "Playtest {id}",
     "kinds": {
         "stuck": {"label": "Stuck", "lower": "stuck", "class": "stuck"},
         "confused": {"label": "Confused", "lower": "confused", "class": "confused"},
@@ -89,7 +90,14 @@ LABELS = {
         # Proposals (Claude Fable 5.1, 2026-11-01), not Sasha's wording.
         "line": "{length} recording, {kept} moments kept, {dropped}.",
         "lost": "{time} stuck or blocked.",
-        "model": "Analyzed with {model}.",
+        # Proposals (Claude Opus 5.5, 2026-11-01, words delegated by Sasha): the
+        # model as a tag, so a Spark page and an Open page side by side differ at a glance.
+        "model": "Analyzed by {model}",
+        "model_names": {
+            "muse-spark-1.2-contributor": "Muse Spark 1.2",
+            "muse-spark-1.2": "Muse Spark 1.2",
+            "meta-models/muse-spark-open-1026": "Muse Spark Open (open weights)",
+        },
         "play_session": "Play the session",
         "play_hint": "Runs at 10x between moments and stops at each unplanned one to play its clip. Previous and Next reach every moment.",
     },
@@ -275,7 +283,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visibl
 /* ------------------------------------------------------------ Read */
 .read { max-width: 1180px; margin: 0 auto; padding: var(--s6) var(--s5) 80px; }
 .head h1 { font-size: var(--fs-l); font-weight: 700; color: var(--ink2); }
-.head .model { color: var(--muted); font-size: var(--fs-s); margin-top: var(--s1); }
+.head .model { display: inline-block; margin-top: var(--s2); padding: .2em .7em; border-radius: 999px; background: var(--accent-tint); color: var(--ink); font-size: var(--fs-s); }
 .head .verdict { font-size: var(--fs-xl); font-weight: 700; line-height: 1.2; margin-top: var(--s3); letter-spacing: -.01em; max-width: 36ch; }
 .head .meta { color: var(--muted); margin-top: var(--s2); }
 .head .start { margin-top: var(--s5); display: flex; align-items: center; gap: var(--s4); flex-wrap: wrap; }
@@ -651,7 +659,7 @@ def _drop_words(finding):
 # when past the first, and the floor when the level has more than one.
 def _place(finding, floor_count):
     beat = finding.get("beat") or {}
-    title = beat.get("puzzle") or beat.get("area") or finding["check"].get("area")
+    title = _name(beat.get("puzzle") or beat.get("area") or finding["check"].get("area"))
     if not title:
         title = LABELS["moments"]["fallback"]
     attempt = beat.get("attempt")
@@ -661,6 +669,18 @@ def _place(finding, floor_count):
     if floor_count > 1 and at is not None:
         title = f"{title}, {_floor_name(at['floor'])}"
     return title
+
+
+# A raw volume or node name from the level ("CUBICLE_AREA", "BREAK_ROOM")
+# reads as words ("Cubicle area"); names already in words are untouched.
+_RAW_NAME = re.compile(r"\b[A-Za-z0-9]+(?:_[A-Za-z0-9]+)+\b")
+
+
+def _name(text):
+    def words(match):
+        token = match.group(0).replace("_", " ")
+        return token.capitalize() if token.replace(" ", "").isupper() else token
+    return _RAW_NAME.sub(words, text) if text else text
 
 
 def _models(findings):
@@ -733,8 +753,9 @@ def _render_header(data, kept, dropped):
     parts = ['<header class="head">', f"<h1>{heading}</h1>"]
     models = _models(data["findings"])
     if models:
-        model_line = _e(words["model"]).replace("{model}", f'<span class="mono">{_e(models)}</span>')
-        parts.append(f'<p class="model">{model_line}</p>')
+        names = ", ".join(words["model_names"].get(m, m) for m in models.split(", "))
+        model_line = _e(words["model"]).replace("{model}", f"<b>{_e(names)}</b>")
+        parts.append(f'<p class="model" title="{_e(models)}">{model_line}</p>')
     if summary.get("verdict"):
         parts.append(f'<p class="verdict">{_e(summary["verdict"])}</p>')
     kept_count, dropped_count = _counts(data, kept, dropped)
@@ -760,7 +781,7 @@ def _render_problems(problems, by_id):
     for problem in problems:
         moments = [by_id[moment] for moment in problem["moments"] if moment in by_id]
         first = moments[0] if moments else None
-        place = _e(problem["place"])
+        place = _e(_name(problem["place"]))
         if first is not None:
             place = f'<a class="place" href="#m{first["rank"]}" data-open="{_e(first["id"])}">{place}</a>'
         else:
@@ -1033,7 +1054,7 @@ def _render_across(cross_player, id_to_rank):
                 text = across["chip_time"].format(label=player["label"], time=_mss(player["worst_t"]))
                 chips.append(f'<span class="chip">{_e(text)}</span>')
         parts.append(
-            f'<li class="group"><h3>{_e(group["place"])}</h3>'
+            f'<li class="group"><h3>{_e(_name(group["place"]))}</h3>'
             f'<p><span class="who">{_e(who)}</span></p>'
             f'<div class="chips">{"".join(chips)}</div></li>'
         )
@@ -1163,8 +1184,8 @@ def _kept_groups(kept):
 def _group_title(beat):
     if not beat:
         return LABELS["moments"]["fallback"]
-    area = beat.get("area") or beat.get("zone")
-    puzzle = beat.get("puzzle")
+    area = _name(beat.get("area") or beat.get("zone"))
+    puzzle = _name(beat.get("puzzle"))
     number = beat.get("puzzle_number")
     parts = []
     if area:
@@ -1308,13 +1329,13 @@ def _render_timeline(data, kept, dropped):
         left, right = _pct(zone["start_s"], duration), _pct(end, duration)
         span = _span(max(0.0, zone["start_s"]), end)
         if zone["puzzle"]:
-            title = words["room_bar_puzzle"].format(room=zone["zone"], puzzle=zone["puzzle"], span=span)
+            title = words["room_bar_puzzle"].format(room=_name(zone["zone"]), puzzle=_name(zone["puzzle"]), span=span)
         else:
-            title = words["room_bar"].format(room=zone["zone"], span=span)
-        text = _e(zone["zone"]) if right - left >= BAR_LABEL_MIN_PCT else ""
+            title = words["room_bar"].format(room=_name(zone["zone"]), span=span)
+        text = _e(_name(zone["zone"])) if right - left >= BAR_LABEL_MIN_PCT else ""
         parts.append(
             f'<span class="room{" puzzle" if zone["puzzle"] else ""}" data-s="{zone["start_s"]}" data-e="{end}" '
-            f'data-room="{_e(zone["zone"])}" style="left:{left:.2f}%;width:{right - left:.2f}%" title="{_e(title)}">{text}</span>'
+            f'data-room="{_e(_name(zone["zone"]))}" style="left:{left:.2f}%;width:{right - left:.2f}%" title="{_e(title)}">{text}</span>'
         )
     parts.append("</div>")
     marks = sorted(kept + dropped, key=lambda f: (f["time_s"], f["rank"] or 0))

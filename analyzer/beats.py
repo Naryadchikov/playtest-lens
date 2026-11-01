@@ -44,17 +44,21 @@ ZONE_EDGE_S = 5.0
 ZONE_REENTRY_S = 5.0
 
 
-# The volume a moment is in: the one that holds its time, else the nearest
-# one whose edge is within ZONE_EDGE_S.
+# The volume a moment is in: one that holds its time, a puzzle volume
+# first (it sits inside its room's volume), else the nearest one whose
+# edge is within ZONE_EDGE_S.
 def _zone_at(zones, time_s):
-    nearest, best = None, ZONE_EDGE_S
+    holding, nearest, best = None, None, ZONE_EDGE_S
     for zone in zones or []:
         if zone["start_s"] <= time_s and (zone["end_s"] is None or time_s <= zone["end_s"]):
-            return zone
+            if zone["puzzle"]:
+                return zone
+            holding = holding or zone
+            continue
         gap = zone["start_s"] - time_s if time_s < zone["start_s"] else time_s - zone["end_s"]
         if gap <= best:
             nearest, best = zone, gap
-    return nearest
+    return holding or nearest
 
 
 # Zone intervals from a session log's telemetry events, in video time.
@@ -85,15 +89,22 @@ def zone_intervals(events, video_flash_s):
                 zone["end_s"] = video_t
                 intervals.append(zone)
     intervals.extend(open_zones.values())
+    return sorted(intervals, key=lambda zone: zone["start_s"])
+
+
+# For grouping only: a step out of a volume and back in within
+# ZONE_REENTRY_S is one visit. The log slice the checker reads keeps the
+# raw intervals, so its prompt (and its cached reply) does not change.
+def _merge_reentries(zones):
     merged, last_by_key = [], {}
-    for zone in sorted(intervals, key=lambda zone: zone["start_s"]):
+    for zone in zones:
         key = (zone["zone"], zone["puzzle"])
         last = last_by_key.get(key)
         if last is not None and last["end_s"] is not None and zone["start_s"] - last["end_s"] <= ZONE_REENTRY_S:
             last["end_s"] = zone["end_s"]
             continue
-        merged.append(zone)
-        last_by_key[key] = zone
+        merged.append(dict(zone))
+        last_by_key[key] = merged[-1]
     return merged
 
 
@@ -369,6 +380,7 @@ def _resolve_state(states, areas, finding, time_s, zone=None):
 # an Attempt ends when the player finishes another puzzle, spends a
 # kept moment on another puzzle, or is gone longer than ATTEMPT_GAP_S.
 def assign_beats(findings, zones=None):
+    zones = _merge_reentries(zones) if zones else zones
     activity = sorted(findings, key=lambda f: f["time_s"])
     areas = _Areas()
     states = []

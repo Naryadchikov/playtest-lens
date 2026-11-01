@@ -352,7 +352,8 @@ def test_a_step_out_and_back_within_seconds_is_one_visit():
         {"t": 41.0, "event": "zone_exit", "zone": "Archive", "puzzle": "Code Lock"},
     ]
     zones = zone_intervals(events, 101.0)
-    assert [(z["start_s"], z["end_s"]) for z in zones] == [(111.0, 141.0)]
+    # The checker's log slice keeps both raw intervals; only the grouping joins them.
+    assert [(z["start_s"], z["end_s"]) for z in zones] == [(111.0, 121.0), (121.2, 141.0)]
     findings = [_finding("f1", 115.0), _finding("f2", 135.0)]
     assign_beats(findings, zones=zones)
     assert [f["beat"]["attempt"] for f in findings] == [1, 1]
@@ -368,6 +369,22 @@ def test_a_moment_just_before_a_puzzle_volume_joins_it():
     findings = [_labelled("f1", 110.5, "Archive", "Code Lock"), _labelled("f2", 115.0, "Archive", "Code Lock")]
     assign_beats(findings, zones=zones)
     assert [(f["beat"]["puzzle"], f["beat"]["attempt"]) for f in findings] == [("Code Lock", 1), ("Code Lock", 1)]
+
+
+def test_a_puzzle_volume_wins_over_the_room_around_it():
+    events = [
+        {"t": 1.0, "event": "sync_flash"},
+        {"t": 10.0, "event": "zone_enter", "zone": "CEO Office", "puzzle": ""},
+        {"t": 15.0, "event": "zone_enter", "zone": "CEO Office", "puzzle": "Bear Head"},
+        {"t": 16.0, "event": "zone_exit", "zone": "CEO Office", "puzzle": ""},
+        {"t": 16.5, "event": "zone_enter", "zone": "CEO Office", "puzzle": ""},
+        {"t": 30.0, "event": "zone_exit", "zone": "CEO Office", "puzzle": ""},
+        {"t": 40.0, "event": "zone_exit", "zone": "CEO Office", "puzzle": "Bear Head"},
+    ]
+    zones = zone_intervals(events, 101.0)
+    findings = [_labelled("f1", 116.0, "CEO Office", "Bear Head")]
+    assign_beats(findings, zones=zones)
+    assert findings[0]["beat"]["puzzle"] == "Bear Head"
 
 
 def test_colourless_area_wording_joins_the_most_recent_colour_room():

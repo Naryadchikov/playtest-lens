@@ -118,9 +118,9 @@ def test_header_and_dropped_counts_print_the_summary(redesign):
 def test_model_line_names_the_model_the_file_holds(redesign):
     page = render_html(redesign)
     head = page[page.index('<header class="head">'):page.index("</header>")]
-    assert re.search(r'<h1>[^<]*</h1>\n<p class="model">Analyzed with <span class="mono">[^<]+</span>\.</p>', head)
     model = sorted({f["check"]["model"] for f in redesign["findings"]})
-    assert f'<span class="mono">{html.escape(", ".join(model))}</span>' in head
+    names = ", ".join(render.LABELS["head"]["model_names"].get(m, m) for m in model)
+    assert f'<p class="model" title="{html.escape(", ".join(model))}">Analyzed by <b>{html.escape(names)}</b></p>' in head
     for finding in redesign["findings"]:
         finding["check"]["model"] = None
     assert 'class="model"' not in render_html(redesign)
@@ -686,3 +686,10 @@ def test_main_writes_the_page(tmp_path):
     out = tmp_path / "page.html"
     assert render.main([str(REDESIGN), "-o", str(out)]) == 0
     assert out.read_text(encoding="utf-8").startswith("<!DOCTYPE html>")
+
+
+def test_raw_volume_names_read_as_words():
+    assert render._name("CUBICLE_AREA") == "Cubicle area"
+    assert render._name("Archive, BREAK_ROOM") == "Archive, Break room"
+    assert render._name("COGITO_3_Lobby") == "COGITO 3 Lobby"
+    assert render._name("Break Room") == "Break Room"
