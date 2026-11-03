@@ -26,7 +26,7 @@ Sasha decides what gets built, every word a user reads, the look, the prompts' g
 
 - Muse Code runs on Sasha's Muse Code sign-in (his plan), never on the API key. Never read, print or copy its credential files (`~/.config/muse/`).
 - **Keep the API key out of every agent's environment.** A `META_API_KEY` in Muse Code's environment takes priority over the sign-in, and would bill Muse's work to the $150 API credits. The key lives only in the macOS Keychain (service `META_API_KEY`). `tools/run-analyzer.sh` reads it from there for the analyzer's own process and nothing else; never export it in a shell profile or with `launchctl`.
-- **Modal and Baseten keys follow the same rule as the Meta key:** the Modal proxy token lives in the Keychain (service `MODAL_PROXY_TOKEN`) and the Baseten key in service `BASETEN_API_KEY`. Only `tools/run-modal-agent.sh` and `tools/run-baseten.sh` read them, each for its own process. Never print, log, write or export them, and never put one in a URL.
+- **The Baseten key follows the same rule as the Meta key:** it lives in the Keychain (service `BASETEN_API_KEY`), and only `tools/run-baseten.sh` reads it, for its own process. Never print, log, write or export it, and never put it in a URL.
 - The analyzer calls the Meta Model API from Python. If the key isn't in the Keychain, stop and tell Sasha; never work around it, and never borrow a token from Muse Code's files.
 - Never print, log or write a key or token anywhere, and never put one in a URL.
 - Every model call goes through one client module. It caches each reply in `runs/cache/` by a hash of the request, so a rerun on the same input costs nothing, and appends one line to `runs/costs.jsonl`: time, model, input and output tokens, cost if returned, and what the call was for. Log Muse Code's usage there too when it's reported. Both are git-ignored.
@@ -82,7 +82,7 @@ Claude's limits came back on 2026-10-31, and Opus now writes the code. Spend Cla
 
 - **Short reports.** Authors and reviewers end with the files changed, the commands, the evidence paths and what they didn't check: no file dumps, no recaps. The orchestrator reads a verdict, and a diff only when it has to.
 - **Never wait in a loop.** A started author or reviewer wakes the orchestrator when it finishes: end the turn. No "still waiting" messages.
-- **A fresh orchestrator thread each day.** At each milestone and at the end of the day, bring [STATUS.md](STATUS.md) up to date: where things stand, what's next, open questions for Sasha, credits used. Sasha starts the next thread with "Read STATUS.md and continue".
+- **A fresh orchestrator thread each day.** At each milestone and at the end of the day, bring `STATUS.md` (kept locally, git-ignored) up to date: where things stand, what's next, open questions for Sasha, credits used. Sasha starts the next thread with "Read STATUS.md and continue".
 - **When Claude runs out:** say so in STATUS.md and to Sasha.
 
 ## Working with the authors

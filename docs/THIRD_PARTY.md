@@ -85,7 +85,7 @@ Research only, 2026-10-28: no code, dependency or asset came from these. They in
 
 ## Prepared before building started
 
-- This repo's planning notes, agent rules and skills (`PLAN.md`, `AGENTS.md`, `CLAUDE.md`, `STATUS.md`, `README.md`, `docs/`, `.claude/skills/`), drafted on 2026-10-26 around the kickoff. The rules, the review loop and the skills adapt working rules the author uses on his other projects: process only, no code or content from them. No code.
+- This repo's planning notes, agent rules and skills (`PLAN.md`, `AGENTS.md`, `CLAUDE.md`, `README.md`, `docs/`, `.claude/skills/`), drafted on 2026-10-26 around the kickoff. The rules, the review loop and the skills adapt working rules the author uses on his other projects: process only, no code or content from them. No code.
 
 Building started after the kickoff on 2026-10-26 at 12:00 ET.
 
@@ -111,7 +111,7 @@ On top of upstream's `676be6d`, in order:
 
 ## Development tools (not part of the product)
 
-- DeepSeek V4.1 Flash 1017 (DeepSeek, open weights) wrote part of the early code, served on Modal as a Shared Endpoint and driven by `tools/run-modal-agent.sh`. Modal's agent skill (`modal skills install --claude`) is installed locally and git-ignored. The product itself calls only Meta models (Muse Spark, Voice Transcribe, and Muse Spark Open for the open-weights mode).
+- DeepSeek V4.1 Flash 1017 (DeepSeek, open weights) wrote part of the early code, served on Modal as a Shared Endpoint and driven by a small script, since removed. Modal's agent skill (`modal skills install --claude`) is installed locally and git-ignored. The product itself calls only Meta models (Muse Spark, Voice Transcribe, and Muse Spark Open for the open-weights mode).
 - Grok 4.7 (xAI, through Cursor) reviews code and built the Godot side and tools. The author's Grok bot, on its own machine and briefed by him, wrote some of the fork's Godot tool commits (`grok-bot` in the fork's history). Claude Sonnet 5.5 orchestrated until 2026-10-31; since then Claude Opus 5.5 orchestrates and writes the code, Claude Fable 5.1 designed the report page, and Claude Sonnet 5.5 reviews the page. Every commit names its author models in a `Co-Authored-By:` trailer.
 
 The top-down maps in `report/maps/` and the fork's `maps/` are renders of COGITO's demo scenes (Lobby and Laboratory) made by our map tool (`godot/tools/map_export.gd` in this repo since 2026-10-31; first written in the fork's `tools/`), so their geometry is COGITO's (MIT, credited above); the tool and the pictures' framing are ours.
