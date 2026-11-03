@@ -14,7 +14,7 @@ What the rules need on screen (docs/PUBLIC_CHECKLIST.md): only work built during
 
 | Time | Show | Say (suggestion) |
 |---|---|---|
-| 0:00 to 0:15 | Player 1's raw recording scrubbing fast, the 21:21 length visible | "A 20-minute playtest takes 20 minutes to watch, and most small teams never do." |
+| 0:00 to 0:15 | Player 1's raw recording scrubbing fast, the 21:20 length visible | "A 20-minute playtest takes 20 minutes to watch, and most small teams never do." |
 | 0:15 to 0:35 | The Godot add-on in the editor: the telemetry volumes in the Lobby; then the white start flash in a recording. A caption: "Test level: the COGITO demo (MIT), prior work" | "A small Godot add-on logs what the player does, and flashes white at the start so the video and the log line up." |
 | 0:35 to 0:55 | The pipeline in four boxes: Muse Spark finds, Muse Spark checks with the clip and the log, Voice Transcribe confirms the quote, one page | "Meta's Muse Spark watches and listens. A second Spark pass has to prove each moment with the clip, the player's words and the log, or drop it." |
 | 0:55 to 1:10 | Player 1's Spark page, Read: the verdict, the top problems beside the map | "One page: what went wrong, and where." |
