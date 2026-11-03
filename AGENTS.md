@@ -17,7 +17,7 @@ Sasha decides what gets built, every word a user reads, the look, the prompts' g
 ## Hackathon rules that bind the work
 
 - **New work only.** Everything in this repo is made after the kickoff. Third-party code is a clearly separate dependency (COGITO is a git submodule of Sasha's fork) and is listed in [docs/THIRD_PARTY.md](docs/THIRD_PARTY.md).
-- **The repo is public.** Going public is the last step: [docs/PUBLIC_CHECKLIST.md](docs/PUBLIC_CHECKLIST.md). Never commit a key, a token, a tester's video or audio, or anything private. Check every diff for them before committing.
+- **The repo is public.** Going public is the last step, run from a checklist kept locally (`docs/PUBLIC_CHECKLIST.md`, git-ignored). Never commit a key, a token, a tester's video or audio, or anything private. Check every diff for them before committing.
 - **Testers are Player 1, Player 2 and so on,** never named or described by who they are to Sasha, in files and in commit messages. Sasha, T3 Code chat, 2026-11-03: "all personal detailes should be removed from history as well, besides mine, it is ok."
 - **Meta's models are the product.** The analyzer uses the Meta Model API (Muse Spark, Voice Transcribe) and, for the open-weights mode, Muse Spark Open.
 - **Out of scope, always:** Sasha's other games and projects, and anything from his employer. Don't copy code from any of them, not even a COGITO fix: redo it in the fork. His other folders on this Mac, including his earlier hackathon folder, are off limits: don't open, read or copy from them.
@@ -50,7 +50,7 @@ The arrangement from 2026-10-31 (Sasha's words are quoted in DECISIONS.md). Mode
 
 Effort: high for the orchestrator and every subagent (Sasha, T3 Code chat, 2026-11-01: "also lets move orchestration work to high effort as well as all subagents."); Grok stays at xhigh (Sasha, same chat: "sorry, grok should stay on xhigh"). A brief sets it in `delegate_task` options (`effort: high` for Claude, `reasoning_effort: xhigh` for Grok). If Cursor's limits stop a Grok review mid run, the code review goes to a fresh Claude Sonnet 5.5 (high) instead (Sasha, T3 Code chat, 2026-11-01: "also I might get hit by cursor limits soon, if it will be the case mid run on your end, change reviewer model to sonnet instead."). Sasha named Opus as planner and author and left the reviewer split to the orchestrator; the split above is Opus's pick (DECISIONS.md, 2026-10-31). Grok runs only through Cursor (Sasha's rule for his projects; it may change), and Cursor is close to unlimited. DeepSeek, GLM 5.3 and Kimi K3 on Modal are idle.
 
-Backup mode ran from 2026-10-28 to 2026-10-31. If Claude's usage runs out again, docs/BACKUP_ORCHESTRATOR.md is the fallback, and Sasha starts it.
+Backup mode ran from 2026-10-28 to 2026-10-31.
 
 ## When to switch to more Claude
 
@@ -83,7 +83,7 @@ Claude's limits came back on 2026-10-31, and Opus now writes the code. Spend Cla
 - **Short reports.** Authors and reviewers end with the files changed, the commands, the evidence paths and what they didn't check: no file dumps, no recaps. The orchestrator reads a verdict, and a diff only when it has to.
 - **Never wait in a loop.** A started author or reviewer wakes the orchestrator when it finishes: end the turn. No "still waiting" messages.
 - **A fresh orchestrator thread each day.** At each milestone and at the end of the day, bring [STATUS.md](STATUS.md) up to date: where things stand, what's next, open questions for Sasha, credits used. Sasha starts the next thread with "Read STATUS.md and continue".
-- **When Claude runs out:** say so in STATUS.md and to Sasha; docs/BACKUP_ORCHESTRATOR.md is the fallback.
+- **When Claude runs out:** say so in STATUS.md and to Sasha.
 
 ## Working with the authors
 
