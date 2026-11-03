@@ -10,7 +10,7 @@ Muse Spark 1.2 takes each 2-minute window of the recording as video with its sou
 
 ![The report: the top problem, its clip with the player's words, the map with the route walked](https://naryadchikov.github.io/playtest-lens-demo/report.gif)
 
-<!-- Demo video: the link goes here once it is uploaded. -->
+**[Watch the 3-minute demo video](https://youtu.be/WqwKa8eM9Io)**
 
 ## What you get
 

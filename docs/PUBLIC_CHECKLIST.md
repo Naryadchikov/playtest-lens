@@ -15,7 +15,7 @@ These describe the history before the 2026-11-03 rewrite; step 9 below describes
 ## Do before the visibility flip
 
 1. **LICENSE:** done (Aleksandr Nariadchikov).
-2. **README:** rewritten on 2026-11-01 (problem first, three playtests, the held-out check, Meta's models, open-weights mode, run it, the add-on, how it was built). Left: the demo video link in the comment under the GIF.
+2. **README:** rewritten on 2026-11-01 (problem first, three playtests, the held-out check, Meta's models, open-weights mode, run it, the add-on, how it was built). The demo video link is under the GIF, added 2026-11-04.
 3. **Hackathon rules** (verified from the Participant Guide Sasha sent on 2026-10-28; the Internshala deadline I found earlier was wrong):
    - Submission due **Wed 2026-11-04, 9:00 PM Eastern (EST)** on the Cerebral Valley platform. Late submissions are not considered. Building period 2026-10-27 to 2026-11-04; kickoff was Mon 2026-10-26, 12:00 ET. Our first commit is 2026-10-26 20:39 CET, a planning commit made after the kickoff and before the building period: answered: Sasha, T3 Code chat, 2026-10-31: "It was said both on discord and FQA that dev starts once first stream is finished or something along those lines, so we made all good".
    - The repository must be public; the video link must be reachable; everyone who worked on it is listed on the submission page (solo here).
