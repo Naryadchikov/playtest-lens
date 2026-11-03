@@ -38,5 +38,5 @@ The repo is private for now (Sasha, 2026-10-27, DECISIONS.md: "I'll make it publ
     - `gh repo edit Naryadchikov/playtest-lens-demo --visibility public --accept-visibility-change-consequences`
     - `gh api -X POST repos/Naryadchikov/playtest-lens-demo/pages -f 'source[branch]=main' -f 'source[path]=/'`
     - open https://naryadchikov.github.io/playtest-lens-demo/ signed out: the front page, the three reports, a clip playing, and the README's GIF (it loads from the site).
-11. **Visibility:** Sasha makes `playtest-lens` public in GitHub settings, sets the repo description and topics, and checks that the fork is public too. Open the public URL in a signed-out browser.
+11. **Visibility:** first `git ls-remote origin` lists only `main` and no tags (the old history still lives in local tags, branches and `refs/t3/`, so push only `main`, never `--tags`, `--all` or `--mirror`). Then Sasha makes `playtest-lens` public in GitHub settings, sets the repo description and topics, and checks that the fork is public too. Open the public URL in a signed-out browser.
 12. **Submit** only after steps 10 and 11, with the public URL and the video link, and after the X post if it goes in the Most Viral field. The form's fields and drafts: docs/SUBMISSION.md.

@@ -5,7 +5,7 @@ For the case where Claude's usage runs out. It ran from 2026-10-28 to 2026-10-31
 ## How to switch
 
 1. Sasha opens a new thread in T3 Code on the `cursor` provider, model Grok 4.7 (reasoning xhigh, fast mode on), in this repo on `main`.
-2. First message: "Read docs/BACKUP_ORCHESTRATOR.md, then STATUS.md, DECISIONS.md and AGENTS.md, then continue."
+2. First message: "Read docs/BACKUP_ORCHESTRATOR.md, then STATUS.md, DECISIONS.md and AGENTS.md, then continue." (DECISIONS.md is the owner's local file, not in this repo.)
 3. The outgoing orchestrator brings STATUS.md up to date before it stops (what is running, which round a review is on, what is uncommitted, what Sasha owes an answer on).
 
 ## Who does what in backup mode

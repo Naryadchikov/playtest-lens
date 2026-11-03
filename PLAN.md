@@ -2,6 +2,8 @@
 
 Agreed with Sasha on 2026-10-26. "Playtest Lens" is a working name.
 
+DECISIONS.md, cited below, is the owner's local decision log and is not in this repo.
+
 ## In one sentence
 
 You give it playtest recordings (the screen plus the player thinking out loud) and the game's event log. It returns a timeline of where players got confused, stuck or surprised, each moment with its clip, the player's words, what the game was doing, and a note on how it was checked, combined across all players.

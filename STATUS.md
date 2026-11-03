@@ -11,7 +11,7 @@ Claude Opus 5.5 orchestrates and writes the code. Claude Fable 5.1 designs the r
 - **Frozen:** no more tuning since 2026-11-01. The check prompt is v2 with the friction guard. The freeze review passed (Grok, the repo: PASS; Sonnet, the judge view: 8.6 PASS), docs/tasks/39-freeze-review.md.
 - **Three playtests, all consented:** Player 1 (21:21, the demo), Player 2 (6:04, held out), and the developer's own run (8:32). Findings and pages in both modes, under readable names in `runs/demo/` (git-ignored).
 - **The demo site** is staged in `runs/demo-site/site/` and pushed to `Naryadchikov/playtest-lens-demo`, private, Pages off until the green light.
-- **The repo is ready to go public:** DECISIONS.md is out of the history and kept locally only; the testers are Player 1 and Player 2 everywhere; a fresh recursive clone passes the offline tests (249). docs/PUBLIC_CHECKLIST.md steps 1 to 9 are done.
+- **The repo is ready to go public:** DECISIONS.md is out of the history and kept locally only; the testers are Player 1 and Player 2 everywhere; a fresh recursive clone passes the offline tests (249). docs/PUBLIC_CHECKLIST.md steps 1 and 3 to 9 are done; step 2 waits for the video link. The step 4 scans and the tests were rerun on the tip on 2026-11-03 (review 36).
 - **Submission:** the form's fields and the drafts for its text are in docs/SUBMISSION.md.
 
 ## Next (Sasha's target: submit by 18:00 CET on Wed 4 Nov; the deadline is 03:00 CET on Thu 5 Nov)

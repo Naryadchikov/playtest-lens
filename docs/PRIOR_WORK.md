@@ -4,7 +4,7 @@ The hackathon's rule: what's presented must be built during the event, and what 
 
 ## Third-party
 
-- **COGITO** by Phazorknight (MIT), the immersive-sim template whose demo is the test game. Origin: codeberg.org/Phazorknight/Cogito at 676be6d (MIT). The author's copy, [github.com/Naryadchikov/cogito-playtest-lens](https://github.com/Naryadchikov/cogito-playtest-lens), keeps upstream's `main` at that commit, unchanged, with its full history. Our changes are only the commits on its `playtest-lens` branch, listed below. It's the submodule at `game/`.
+- **COGITO** by Phazorknight (MIT), the immersive-sim template whose demo is the test game. Origin: codeberg.org/Phazorknight/Cogito at 676be6d (MIT). The author's copy, [github.com/Naryadchikov/cogito-playtest-lens](https://github.com/Naryadchikov/cogito-playtest-lens), keeps upstream's `main` at that commit, unchanged, with its full history. Our changes are only the commits on its `playtest-lens` branch; the main ones are listed below. It's the submodule at `game/`.
 - **Godot 4.7.2**, **Python**, **ffmpeg**, and any library listed in the analyzer's requirements file.
 - Demo asset credits: listed here once each asset's license is checked.
 - Tools used to build it, not part of the submission: T3 Code, Claude Code, Muse Code and Cursor.
@@ -111,7 +111,7 @@ On top of upstream's `676be6d`, in order:
 
 ## Development tools (not part of the product)
 
-- DeepSeek V4.1 Flash 1017 (DeepSeek, open weights) writes part of the code, served on Modal as a Shared Endpoint and driven by `tools/run-modal-agent.sh`. Modal's agent skill (`modal skills install --claude`) is installed locally and git-ignored. The product itself calls only Meta models (Muse Spark, Voice Transcribe, and Muse Spark Open for the open-weights mode).
+- DeepSeek V4.1 Flash 1017 (DeepSeek, open weights) wrote part of the early code, served on Modal as a Shared Endpoint and driven by `tools/run-modal-agent.sh`. Modal's agent skill (`modal skills install --claude`) is installed locally and git-ignored. The product itself calls only Meta models (Muse Spark, Voice Transcribe, and Muse Spark Open for the open-weights mode).
 - Grok 4.7 (xAI, through Cursor) reviews code and built the Godot side and tools. Claude Sonnet 5.5 orchestrated until 2026-10-31; since then Claude Opus 5.5 orchestrates and writes the code, Claude Fable 5.1 designed the report page, and Claude Sonnet 5.5 reviews the page. Every commit names its author models in a `Co-Authored-By:` trailer.
 
 The top-down maps in `report/maps/` and the fork's `maps/` are renders of COGITO's demo scenes (Lobby and Laboratory) made by our map tool (`godot/tools/map_export.gd` in this repo since 2026-10-31; first written in the fork's `tools/`), so their geometry is COGITO's (MIT, credited above); the tool and the pictures' framing are ours.

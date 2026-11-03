@@ -21,3 +21,10 @@ Base commit: `main` at the commit that adds this brief, in the main repo. The fo
 ## Rules
 
 Read-only except your report file. Do not commit. Do not call any t3-code tools. Never run rm. No model calls, no network, no Keychain. Never open `recordings/`, `runs/` or `DECISIONS.md`. Only stop processes you started, never by name. No em dashes and no spaced en dashes. Report: PASS or NOT PASS, findings ranked (blocking, should fix, nit) with file and line, the commands you ran, and what you did not check. Short.
+
+## What came back (2026-11-03)
+
+Grok did not start: Cursor's limits. A fresh Claude Sonnet 5.5 (high) took it, review 36: NOT PASS, 1 blocking, 3 should fix, 5 nits.
+- Blocking: this brief itself quoted the relationship words. The brief's commit was amended and `main` pushed again with a lease, while private. The review report describes the words instead of repeating them.
+- Fixed: docs/SUBMISSION.md's max_tokens line now matches `analyzer/client.py` (8192) and says the voice-less run was an open-weights one; STATUS.md says which checklist steps are done; PUBLIC_CHECKLIST step 11 checks that the remote holds only `main` and no tags; PLAN.md and docs/BACKUP_ORCHESTRATOR.md say DECISIONS.md is local; docs/PRIOR_WORK.md says "the main ones are listed below" and DeepSeek in the past tense.
+- Left on purpose: the local tags, branches and `refs/t3/` keep the old history (Sasha: "leave local copy just for our use"); only `main` is ever pushed. Gendered pronouns for Player 1 and Player 2 are Sasha's call.
