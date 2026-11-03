@@ -27,7 +27,7 @@ The repo is private for now (Sasha, 2026-10-27, DECISIONS.md: "I'll make it publ
 4. **Rerun the scans on the final commit,** in the main repo and in the fork:
    - `git ls-files -co --exclude-standard | xargs grep -InE 'wk-[A-Za-z0-9]{10,}|ws-[A-Za-z0-9]{10,}|sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|Bearer [A-Za-z0-9._-]{20,}|AKIA[0-9A-Z]{16}'` shows nothing;
    - `git ls-files | grep -Ei '\.(mp4|mov|mkv|webm|wav|m4a|zip|key|pem|env)$|recordings/|runs/'` shows nothing outside the fork's licensed game audio;
-   - `git log --all --format=%ae | sort -u` lists only noreply addresses;
+   - `git log main --format=%ae | sort -u` lists only noreply addresses (on `main`: the local tags, branches and `refs/t3/` keep the old history on purpose);
    - `git check-ignore -v recordings runs .env .claude/skills/modal` matches every path.
 5. **Tester privacy:** no tester video, audio, name or message anywhere in the repo or the docs. Sasha's own recordings stay out too. The demo's clips live only in the separate demo repo, with all three players' yes (Sasha, 2026-11-01: "all 3 players are ok with sharing their data"); this repo holds none, and the README's GIF loads from the demo site.
 6. **PRIOR_WORK.md:** complete. COGITO and its assets, Montserrat and OFL, every CC0 sound, the dev tools (DeepSeek on Modal, Grok, Claude), and any new add-on or library added since.
