@@ -7,7 +7,7 @@ The Cerebral Valley form, as Sasha shared it on 2026-11-02. The text below is a 
 - The repo must be public: "Public GitHub Repository" is required. Order on the day: the green light, both repos public and Pages on, a signed-out check, the X post, then the form.
 - The Most Viral field takes the X post's link, so the post goes up first.
 - The form has no field for the live demo or for the open-weights prize: the demo link is in the description, and Muse Spark Open on Baseten is in the two Meta fields and the partner feedback.
-- The permission box grants Meta and Cerebral Valley the right to "use, publish, share, and promote the submitted materials". The video and the site carry the testers' voices: Sasha checks this with both testers.
+- The permission box grants Meta and Cerebral Valley the right to "use, publish, share, and promote the submitted materials". The video and the site carry the testers' voices; Sasha confirmed on 2026-11-03 that both testers agree their videos may be used.
 
 ## Fields
 
