@@ -1,4 +1,4 @@
-# What existed before the hackathon
+# Third-party work and credits
 
 The hackathon's rule: what's presented must be built during the event, and what existed before must be clearly identified.
 
@@ -74,7 +74,7 @@ These licenses ask for a credit or for the copyright notice to stay with the cop
 
 The five files with unknown or non-commercial licenses (the CC BY-NC fireplace sound, the two sliding-door sounds and the two Freepik flags) were replaced or cut on `playtest-lens` in `1a381f1`. See the entries above.
 
-## Telemetry prior work (read, not used)
+## Telemetry projects we read (not used)
 
 Research only, 2026-10-28: no code, dependency or asset came from these. They informed the shape of our own add-on and this list is the credit for that.
 

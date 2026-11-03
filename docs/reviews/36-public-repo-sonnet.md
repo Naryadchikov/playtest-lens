@@ -23,8 +23,8 @@ Read-only. I wrote only this file. No model call, no network, no Keychain; I did
 
 5. `README.md:45,47` and some commit messages and task briefs say "she", "her", "him", "Hers" about Player 1 and Player 2 (for example `docs/tasks/33-prompt-review.md:16`, `docs/tasks/37-report-build-mix.md:48`; commit messages with "Her 14:02 Code Lock moment"). Not a relationship word, so it does not fail check 1, but Sasha said all personal details go. His call whether gender counts; a neutral wording ("the player") costs a few lines in README and the briefs.
 6. `PLAN.md` cites DECISIONS.md nine times (for example `PLAN.md:26,27,33,43,47,58`) and `docs/BACKUP_ORCHESTRATOR.md:8` says to read it, with no note that a fresh clone has no such file. Only AGENTS.md:5 says so. README does not mention it, so it reads fine. One line near the top of PLAN.md ("DECISIONS.md is the owner's local log and is not in this repo") closes it.
-7. `docs/PRIOR_WORK.md:7` says "Our changes are only the commits on its `playtest-lens` branch, listed below", and `:96-110` lists 10 commits. The branch has 31 commits above `676be6d` (`git -C game log 676be6d..HEAD`): `03ba23f`, `6e4e0ad`, `dc8c771`, `aee94ef`, `c10c2d0`, `95b8704`, `eab665d`, `b0a52cf`, `588c6a3`, `290cba9`, `8049b5d` and more are not listed. All are new work, so no rule is at risk, but "listed below" is not true.
-8. `docs/PRIOR_WORK.md:114` says DeepSeek "writes part of the code" in the present tense; AGENTS.md says DeepSeek, GLM and Kimi are idle.
+7. `docs/THIRD_PARTY.md:7` says "Our changes are only the commits on its `playtest-lens` branch, listed below", and `:96-110` lists 10 commits. The branch has 31 commits above `676be6d` (`git -C game log 676be6d..HEAD`): `03ba23f`, `6e4e0ad`, `dc8c771`, `aee94ef`, `c10c2d0`, `95b8704`, `eab665d`, `b0a52cf`, `588c6a3`, `290cba9`, `8049b5d` and more are not listed. All are new work, so no rule is at risk, but "listed below" is not true.
+8. `docs/THIRD_PARTY.md:114` says DeepSeek "writes part of the code" in the present tense; AGENTS.md says DeepSeek, GLM and Kimi are idle.
 9. `docs/SUBMISSION.md:34`, "When an early run saw the video without the voice, it did worst against the developer's notes": the only support in the tree is `docs/reviews/13-open-model-choice-opus.md:9`, a Muse Spark Open run on Modal, judged by a reviewer who did not watch the footage. Say "an early open-weights run". The cost figures (about $0.18, $0.06, $0.09, $2.30 and so on, `README.md:7,40,41`) come from the git-ignored `runs/costs.jsonl`; I could not check them.
 
 ## 1. History (commands and results)
@@ -62,7 +62,7 @@ All commands from the repo root, read-only.
 | `763f102`, `7e32700` | tasks/39:34,35 | main "Review 33 fixes...", "Review 34 fixes..." |
 | fork `b0b3647`, `8049b5d`, `b0a52cf`, `dc8c771`, `1bd0281` | tasks/25, 24, 22, 31 | fork subjects match each task's sentence |
 
-The 10 fork commits listed in PRIOR_WORK.md:98-110 all exist in the fork, in the same order and with the quoted subjects. `c10fbc2` (reviews/18:24, "a render from c10fbc2") is the commit just before the polish commit `b36e564` and is consistent with "before".
+The 10 fork commits listed in THIRD_PARTY.md:98-110 all exist in the fork, in the same order and with the quoted subjects. `c10fbc2` (reviews/18:24, "a render from c10fbc2") is the commit just before the polish commit `b36e564` and is consistent with "before".
 
 ## 3. DECISIONS.md
 
@@ -71,7 +71,7 @@ The 10 fork commits listed in PRIOR_WORK.md:98-110 all exist in the fork, in the
 
 ## 4. The docs against README and code
 
-Checked and true: STATUS.md's roles match AGENTS.md; the deadline arithmetic (9:00 PM EST Wed 4 Nov is 03:00 CET Thu 5 Nov; 18:00 CET Wed is 12:00 EST); README's flow against code (120 s windows with 20 s overlap `analyzer/analyze.py:28`, `spark_test.py:63`; 20 s clips `check.py:32`; quote kept only if in the transcript `check.py:190-195`; separate `input_audio` wav for the open model `client.py:312-334`; default model ids `client.py:36-48`, `analyze.py:27`); SUBMISSION's Meta-product list matches README "Use of Meta's models"; PRIOR_WORK's third-party list is complete for what the README names; PUBLIC_CHECKLIST step 9 matches the state (no DECISIONS.md in any `main` commit). Not true or loose: findings 3, 4, 7, 8, 9.
+Checked and true: STATUS.md's roles match AGENTS.md; the deadline arithmetic (9:00 PM EST Wed 4 Nov is 03:00 CET Thu 5 Nov; 18:00 CET Wed is 12:00 EST); README's flow against code (120 s windows with 20 s overlap `analyzer/analyze.py:28`, `spark_test.py:63`; 20 s clips `check.py:32`; quote kept only if in the transcript `check.py:190-195`; separate `input_audio` wav for the open model `client.py:312-334`; default model ids `client.py:36-48`, `analyze.py:27`); SUBMISSION's Meta-product list matches README "Use of Meta's models"; THIRD_PARTY's third-party list is complete for what the README names; PUBLIC_CHECKLIST step 9 matches the state (no DECISIONS.md in any `main` commit). Not true or loose: findings 3, 4, 7, 8, 9.
 
 ## 5. Tests
 

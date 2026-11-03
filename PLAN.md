@@ -73,7 +73,7 @@ Sasha's MacBook Pro (M1 Max, 64 GB), kept awake with `caffeinate -dims` while ag
 | Fri Oct 30 | Send testers the build, the guide and the consent text | The checking pass; event-log candidates |
 | Sat to Sun | Testers record. Sasha makes his blind notes, then reads the first reports | Report page, cross-player summary, score |
 | Mon Nov 2 | Tune with real data | Tune; open-weights mode if all else works |
-| Tue Nov 3 | Freeze. Record the demo | README, PRIOR_WORK, final checks |
+| Tue Nov 3 | Freeze. Record the demo | README, THIRD_PARTY, final checks |
 | Wed Nov 4 | Edit the 3-minute video, submit by evening Stockholm time | Final checks |
 
 The deadline is Nov 4, 21:00 ET (Thu Nov 5, 03:00 Stockholm). Don't count on the night.

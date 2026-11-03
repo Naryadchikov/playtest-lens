@@ -6,7 +6,7 @@
 
 ## Goal
 
-One outcome: every item in `docs/PRIOR_WORK.md`, "Demo assets to check", has its license from a source you can link, or stays "unknown", and a short list names what Sasha must decide on.
+One outcome: every item in `docs/THIRD_PARTY.md`, "Demo assets to check", has its license from a source you can link, or stays "unknown", and a short list names what Sasha must decide on.
 
 Sasha (T3 Code chat, 2026-10-26): "Yes, the read-only Grok task. Kenney's site says all its assets are CC0, so link that page for the Kenney items. Whatever is still unknown after the credits page, or has a non-commercial license, gets replaced with a CC0 asset or cut before Friday's build. Show me that list before anything is cut or replaced."
 
@@ -18,7 +18,7 @@ Sasha (T3 Code chat, 2026-10-26): "Yes, the read-only Grok task. Kenney's site s
 
 ## Files you own
 
-- `docs/PRIOR_WORK.md`, only its "Demo assets to check" section.
+- `docs/THIRD_PARTY.md`, only its "Demo assets to check" section.
 
 Touch nothing in `game/` (task 03 is changing it at the same time) and nothing else. Don't commit.
 

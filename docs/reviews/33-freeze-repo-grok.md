@@ -74,7 +74,7 @@ Findings are written in `analyzer/check.py` after the candidate pass. `analyzer/
 
 2. Home path and tester relationship, still in the tree a judge would clone. `docs/tasks/33-prompt-review.md:38` and `docs/tasks/36-report-layout-mocks.md:7` contain `/Users/sashanaria/...`. `DECISIONS.md:257`, `:314`, `:381`, `:383`, `:404` and `docs/tasks/33-prompt-review.md:9` name two testers by who they are to the author and name gitignored recording files. `docs/PUBLIC_CHECKLIST.md` step 9 already says to remove `DECISIONS.md` before the visibility flip. The file is still tracked at `e8511f3`.
 
-3. Who writes the code. `PLAN.md:43` says Claude Sonnet orchestrates and DeepSeek writes the analyzer and the report. `docs/PRIOR_WORK.md:115` says Claude Sonnet 5.5 orchestrates and Grok builds the Godot side. `README.md:83`, `AGENTS.md` ("Who does what"), and `STATUS.md:7` say Opus writes the code, Fable designed the page, Grok reviews, and Sonnet reviews the page.
+3. Who writes the code. `PLAN.md:43` says Claude Sonnet orchestrates and DeepSeek writes the analyzer and the report. `docs/THIRD_PARTY.md:115` says Claude Sonnet 5.5 orchestrates and Grok builds the Godot side. `README.md:83`, `AGENTS.md` ("Who does what"), and `STATUS.md:7` say Opus writes the code, Fable designed the page, Grok reviews, and Sonnet reviews the page.
 
 4. `STATUS.md:22`. "submit by 18:00 CET on Wed 4 Nov (deadline 9:00 PM Eastern)" treats those as one moment. 9:00 PM EST on Wed 4 Nov is 03:00 CET on Thu 5 Nov (`PLAN.md:77`, `docs/PUBLIC_CHECKLIST.md:18`). 18:00 CET on Wednesday is 12:00 EST.
 

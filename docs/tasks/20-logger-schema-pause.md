@@ -10,7 +10,7 @@ Everything that can land before Sasha's next COGITO session, from the telemetry 
 
 - game/addons/playtest_lens/logger.gd and its headless test (fork, `playtest-lens` branch)
 - analyzer/log_candidates.py and tests/test_log_candidates.py
-- docs/LOG_SCHEMA.md, docs/PRIOR_WORK.md
+- docs/LOG_SCHEMA.md, docs/THIRD_PARTY.md
 
 ## Done means
 

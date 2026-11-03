@@ -33,7 +33,7 @@ Read-only. I wrote only this file. No model call, no Keychain. I did not open `r
 - STATUS.md `:14` names steps 1 and 3 to 9 done and step 2 waiting on the video link, which matches `docs/PUBLIC_CHECKLIST.md` step 2 ("Left: the demo video link").
 - PUBLIC_CHECKLIST step 11: the `ls-remote` check and the push warning are present and true (see above).
 - PLAN.md `:5` and `docs/BACKUP_ORCHESTRATOR.md:8` say DECISIONS.md is the owner's local file. `git grep -nIE '\]\([^)]*DECISIONS' main` finds no Markdown link to it; README does not mention it.
-- PRIOR_WORK: "the main ones are listed below" (`:7`) is true (10 of 31 fork commits are listed, as round 1 counted); DeepSeek is in the past tense (`:114`), consistent with AGENTS.md ("idle").
+- THIRD_PARTY: "the main ones are listed below" (`:7`) is true (10 of 31 fork commits are listed, as round 1 counted); DeepSeek is in the past tense (`:114`), consistent with AGENTS.md ("idle").
 - Brief (`docs/tasks/40-public-review.md`): the Sasha quote and check 1 no longer hold the words; "What came back" matches review 36's counts (1 blocking, 3 should fix, 5 nits).
 - Left on purpose, as the brief says: the local old refs, and the pronoun question (now empty in the tree).
 

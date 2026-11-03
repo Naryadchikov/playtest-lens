@@ -2,7 +2,7 @@
 
 Reviewer: Grok 4.7, Cursor. Fresh reviewer. I did not build this project. Commit: `3c5c920` (2026-10-28, "Add a time trail and a separate heat map on the report"). Judged 2026-10-29, six days before the 2026-11-04 9:00 PM Eastern deadline.
 
-Read: README.md, PLAN.md, STATUS.md, docs/PRIOR_WORK.md, docs/PUBLIC_CHECKLIST.md, the analyzer pipeline and `report/render.py`, docs/reviews/11-report-timeline-sonnet.md, docs/tasks/26-open-model-grok.md, docs/tasks/26-open-model-opus.md. Pages: `runs/check/cogito-report-26.html` (contributor Spark) and `runs/check/cogito-report-open.html` (Muse Spark Open). Both are git-ignored and were rendered after that commit.
+Read: README.md, PLAN.md, STATUS.md, docs/THIRD_PARTY.md, docs/PUBLIC_CHECKLIST.md, the analyzer pipeline and `report/render.py`, docs/reviews/11-report-timeline-sonnet.md, docs/tasks/26-open-model-grok.md, docs/tasks/26-open-model-opus.md. Pages: `runs/check/cogito-report-26.html` (contributor Spark) and `runs/check/cogito-report-open.html` (Muse Spark Open). Both are git-ignored and were rendered after that commit.
 
 I did not play COGITO, watch a recording, open a clip, or read notes held out for the score. No API call. This is a hackathon judge's read of the package, not a PASS or NOT PASS code review.
 
@@ -22,7 +22,7 @@ Weights used below are the ones the participant guide states, as copied in docs/
 - The contributor page is a thing you can show. Session `cogito.mp4`, 8:32, start flash at 25.2 s. Each kept card has a `<video>` pointing at a local clip (20 clips). The map has a 464-point route, pins, a time trail, and a heat view. The heat spots in the file are 2:12, 0:25, and 0:15. A previous review (docs/reviews/11-report-timeline-sonnet.md) drove the trail in a browser: a 15 s window lit one pin and dimmed the other cards, and the heat view hid the route. I did not repeat that browser pass.
 - Open-weights mode recovered. The task 26 notes are right about the empty run: eight silent frames across 120 s, no clock, and a prompt that allows `[]`. The current open page is a second full report on the same session, checker model `meta-models/muse-spark-open-1026`, same lobby map. Of the 20 contributor keeps, 14 have an open keep within 15 s, and 11 within 8 s. The code path now labels each frame and puts the Voice Transcribe text in the prompt. That is a real second mode, which is what the open-weights bonus asks for (partner inference counts).
 - A second game has already been through the checker. The Talos findings file is about 15.5 minutes, with no event log and no map: contributor Spark kept 22 and dropped 13. I did not judge whether those moments are right. It does show the pipeline is not hardcoded to one COGITO report.
-- Prior work is in better shape than most hackathon repos. docs/PRIOR_WORK.md separates COGITO, Godot, fonts, and sounds from the analyzer, the report, and the logger. A judge who checks "new work only" can see the line. The license line is a name, not a placeholder.
+- Prior work is in better shape than most hackathon repos. docs/THIRD_PARTY.md separates COGITO, Godot, fonts, and sounds from the analyzer, the report, and the logger. A judge who checks "new work only" can see the line. The license line is a name, not a placeholder.
 
 ## What is weak
 
@@ -75,4 +75,4 @@ Leave these if the four items above are in doubt.
 
 ## What I did not check
 
-I did not re-run the suite. Review 11 recorded 180 passed and 2 failed, then a one-line test fix for the heat gradient. I did not open the browser, play a clip, or confirm that a pin sits on the right room. I did not read Talos moment by moment. I did not audit `game/` beyond PRIOR_WORK.md. Finding quality against the designer's own memory is Sasha's call: I cannot make it.
+I did not re-run the suite. Review 11 recorded 180 passed and 2 failed, then a one-line test fix for the heat gradient. I did not open the browser, play a clip, or confirm that a pin sits on the right room. I did not read Talos moment by moment. I did not audit `game/` beyond THIRD_PARTY.md. Finding quality against the designer's own memory is Sasha's call: I cannot make it.

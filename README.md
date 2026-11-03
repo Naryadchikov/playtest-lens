@@ -87,7 +87,7 @@ Solo, by a level designer, during the hackathon, with coding agents in T3 Code. 
 ## Built with
 
 - Meta: Muse Spark 1.2 (contributor), Muse Voice Transcribe, Muse Spark Open on Baseten.
-- Test game: the COGITO demo by Phazorknight (MIT), from codeberg.org/Phazorknight/Cogito at 676be6d, in a fork, [cogito-playtest-lens](https://github.com/Naryadchikov/cogito-playtest-lens). Prior work and asset licenses: [docs/PRIOR_WORK.md](docs/PRIOR_WORK.md).
+- Test game: the COGITO demo by Phazorknight (MIT), from codeberg.org/Phazorknight/Cogito at 676be6d, in a fork, [cogito-playtest-lens](https://github.com/Naryadchikov/cogito-playtest-lens). Third-party work and asset licenses: [docs/THIRD_PARTY.md](docs/THIRD_PARTY.md).
 - Godot 4.7.2, Python 3.13, ffmpeg.
 
 ## License

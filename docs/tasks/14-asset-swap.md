@@ -6,9 +6,9 @@
 
 ## Goal
 
-One outcome: the demo no longer uses the five files on docs/PRIOR_WORK.md's "To decide (Sasha)" list, and still runs.
+One outcome: the demo no longer uses the five files on docs/THIRD_PARTY.md's "To decide (Sasha)" list, and still runs.
 
-Sasha (T3 Code chat, 2026-10-27): "Yes to all three. Pick the CC0 fire loop yourself, no pick page needed, and credit it in PRIOR_WORK.md." The three were the orchestrator's proposals: a CC0 fire loop in place of the CC BY-NC fireplace sound, Kenney sounds already in the project for the two sliding-door sounds, and cutting the two Freepik flag icons. Read docs/PRIOR_WORK.md, "To decide (Sasha)", for where each file is used.
+Sasha (T3 Code chat, 2026-10-27): "Yes to all three. Pick the CC0 fire loop yourself, no pick page needed, and credit it in PRIOR_WORK.md." The three were the orchestrator's proposals: a CC0 fire loop in place of the CC BY-NC fireplace sound, Kenney sounds already in the project for the two sliding-door sounds, and cutting the two Freepik flag icons. Read docs/THIRD_PARTY.md, "To decide (Sasha)", for where each file is used.
 
 ## The changes
 
@@ -50,4 +50,4 @@ Grok 4.7, one run. `pagdev_fireplace_loop.ogg` (29.3 s, Vorbis stereo 44.1 kHz, 
 
 ## What the orchestrator changed
 
-Removed the five old files and their `.import` files with `git rm`, committed the swap on the fork's `playtest-lens` as `1a381f1` and the nine `.uid` files as `708528e`, and pushed. Updated docs/PRIOR_WORK.md (the fire loop's credit, the "To decide" list closed). Not checked: hearing the sounds, opening the sliding door or lighting a fire in a window.
+Removed the five old files and their `.import` files with `git rm`, committed the swap on the fork's `playtest-lens` as `1a381f1` and the nine `.uid` files as `708528e`, and pushed. Updated docs/THIRD_PARTY.md (the fire loop's credit, the "To decide" list closed). Not checked: hearing the sounds, opening the sliding door or lighting a fire in a window.

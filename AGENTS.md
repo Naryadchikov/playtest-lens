@@ -16,7 +16,7 @@ Sasha decides what gets built, every word a user reads, the look, the prompts' g
 
 ## Hackathon rules that bind the work
 
-- **New work only.** Everything in this repo is made after the kickoff. Third-party code is a clearly separate dependency (COGITO is a git submodule of Sasha's fork) and is listed in [docs/PRIOR_WORK.md](docs/PRIOR_WORK.md).
+- **New work only.** Everything in this repo is made after the kickoff. Third-party code is a clearly separate dependency (COGITO is a git submodule of Sasha's fork) and is listed in [docs/THIRD_PARTY.md](docs/THIRD_PARTY.md).
 - **The repo is public.** Going public is the last step: [docs/PUBLIC_CHECKLIST.md](docs/PUBLIC_CHECKLIST.md). Never commit a key, a token, a tester's video or audio, or anything private. Check every diff for them before committing.
 - **Testers are Player 1, Player 2 and so on,** never named or described by who they are to Sasha, in files and in commit messages. Sasha, T3 Code chat, 2026-11-03: "all personal detailes should be removed from history as well, besides mine, it is ok."
 - **Meta's models are the product.** The analyzer uses the Meta Model API (Muse Spark, Voice Transcribe) and, for the open-weights mode, Muse Spark Open.

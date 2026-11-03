@@ -27,7 +27,7 @@ The orchestrator made it: https://github.com/Naryadchikov/cogito-playtest-lens, 
 
 ## Files you own
 
-- `docs/PRIOR_WORK.md`: only a new section listing the demo assets to check
+- `docs/THIRD_PARTY.md`: only a new section listing the demo assets to check
 
 Touch nothing else. Don't commit anywhere. Godot's import writes `game/.godot/`, which is expected; change no tracked file in `game/`.
 
@@ -38,14 +38,14 @@ Touch nothing else. Don't commit anywhere. Godot's import writes `game/.godot/`,
    `/Applications/Godot.app/Contents/MacOS/Godot --headless --path game --import`
 3. Run the main scene briefly: `/Applications/Godot.app/Contents/MacOS/Godot --headless --path game --quit-after 600`.
 4. Save both runs' full output to `runs/checks/02-import.log` and `runs/checks/02-run.log` (git-ignored).
-5. List the demo assets that need a license check or credit: models, textures, sounds, music, fonts, shaders, anything not obviously made by Phazorknight. For each: the path, where it says it came from (a license file, a README, a credits file, a comment), the license if stated, and "unknown" if not. Add them as a section "Demo assets to check" in `docs/PRIOR_WORK.md`, facts only.
+5. List the demo assets that need a license check or credit: models, textures, sounds, music, fonts, shaders, anything not obviously made by Phazorknight. For each: the path, where it says it came from (a license file, a README, a credits file, a comment), the license if stated, and "unknown" if not. Add them as a section "Demo assets to check" in `docs/THIRD_PARTY.md`, facts only.
 
 ## Done means
 
 - `git -C game status --short` shows no change to a tracked file.
 - The import exits 0, or its failure is reported with the log.
 - The run's errors and warnings, deduplicated, each with a count and one example line, in your report. Say which look like the 4.6 to 4.7 move and which look like COGITO's own.
-- The asset list in `docs/PRIOR_WORK.md`.
+- The asset list in `docs/THIRD_PARTY.md`.
 
 ## Report back
 
@@ -66,7 +66,7 @@ Grok 4.7 (xhigh, fast), one run. Import and a 600-frame run of the main scene bo
 - Import: Montserrat font and theme errors on the first import (the theme loaded before the fonts' `.fontdata` existed); the run doesn't repeat them. Exit cleanup lines (4 ObjectDB instances leaked, 2 resources in use) in both.
 - Run: COGITO's own `DynamicInputIcon: ISSUE: No rendering device detected.` 49 times, expected headless.
 - The move to 4.7: the import rewrote 261 tracked files in `game/` (`project.godot` features `4.6` to `4.7`, new keys in `.import` files). Grok restored them, so the submodule stays at upstream's files.
-- The asset list in `docs/PRIOR_WORK.md`, "Demo assets to check". Not read: the Codeberg credits wiki that `game/Readme.md` links to.
+- The asset list in `docs/THIRD_PARTY.md`, "Demo assets to check". Not read: the Codeberg credits wiki that `game/Readme.md` links to.
 
 ## What the orchestrator changed
 
