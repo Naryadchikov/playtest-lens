@@ -16,7 +16,7 @@ Claude Opus 5.5 orchestrates and writes the code. Claude Fable 5.1 designs the r
 
 ## Next (Sasha's target: submit by 18:00 CET on Wed 4 Nov; the deadline is 03:00 CET on Thu 5 Nov)
 
-1. Sasha records and edits the video (docs/VIDEO_PLAN.md) and sends the YouTube link. It goes under the GIF in the README and on the site's front page.
+1. Sasha records and edits the video on his Windows PC (the script is in docs/VIDEO_PLAN.md, kept locally and not in git) and sends the YouTube link. It goes under the GIF in the README and on the site's front page.
 2. The green light, on Sasha's word: both repos public, Pages on, a signed-out check of the README GIF, the site and the clips (PUBLIC_CHECKLIST steps 10 and 11).
 3. The X post, then the submission (the form needs the public repo URL and the video link).
 
