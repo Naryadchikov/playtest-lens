@@ -17,14 +17,14 @@ Sasha decides what gets built, every word a user reads, the look, the prompts' g
 ## Hackathon rules that bind the work
 
 - **New work only.** Everything in this repo is made after the kickoff. Third-party code is a clearly separate dependency (COGITO is a git submodule of Sasha's fork) and is listed in [docs/THIRD_PARTY.md](docs/THIRD_PARTY.md).
-- **The repo is public.** Going public is the last step, run from a checklist kept locally (`docs/PUBLIC_CHECKLIST.md`, git-ignored). Never commit a key, a token, a tester's video or audio, or anything private. Check every diff for them before committing.
+- **Everything here is public.** Never commit a key, a token, a tester's video or audio, or anything private. Check every diff for them before committing.
 - **Testers are Player 1, Player 2 and so on,** never named or described by who they are to Sasha, in files and in commit messages. Sasha, T3 Code chat, 2026-11-03: "all personal detailes should be removed from history as well, besides mine, it is ok."
 - **Meta's models are the product.** The analyzer uses the Meta Model API (Muse Spark, Voice Transcribe) and, for the open-weights mode, Muse Spark Open.
-- **Out of scope, always:** Sasha's other games and projects, and anything from his employer. Don't copy code from any of them, not even a COGITO fix: redo it in the fork. His other folders on this Mac, including his earlier hackathon folder, are off limits: don't open, read or copy from them.
+- **Out of scope, always:** Sasha's other projects and anything from his employer. Don't copy code from any of them, not even a COGITO fix: redo it in the fork. Don't open, read or copy from other projects' folders.
 
 ## Access and cost
 
-- Muse Code runs on Sasha's Muse Code sign-in (his plan), never on the API key. Never read, print or copy its credential files (`~/.config/muse/`).
+- Muse Code runs on its own sign-in, never on the API key. Never read, print or copy its credential files (`~/.config/muse/`).
 - **Keep the API key out of every agent's environment.** A `META_API_KEY` in Muse Code's environment takes priority over the sign-in, and would bill Muse's work to the $150 API credits. The key lives only in the macOS Keychain (service `META_API_KEY`). `tools/run-analyzer.sh` reads it from there for the analyzer's own process and nothing else; never export it in a shell profile or with `launchctl`.
 - **The Baseten key follows the same rule as the Meta key:** it lives in the Keychain (service `BASETEN_API_KEY`), and only `tools/run-baseten.sh` reads it, for its own process. Never print, log, write or export it, and never put it in a URL.
 - The analyzer calls the Meta Model API from Python. If the key isn't in the Keychain, stop and tell Sasha; never work around it, and never borrow a token from Muse Code's files.
@@ -34,31 +34,23 @@ Sasha decides what gets built, every word a user reads, the look, the prompts' g
 
 ## Who does what
 
-The arrangement from 2026-10-31 (Sasha's words are quoted in DECISIONS.md). Model picks may change again when someone's usage runs out; this table and DECISIONS.md are the two places to edit.
+The arrangement from 2026-10-31. The authors were different before that: [docs/tasks/README.md](docs/tasks/README.md) and [PLAN.md](PLAN.md).
 
 | Who | Model and harness | What |
 |---|---|---|
-| Orchestrator and main author | Claude Opus 5.5 (high effort), Claude Code in T3 Code | Plans, writes the analyzer, the report page, the tools and their tests, keeps STATUS.md and DECISIONS.md, brings Sasha results and questions |
-| Code reviewer | Grok 4.7 (xhigh, fast) through Cursor, started by T3 `delegate_task` on the `cursor` provider, a fresh reviewer every round | Reviews Opus-authored code at milestones and at the freeze |
-| Final design pass on the report | Claude Fable 5.1 (high effort), a Claude Code subagent (Sasha, 2026-10-31) | Design improvements and UX suggestions on the built page; Grok reviews its code |
-| Look reviewer | Claude Sonnet 5.5 (high effort), a fresh subagent every round | Judges captures of the report page and the README (the UX review in docs/REVIEW.md), and reviews any code Grok authors. The look itself is Sasha's call |
-| Grok bot on its own VM | Sasha's bot, briefed by prompts Sasha pastes | Parallel work on files nobody else touches, such as the Godot telemetry tool. It has no recordings, no Keychain and no secrets |
-| Product, normal mode | Contributor Spark `muse-spark-1.2-contributor` and Voice Transcribe, from the Meta pool (about $23.90 on 2026-10-28) | The pool pays for the product's video and audio processing only (Sasha, 2026-10-28 and 2026-10-31). No agent work is billed to it, and Muse Wonder is not called |
-| Product, open-weights mode | Muse Spark Open `meta-models/muse-spark-open-1026` on Baseten (OpenAI-compatible, `https://inference.baseten.co/v1`): the mp4 plus a separate wav, quotes still checked against Voice Transcribe | A separate mode for the open-weights prize; billed to Baseten's credits, not to the Meta pool. Only `tools/run-baseten.sh` reads `BASETEN_API_KEY` |
-| Sasha's Windows machine | His volume placement, play session and recording | OBS, not Game Bar (Sasha, 2026-10-28). Steps in docs/COGITO_VOLUMES.md. Agents on the Mac still use `/Applications/Godot.app` |
-| Sasha | | Decides; judges the findings, the report and the video; plays the build |
+| Orchestrator and main author | Claude Opus 5.5, Claude Code in T3 Code | Plans, writes the analyzer, the report page, the tools and their tests, keeps STATUS.md and DECISIONS.md, brings Sasha results and questions |
+| Code reviewer | Grok 4.7 through Cursor, a fresh reviewer every round; Claude Sonnet 5.5 when Cursor isn't available | Reviews Opus-authored code at milestones and at the freeze |
+| Final design pass on the report | Claude Fable 5.1, a Claude Code subagent | Design improvements and UX suggestions on the built page; Grok reviews its code |
+| Look reviewer | Claude Sonnet 5.5, a fresh subagent every round | Judges captures of the report page and the README (the UX review in docs/REVIEW.md), and reviews any code Grok authors. The look itself is Sasha's call |
+| Grok bot on its own VM | Briefed by prompts Sasha pastes | Parallel work on files nobody else touches, such as the Godot telemetry tool. It has no recordings, no Keychain and no secrets |
+| Product, normal mode | Contributor Spark `muse-spark-1.2-contributor` and Voice Transcribe | The Meta credits pay for the product's video and audio processing only (Sasha, 2026-10-28 and 2026-10-31). No agent work is billed to them, and Muse Wonder is not called |
+| Product, open-weights mode | Muse Spark Open `meta-models/muse-spark-open-1026` on Baseten (OpenAI-compatible, `https://inference.baseten.co/v1`): the mp4 plus a separate wav, quotes still checked against Voice Transcribe | A separate mode for the open-weights prize; billed to Baseten's credits, not to the Meta credits |
+| Sasha | | Decides; judges the findings, the report and the video; plays the build; places the volumes and records on Windows with OBS (steps in docs/COGITO_VOLUMES.md) |
 
-Effort: high for the orchestrator and every subagent (Sasha, T3 Code chat, 2026-11-01: "also lets move orchestration work to high effort as well as all subagents."); Grok stays at xhigh (Sasha, same chat: "sorry, grok should stay on xhigh"). A brief sets it in `delegate_task` options (`effort: high` for Claude, `reasoning_effort: xhigh` for Grok). If Cursor's limits stop a Grok review mid run, the code review goes to a fresh Claude Sonnet 5.5 (high) instead (Sasha, T3 Code chat, 2026-11-01: "also I might get hit by cursor limits soon, if it will be the case mid run on your end, change reviewer model to sonnet instead."). Sasha named Opus as planner and author and left the reviewer split to the orchestrator; the split above is Opus's pick (DECISIONS.md, 2026-10-31). Grok runs only through Cursor (Sasha's rule for his projects; it may change), and Cursor is close to unlimited. DeepSeek, GLM 5.3 and Kimi K3 on Modal are idle.
+## The quality bar
 
-Backup mode ran from 2026-10-28 to 2026-10-31.
+The orchestrator checks it at every milestone, with evidence:
 
-## When to switch to more Claude
-
-From 2026-10-31 Opus authors every area, so the switch triggers below are dormant until another model authors again. The quality bar still applies at every milestone.
-
-"Goes poorly" means bad software (Sasha's words: "goes poorly that we are getting bad software"). A switch is per area (the analyzer, the report page, the Godot side), not for the whole project. The orchestrator tells Sasha when a trigger trips and asks before switching.
-
-**The quality bar.** The orchestrator checks it at every milestone, with evidence:
 - **Right times.** A finding's time matches the video and the event log within 1 second, measured from the start flash in both.
 - **Works on a session it wasn't built on.** Once there are two recordings, each milestone runs on one the author never saw, without code changes. Running on a held-out session is fine; reading its notes isn't.
 - **Survives real input:** a full-length recording, long silence, another resolution, a log with missing lines. It fails with a clear message, never a wrong answer.
@@ -66,35 +58,15 @@ From 2026-10-31 Opus authors every area, so the switch triggers below are dorman
 - **Offline tests pass** with cached replies and no API call.
 - **One path,** no duplicated logic, no dead code.
 
-**Switch an area to Claude when:**
-- a defect in it reaches Sasha after passing review (a Miss in docs/REVIEW.md), and it's wrong data: a wrong time, a wrong quote, a finding the file doesn't hold; or two Misses of any kind;
-- the quality bar fails and the author's fix doesn't pass it;
-- A reviewer finds the same class of bug again after it was fixed, or blocking correctness findings at two milestones in a row;
-- the orchestrator rewrites more than about 20 lines of an author's diff on two tasks in a row.
-
-**Bad findings are a different problem.** If the software works but the model flags the wrong moments, switching authors won't fix it. That's the prompts, the model choice or the idea itself, and it goes to Sasha as the go or no-go question (PLAN.md, the Spark test).
-
-After a switch, Claude Sonnet 5.5 subagents author that area; Opus authors only what Sonnet can't get right. Tool failures aren't a quality switch: when a Grok task fails twice, fallback included, Muse takes it, and the other way round.
-
-## Saving Claude usage
-
-Claude's limits came back on 2026-10-31, and Opus now writes the code. Spend Claude on the work, not on ceremony: reviews go to Grok through Cursor first.
-
-- **Short reports.** Authors and reviewers end with the files changed, the commands, the evidence paths and what they didn't check: no file dumps, no recaps. The orchestrator reads a verdict, and a diff only when it has to.
-- **Never wait in a loop.** A started author or reviewer wakes the orchestrator when it finishes: end the turn. No "still waiting" messages.
-- **A fresh orchestrator thread each day.** At each milestone and at the end of the day, bring `STATUS.md` (kept locally, git-ignored) up to date: where things stand, what's next, open questions for Sasha, credits used. Sasha starts the next thread with "Read STATUS.md and continue".
-- **When Claude runs out:** say so in STATUS.md and to Sasha.
-
 ## Working with the authors
 
-- **Opus writes in the orchestrator's thread,** or in an Opus subagent with worktree isolation for a task big enough to need its own context. Other agents start as T3 Code subagents with worktree isolation: Grok on T3's `cursor` provider. Godot tasks are the exception: Grok works directly in `game/` on `playtest-lens`, with no new worktree. Sasha, T3 Code chat, 2026-10-26: "for Godot tasks, Grok works directly in game/ on playtest-lens instead of a new worktree each time, since no other author touches it." Once an author's work is committed, the orchestrator removes its worktree without asking. Sasha, T3 Code chat, 2026-10-27: "remove each author's worktree once its work is committed, without asking." A brief stands alone (see "How to work") and names the skill file the author follows, since only Claude loads `.claude/skills/` by itself.
-- **Fallbacks.** Muse (only if Sasha approves it): `muse exec` (JSON output, a step cap of 40, the brief as a prompt file; check `muse exec --help` for the current flags), run inside `.worktrees/muse-NN` on a branch `muse/NN-name`. Grok: the Cursor CLI (`cursor-agent`, model `grok-4.7-xhigh-fast`; check `--list-models` and `--help`), run inside `.worktrees/grok-NN`.
-- **Never** use `--yolo` or any flag that turns off approvals or the sandbox: this is Sasha's own laptop.
-- **Keep Grok's tasks short:** one outcome, about 15 minutes. Cursor ends a run after 10 connection errors and the count never resets, so a long run can die. When a run fails, read its thread before rerunning: the work is often there.
-- **Two authors at once only on different files.** Each brief lists the files it owns.
+- **Opus writes in the orchestrator's thread,** or in an Opus subagent with worktree isolation for a task big enough to need its own context. Other agents start as T3 Code subagents with worktree isolation. Once an author's work is committed, the orchestrator removes its worktree without asking. A brief names the skill file the author follows, since only Claude loads `.claude/skills/` by itself.
+- **Never** use `--yolo` or any flag that turns off approvals or the sandbox.
+- **Keep Grok's tasks short:** one outcome, about 15 minutes. When a run fails, read its thread before rerunning: the work is often there.
 - **Brief in a file:** `docs/tasks/NN-name.md`, with the author, the goal, the files it may touch, what "done" means and the evidence to show. After the task, add what came back and what the orchestrator changed. These files are public: they show which agent built what.
+- **Short reports.** Authors and reviewers end with the files changed, the commands, the evidence paths and what they didn't check: no file dumps, no recaps.
 - Authors other than the orchestrator edit files and don't commit. The orchestrator reads the whole diff, runs the checks, and commits it with the author's name and model in a `Co-Authored-By:` trailer next to its own.
-- **Asking a model about an API** (for example how the current Meta API takes video) is a read-only task with a small step cap, and only when Muse is approved to be called. Check its answer against Meta's docs before building on it.
+- **Asking a model about an API:** check its answer against the vendor's docs before building on it.
 
 ## The analyzer's rules
 
@@ -127,10 +99,11 @@ As [docs/REVIEW.md](docs/REVIEW.md) says: a milestone gets a new reviewer on a d
 - Never write a polling or sleep loop. Run long jobs in the background and wait with the harness's monitor; say nothing while nothing needs doing.
 - Build and test each change before writing the next one.
 - Ask Sasha before installing anything outside the project's `.venv`.
-- Small commits on `main`, each built and tested. No PRs for this solo repo. The GitHub repo is `Naryadchikov/playtest-lens`, private for now. Sasha, T3 Code chat, 2026-10-27: "create it on GitHub now as a private repo named playtest-lens, and push main, for backup. I'll make it public before we submit." Write everything as if it were public already. When pushing, push only `main`. Sasha, T3 Code chat, 2026-10-26: "When we push later, push only main." That's about this repo; on the fork, `playtest-lens` is our branch and gets pushed. Sasha, same chat: "“push only main” is about this repo; on the fork, playtest-lens is our branch."
+- At each milestone, bring `STATUS.md` (kept locally, git-ignored) up to date: where things stand, what's next, open questions for Sasha, credits used.
+- Small commits on `main`, each built and tested. No PRs for this solo repo. The GitHub repo is `Naryadchikov/playtest-lens`. When pushing, push only `main`. On the fork, `playtest-lens` is our branch and gets pushed. Sasha, T3 Code chat, 2026-10-26: "“push only main” is about this repo; on the fork, playtest-lens is our branch."
 - Every commit names the agent and model in a `Co-Authored-By:` trailer, and the harness in a `Harness:` trailer (for example `Harness: Claude Code in T3 Code`).
 - **A brief stands alone:** the base commit, one outcome, the files it owns, the checks that prove it, and Sasha's decisions quoted. Two tasks run at once only when they touch different files.
-- **T3 Code's tools are the orchestrator's:** it starts the authors and the reviewers with them, reads their threads, and follows their runs. An agent it starts gets a narrower brief: "Do not call any t3-code tools" and "never run rm". A child's approval prompt appears in a thread nobody watches, so on the Mac both once stalled a review for good. If T3 is set to approve a child's calls on its own, Sasha can drop this line.
+- **T3 Code's tools are the orchestrator's:** it starts the authors and the reviewers with them, reads their threads, and follows their runs. An agent it starts gets a narrower brief: "Do not call any t3-code tools" and "never run rm". A child's approval prompt appears in a thread nobody watches.
 - Models test first: run the analyzer on the sample session, or play the build, and fix small things before asking Sasha to look.
 - When Sasha chooses between looks or wordings, give him a page showing every option side by side, with a "copy my picks" button.
 

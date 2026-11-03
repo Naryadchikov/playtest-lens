@@ -10,7 +10,7 @@ Use before handing off or committing a change.
 3. Run the project's checks (`python tools/verify.py` once it exists; until then the tests and the headless Godot check). A tool you couldn't run makes the claim unverified, not green.
 4. Exercise the exact thing that changed: the analyzer on the sample session, the build with the add-on, or the report page in a browser with a screenshot.
 5. Check that the report page computes nothing and that every model call went through the client.
-6. At a milestone, check the quality bar in AGENTS.md, "When to switch to more Claude", line by line, with evidence for each.
+6. At a milestone, check the quality bar in AGENTS.md line by line, with evidence for each.
 7. Report:
    - the files changed;
    - what a user would see differently;
