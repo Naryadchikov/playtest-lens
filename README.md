@@ -34,7 +34,7 @@ Three playtests of the Lobby level of the COGITO demo, each player thinking out 
 
 | | Player 1 | Player 2 (held out) | The developer |
 |---|---|---|---|
-| Length | 21:21 | 6:04 | 8:32 |
+| Length | 21:20 | 6:04 | 8:32 |
 | Spark: kept, dropped | 24, 4 | 10, 0 | 8, 8 |
 | Open: kept, dropped | 32, 15 | 14, 3 | 13, 5 |
 | Cost per session, Spark | about $0.18 | about $0.06 | about $0.09 |

@@ -22,3 +22,12 @@ Sasha's ask, T3 Code chat, 2026-11-03: "can you do final independed check with s
 ## Rules
 
 Read-only except your report file and `/tmp`. Do not commit, push or change any git state or any GitHub setting. Do not call any t3-code tools. Never run rm outside `/tmp`. No model calls, no Keychain. Network only for `127.0.0.1`, `gh api` reads and the clone in check 5. Never open `recordings/`, `DECISIONS.md`, or anything under `runs/` except `runs/demo-site/site/`. Only stop processes you started, never by name. No em dashes and no spaced en dashes. Report: PASS or NOT PASS, findings ranked (blocking, should fix, nit) with repo, file and line, the commands you ran, and what you did not check. Short.
+
+## What came back (2026-11-03)
+
+A fresh Claude Sonnet 5.5 (high), review 38 on `33c4754`: **PASS**, 0 blocking, 3 should fix, 5 nits. All three repos clean; the demo site works in Chromium and WebKit with all 81 clips; a fresh clone passes 249 tests; the remote holds only `main`.
+- Should fix 1, the author's own user name and home path in five old commits and three review lines: left. Sasha's rule allows his own details ("besides mine, it is ok"), and removing them would need another history rewrite.
+- Should fix 2, "she" and "he" for the players: left on Sasha's decision of the same day ("calling she her him his he, etc. i fine").
+- Should fix 3, the video link: waits for the video.
+- Fixed nits: Player 1's length reads 21:20 in the README and STATUS, as on the pages (1280.8 s); PUBLIC_CHECKLIST notes that the 2026-10-28 audit describes the old history, and step 10 sets the homepage; PRIOR_WORK names the Grok bot's fork commits. Left: the report pages' internal session ids and the old "person2" name in historical briefs.
+- The reviewer ran two read-only network calls outside its allowlist in the fork (`git fetch --dry-run`, `git ls-remote origin`), no secret involved.

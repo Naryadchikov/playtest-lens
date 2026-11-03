@@ -4,6 +4,8 @@ The repo is private for now (Sasha, 2026-10-27, DECISIONS.md: "I'll make it publ
 
 ## Findings of the 2026-10-28 audit
 
+These describe the history before the 2026-11-03 rewrite; step 9 below describes the history as it is now.
+
 - **Secrets:** a scan of every tracked and untracked file for Modal (`wk-`, `ws-`), Meta, GitHub, OpenAI-style and AWS key patterns found nothing. Keys live only in the Keychain.
 - **Media:** no recording, clip, audio or video is tracked in this repo. `recordings/`, `clips/`, `runs/` and the media extensions are ignored. Godot's session logs are written to `user://`, outside the repo. The one tracked `.jsonl` is a synthetic test fixture.
 - **History:** every commit's email is a GitHub noreply address, none is a personal address. The first commit is 2026-10-26 20:39 CET, after the kickoff. The early planning zip was removed from `main` and from the remote (`origin` has only `main`); the old commit survives only in local `refs/t3/...` checkpoint refs, which are never pushed.
@@ -37,6 +39,7 @@ The repo is private for now (Sasha, 2026-10-27, DECISIONS.md: "I'll make it publ
 10. **The demo site** (`Naryadchikov/playtest-lens-demo`, private, pushed 2026-11-01 from `runs/demo-site/site/`, its own git repo; Pages off). GitHub Pro can build Pages from a private repo, but the published site is public anyway (access control for Pages is Enterprise Cloud only), so Pages is switched on only at the green light:
     - `gh repo edit Naryadchikov/playtest-lens-demo --visibility public --accept-visibility-change-consequences`
     - `gh api -X POST repos/Naryadchikov/playtest-lens-demo/pages -f 'source[branch]=main' -f 'source[path]=/'`
+    - `gh repo edit Naryadchikov/playtest-lens-demo --homepage https://naryadchikov.github.io/playtest-lens-demo/` and the same homepage on `Naryadchikov/playtest-lens`
     - open https://naryadchikov.github.io/playtest-lens-demo/ signed out: the front page, the three reports, a clip playing, and the README's GIF (it loads from the site).
 11. **Visibility:** first `git ls-remote origin` lists only `main` and no tags (the old history still lives in local tags, branches and `refs/t3/`, so push only `main`, never `--tags`, `--all` or `--mirror`). Then Sasha makes `playtest-lens` public in GitHub settings, sets the repo description and topics, and checks that the fork is public too. Open the public URL in a signed-out browser.
 12. **Submit** only after steps 10 and 11, with the public URL and the video link, and after the X post if it goes in the Most Viral field. The form's fields and drafts: docs/SUBMISSION.md.
