@@ -4,7 +4,7 @@ The hackathon's rule: what's presented must be built during the event, and what 
 
 ## Third-party
 
-- **COGITO** by Phazorknight (MIT), the immersive-sim template whose demo is the test game. Origin: codeberg.org/Phazorknight/Cogito at 676be6d (MIT). Sasha's copy, [github.com/Naryadchikov/cogito-playtest-lens](https://github.com/Naryadchikov/cogito-playtest-lens), keeps upstream's `main` at that commit, unchanged, with its full history. Our changes are only the commits on its `playtest-lens` branch, listed below. It's the submodule at `game/`.
+- **COGITO** by Phazorknight (MIT), the immersive-sim template whose demo is the test game. Origin: codeberg.org/Phazorknight/Cogito at 676be6d (MIT). The author's copy, [github.com/Naryadchikov/cogito-playtest-lens](https://github.com/Naryadchikov/cogito-playtest-lens), keeps upstream's `main` at that commit, unchanged, with its full history. Our changes are only the commits on its `playtest-lens` branch, listed below. It's the submodule at `game/`.
 - **Godot 4.7.2**, **Python**, **ffmpeg**, and any library listed in the analyzer's requirements file.
 - Demo asset credits: listed here once each asset's license is checked.
 - Tools used to build it, not part of the submission: T3 Code, Claude Code, Muse Code and Cursor.
@@ -62,7 +62,7 @@ These licenses ask for a credit or for the copyright notice to stay with the cop
   - `Alarm Siren.wav by mirkosukovic -- https://freesound.org/s/435666/ -- License: Attribution 4.0`
   - `Running Water by Poyekhali -- https://freesound.org/s/241842/ -- License: Attribution 3.0`
   - `Underwater Deep Water Loop by Department64 -- https://freesound.org/s/651743/ -- License: Attribution 4.0`
-- Fireplace Sound loop by PagDev, https://opengameart.org/content/fireplace-sound-loop, CC0. Not required by the license; credited because Sasha asked (2026-10-27) and the page says credit "is always appreciated".
+- Fireplace Sound loop by PagDev, https://opengameart.org/content/fireplace-sound-loop, CC0. Not required by the license; credited because the author asked (2026-10-27) and the page says credit "is always appreciated".
 - "Just a screw" by XialiMu.Bell, https://skfb.ly/6XVNT, CC BY 4.0, http://creativecommons.org/licenses/by/4.0/. The deed also asks for a note if the model was changed. Whether this mesh differs from the Sketchfab file was not checked.
 - MIT. The license says the copyright notice and the permission notice must be included in all copies or substantial portions.
   - `game/addons/quick_audio/LICENSE`: Copyright (c) 2023 Bryce "BtheDestroyer" Dixon.
@@ -70,9 +70,9 @@ These licenses ask for a credit or for the copyright notice to stay with the cop
   - `game/addons/godot_state_charts/LICENSE`: Copyright (c) 2023 Jan Thomä.
   - Assets held under the MIT line (the gamepad icon sheet, the HourOfOblivion barks, `vending_machine_sfx.ogg`, `shelf_base.glb`, `shelf_drawer.glb`, `ladder.glb`, `pistol.glb`, `target.glb`, and `game/addons/cogito/Assets/VFX/`): `game/LICENSE` says Copyright (c) 2023 Phazorknight and includes the permission notice. The credits page's MIT block says Copyright © 2026 Phazorknight + Contributors.
 
-### To decide (Sasha): done
+### Replaced assets
 
-Sasha, T3 Code chat, 2026-10-27: "Yes to all three. Pick the CC0 fire loop yourself, no pick page needed, and credit it in PRIOR_WORK.md." The five files (the CC BY-NC fireplace sound, the two sliding-door sounds and the two Freepik flags, whose licenses were unknown) were replaced or cut on `playtest-lens` in `1a381f1`. See the entries above.
+The five files with unknown or non-commercial licenses (the CC BY-NC fireplace sound, the two sliding-door sounds and the two Freepik flags) were replaced or cut on `playtest-lens` in `1a381f1`. See the entries above.
 
 ## Telemetry prior work (read, not used)
 
@@ -85,7 +85,7 @@ Research only, 2026-10-28: no code, dependency or asset came from these. They in
 
 ## Prepared before building started
 
-- This repo's planning notes, agent rules and skills (`PLAN.md`, `AGENTS.md`, `CLAUDE.md`, `DECISIONS.md`, `STATUS.md`, `README.md`, `docs/`, `.claude/skills/`), drafted on 2026-10-26 around the kickoff. The rules, the review loop and the skills adapt working rules Sasha uses on his other projects: process only, no code or content from them. No code.
+- This repo's planning notes, agent rules and skills (`PLAN.md`, `AGENTS.md`, `CLAUDE.md`, `STATUS.md`, `README.md`, `docs/`, `.claude/skills/`), drafted on 2026-10-26 around the kickoff. The rules, the review loop and the skills adapt working rules the author uses on his other projects: process only, no code or content from them. No code.
 
 Building started after the kickoff on 2026-10-26 at 12:00 ET.
 
@@ -103,7 +103,7 @@ On top of upstream's `676be6d`, in order:
 - `9520a99` "Add the start flash and beep to the Playtest Lens logger": `addons/playtest_lens/start_flash.gd` (a white window for 0.25 s and a 1000 Hz beep generated in code, logged as `start_flash`) and its tests.
 - `cbfb616` "Flash and beep at New Game and at each level load": `start_flash.gd` renamed to `addons/playtest_lens/sync_flash.gd`, now flashing on request and logged as `sync_flash` with a `reason`; the logger flashes when a scene with the player loads, the COGITO adapter when the main menu's New Game is pressed; their headless tests.
 - `1be0ed4` "Log the player's death, and a scripted session test": a `death` line from the COGITO adapter when the player's health attribute emits `death`, and `addons/playtest_lens_cogito/tests/test_session.gd`, a headless Lobby session (New Game, out and back, 40 s still, a death, a retry) whose log is the analyzer's test fixture.
-- `1a381f1` "Replace the fire and sliding-door sounds, cut the flag icons": the five files from "To decide (Sasha)" removed; `pagdev_fireplace_loop.ogg` added; `CogitoProperties.tscn`, `sliding_door.tscn`, `language_select.gd` and `OptionsTabMenu.tscn` point at the new sounds or drop the flags.
+- `1a381f1` "Replace the fire and sliding-door sounds, cut the flag icons": the five files listed under "Replaced assets" removed; `pagdev_fireplace_loop.ogg` added; `CogitoProperties.tscn`, `sliding_door.tscn`, `language_select.gd` and `OptionsTabMenu.tscn` point at the new sounds or drop the flags.
 - `708528e` "Add the UID files Godot 4.7 wrote for the Playtest Lens scripts": nine `.gd.uid` files under `addons/playtest_lens*`.
 - `5d585f9` "Log where the player looks; keep the log free of paths that name a person": `yaw` and `pitch` from the camera on each `position` line, `log_path` in its `user://` form, and the scripted session looking around for 20 s of its stand.
 - `7ad0f20` "Trim the sliding door's open sound to 0.4 s with a fade-out": `addons/cogito/Assets/Audio/sliding_door_open.ogg`, the first 0.4 s of Kenney's `stoneDrag4.ogg` (CC0) with a 0.1 s fade-out, used as `sliding_door.tscn`'s `open_sound`.

@@ -1,6 +1,8 @@
 # Playtest Lens: rules for agents
 
-A playtest analyst for game developers, built solo by Sasha for the Meta Global AI Developer Hackathon (kickoff 2026-10-26 at 12:00 ET; building period 2026-10-27 to 2026-11-04; submissions due 2026-11-04 at 9:00 PM Eastern, verified from the Participant Guide, 2026-10-28). Read [PLAN.md](PLAN.md) first, then [DECISIONS.md](DECISIONS.md).
+A playtest analyst for game developers, built solo by Sasha for the Meta Global AI Developer Hackathon (kickoff 2026-10-26 at 12:00 ET; building period 2026-10-27 to 2026-11-04; submissions due 2026-11-04 at 9:00 PM Eastern, verified from the Participant Guide, 2026-10-28). Read [PLAN.md](PLAN.md) first, then DECISIONS.md.
+
+DECISIONS.md is Sasha's decision log. It is kept in the working folder only, git-ignored, and is not part of the public repo (Sasha, T3 Code chat, 2026-11-03: "remove decisions from history in remote, leave local copy just for our use"). A fresh clone does not have it.
 
 Every agent that works here reads this file: the orchestrator, the authors, Grok, the reviewers. The rules apply to all of them.
 
@@ -8,7 +10,7 @@ Every agent that works here reads this file: the orchestrator, the authors, Grok
 
 Sasha decides what gets built, every word a user reads, the look, the prompts' goals, and the scope. Agents propose, build what he approved, and prove it works. When unsure, ask him one question instead of deciding.
 
-- [DECISIONS.md](DECISIONS.md) holds his decisions. Each entry is **Decided** (his words quoted, with the date and the channel) or **Proposal** (whose it is). Without his quote, it's a Proposal.
+- DECISIONS.md holds his decisions. Each entry is **Decided** (his words quoted, with the date and the channel) or **Proposal** (whose it is). Without his quote, it's a Proposal.
 - When he answers, write his words into DECISIONS.md verbatim in the same session. Never turn his "maybe", "for now" or "let's try" into a lock.
 - When you give him options, say whose recommendation each one is.
 
@@ -16,6 +18,7 @@ Sasha decides what gets built, every word a user reads, the look, the prompts' g
 
 - **New work only.** Everything in this repo is made after the kickoff. Third-party code is a clearly separate dependency (COGITO is a git submodule of Sasha's fork) and is listed in [docs/PRIOR_WORK.md](docs/PRIOR_WORK.md).
 - **The repo is public.** Going public is the last step: [docs/PUBLIC_CHECKLIST.md](docs/PUBLIC_CHECKLIST.md). Never commit a key, a token, a tester's video or audio, or anything private. Check every diff for them before committing.
+- **Testers are Player 1, Player 2 and so on,** never named or described by who they are to Sasha, in files and in commit messages. Sasha, T3 Code chat, 2026-11-03: "all personal detailes should be removed from history as well, besides mine, it is ok."
 - **Meta's models are the product.** The analyzer uses the Meta Model API (Muse Spark, Voice Transcribe) and, for the open-weights mode, Muse Spark Open.
 - **Out of scope, always:** Sasha's other games and projects, and anything from his employer. Don't copy code from any of them, not even a COGITO fix: redo it in the fork. His other folders on this Mac, including his earlier hackathon folder, are off limits: don't open, read or copy from them.
 
@@ -31,7 +34,7 @@ Sasha decides what gets built, every word a user reads, the look, the prompts' g
 
 ## Who does what
 
-The arrangement from 2026-10-31 (Sasha's words are quoted in [DECISIONS.md](DECISIONS.md)). Model picks may change again when someone's usage runs out; this table and DECISIONS.md are the two places to edit.
+The arrangement from 2026-10-31 (Sasha's words are quoted in DECISIONS.md). Model picks may change again when someone's usage runs out; this table and DECISIONS.md are the two places to edit.
 
 | Who | Model and harness | What |
 |---|---|---|

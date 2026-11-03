@@ -48,3 +48,6 @@ exports/
 .cursor/
 .codex/
 .opencode/
+
+# The owner's decision log: kept locally, never published (Sasha, 2026-11-03).
+DECISIONS.md
