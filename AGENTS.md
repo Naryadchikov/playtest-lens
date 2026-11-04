@@ -1,6 +1,6 @@
 # Playtest Lens: rules for agents
 
-A playtest analyst for game developers, built solo by Sasha for the Meta Global AI Developer Hackathon (kickoff 2026-10-26 at 12:00 ET; building period 2026-10-27 to 2026-11-04; submissions due 2026-11-04 at 9:00 PM Eastern, verified from the Participant Guide, 2026-10-28). Read [PLAN.md](PLAN.md) first, then DECISIONS.md.
+A playtest analyst for game developers, built solo by Sasha for the Meta Global AI Developer Hackathon (kickoff 2026-10-26 at 12:00 ET; building period 2026-10-27 to 2026-11-04; submissions due 2026-11-04 at 9:00 PM Eastern, verified from the Participant Guide, 2026-10-28). Read [PLAN.md](PLAN.md) first, then DECISIONS.md (kept locally, see below).
 
 DECISIONS.md is Sasha's decision log. It is kept in the working folder only, git-ignored, and is not part of the public repo (Sasha, T3 Code chat, 2026-11-03: "remove decisions from history in remote, leave local copy just for our use"). A fresh clone does not have it.
 

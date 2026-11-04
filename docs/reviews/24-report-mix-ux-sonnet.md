@@ -58,7 +58,7 @@ I used the pages as a first-time level designer would: Chromium and WebKit throu
 6. **The Open page and the Spark page look the same above the fold.**
    - Size and state: all sizes. The model name appears only in the footer (y about 10150 on her Open page), so at 960 x 1080 side by side nothing says which is which.
    - Why it matters: the video plan is "then Open beside it". A judge cannot tell what changed except by the counts.
-   - Fix (proposal, the words are Sasha's): one line under "Session cogito_person2" naming the model, for example "Muse Spark Open".
+   - Fix (proposal, the words are Sasha's): one line under "Session lobby-player-1" naming the model, for example "Muse Spark Open".
 
 7. **Dropped candidates are not linked from the first screen.**
    - Size and state: all sizes. "4 dropped" in the subline and in the map legend is plain text. The section is the last thing on the page.

@@ -21,7 +21,7 @@ Each designer makes one standalone HTML page for one direction, on the real sess
   - `maps.meta`: `px = (x - world_min_x) / (world_max_x - world_min_x) * px_width`, `py = (z - world_min_z) / (world_max_z - world_min_z) * px_height`, 1334 x 2048 px, z grows downward. Both floors share this mapping. `maps.floors[0].image` is `floor0.png` (ground), `[1]` is `floor1.png` (upper floor; the black middle is the open atrium, thin lines are ground walls below).
   - `zones`: room visits `{zone, puzzle, start_s, end_s}` from the game's telemetry volumes.
   - `game_events`: `{t, kind, label}` for doors, pickups, quest steps, unlocks, pause and resume. Labels come from game node names and are rough.
-- The page today: `runs/check/person2-report.html` (render it from `report/render.py`; its wording is in `LABELS` there). Design tokens: `docs/design/DESIGN_NOTES.md`.
+- The page today: `runs/check/lobby-player-1-report.html` (render it from `report/render.py`; its wording is in `LABELS` there). Design tokens: `docs/design/DESIGN_NOTES.md`.
 
 ### What every mockup must do
 

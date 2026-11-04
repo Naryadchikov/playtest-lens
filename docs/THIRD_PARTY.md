@@ -6,10 +6,10 @@ The hackathon's rule: what's presented must be built during the event, and what 
 
 - **COGITO** by Phazorknight (MIT), the immersive-sim template whose demo is the test game. Origin: codeberg.org/Phazorknight/Cogito at 676be6d (MIT). The author's copy, [github.com/Naryadchikov/cogito-playtest-lens](https://github.com/Naryadchikov/cogito-playtest-lens), keeps upstream's `main` at that commit, unchanged, with its full history. Our changes are only the commits on its `playtest-lens` branch, the fork's default branch on GitHub; the main ones are listed below. It's the submodule at `game/`.
 - **Godot 4.7.2**, **Python**, **ffmpeg**, and any library listed in the analyzer's requirements file.
-- Demo asset credits: listed here once each asset's license is checked.
+- Demo asset credits: listed below.
 - Tools used to build it, not part of the submission: T3 Code, Claude Code, Muse Code and Cursor.
 
-## Demo assets to check
+## Demo assets
 
 From the COGITO checkout at 676be6d (`game/`). Each license below is from a file in that checkout, from the credits page `game/Readme.md` links to, or from a page that page or a local readme links. Credits page: https://codeberg.org/Phazorknight/Cogito/wiki/Credits%2C-Contributors%2C-License (raw text, read 2026-10-26). "The MIT line" below means this sentence on that page: "All other included assets either made by Philip Drobar or one of the contributors, published under MIT License." "Unknown" means none of these sources states one license for that item.
 

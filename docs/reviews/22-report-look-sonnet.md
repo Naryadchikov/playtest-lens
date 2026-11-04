@@ -2,7 +2,7 @@ Reviewer: Claude Sonnet 5.5, Claude Code. Commit 6847e40 (task 30 by Claude Opus
 
 **NOT PASS: 2 blocking defects.**
 
-Captures are in `/tmp/r22/shots/` (outside the repo). Pages re-rendered from the two findings files into `/tmp/r22/spark.html` and `open.html`, clips linked from `runs/check/cogito_person2-clips`. Chromium for most flows, WebKit for the 960 and 400 flows. Sizes 1920 x 1080, 1440 x 900, 960 x 1080, 400 wide, light and dark. No page errors in any run.
+Captures are in `/tmp/r22/shots/` (outside the repo). Pages re-rendered from the two findings files into `/tmp/r22/spark.html` and `open.html`, clips linked from `runs/check/lobby-player-1-clips`. Chromium for most flows, WebKit for the 960 and 400 flows. Sizes 1920 x 1080, 1440 x 900, 960 x 1080, 400 wide, light and dark. No page errors in any run.
 
 ## Blocking
 
@@ -70,7 +70,7 @@ Reviewer: Claude Sonnet 5.5, Claude Code. Commit 5b2c281 (task 35 by Claude Fabl
 
 **PASS: 0 blocking defects.** Both round 1 blocking defects and the heat view are fixed in Chromium and WebKit, on the Spark and the Open page, at every size. Seven smaller defects remain, two of them worth fixing before the video (S1 and S2).
 
-Pages re-rendered from the two findings files into `runs/check/r22b-spark.html` and `r22b-open.html` (git-ignored, the clips linked from `runs/check/cogito_person2-clips`). Captures and scripts are in `/tmp/r22b/` (outside the repo). Sizes 1920 x 1080, 1440 x 900, 960 x 1080 and 400 px, light and dark. No page errors in any run, and no sideways scroll at any size in any state I opened. A sampler read the page state every 40 ms during each jump, so a flicker cannot hide between my readings.
+Pages re-rendered from the two findings files into `runs/check/r22b-spark.html` and `r22b-open.html` (git-ignored, the clips linked from `runs/check/lobby-player-1-clips`). Captures and scripts are in `/tmp/r22b/` (outside the repo). Sizes 1920 x 1080, 1440 x 900, 960 x 1080 and 400 px, light and dark. No page errors in any run, and no sideways scroll at any size in any state I opened. A sampler read the page state every 40 ms during each jump, so a flicker cannot hide between my readings.
 
 ### Round 1 items
 

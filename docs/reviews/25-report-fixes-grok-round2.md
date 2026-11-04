@@ -26,7 +26,7 @@ Checked `git diff 17a9675 952ecb1` for `report/render.py`, `tests/test_report.py
 
 5. **Visible words through `LABELS`. Fixed.** `attempt`, `visit`, `moment`, `{n} dropped`, and `F9` live in `LABELS["words"]` (`report/render.py:80`). The problems line, the group note, the pin text, the F9 line, and the dropped link read them. `test_visible_words_come_from_labels` swaps the dict for `try`, `stop`, `beat`, `{n} out`, and `KEY`, and the page follows. That test fails on `17a9675`.
 
-6. **Clip events only for the loaded clip. Not fully fixed.** See the smaller finding below. `timeupdate` does follow the loaded clip: with `#m4` open, `currentSrc` equals `new URL(still src).href` (`file:///tmp/r25/cogito_person2-clips/c00232.00.mp4`), and a `timeupdate` at `currentTime` 5 moves the cursor from `17.33%` to `17.72%` and moves the dot. Both browsers.
+6. **Clip events only for the loaded clip. Not fully fixed.** See the smaller finding below. `timeupdate` does follow the loaded clip: with `#m4` open, `currentSrc` equals `new URL(still src).href` (`file:///tmp/r25/lobby-player-1-clips/c00232.00.mp4`), and a `timeupdate` at `currentTime` 5 moves the cursor from `17.33%` to `17.72%` and moves the dot. Both browsers.
 
 ## Review 24, the code side
 

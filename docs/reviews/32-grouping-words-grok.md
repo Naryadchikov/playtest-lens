@@ -72,7 +72,7 @@ Nothing from `runs/` or `recordings/` was copied into a tracked file. The diff o
 
 `_name` (`report/render.py:679`) turns `CUBICLE_AREA` into `Cubicle area`, `Archive, BREAK_ROOM` into `Archive, Break room`, and `COGITO_3_Lobby` into `COGITO 3 Lobby`, and leaves `Break Room`. It is used for the moment place (`_place`), the group title, problem places, across-player places, and the room bar's text, title, and `data-room` (`report/render.py:1335`).
 
-The script still takes the room from `dataset.room` (`report/render.py:1461`, `roomAt` at 1526). For every finding in the four files, `_place` and `_group_title` contain no raw `WORD_WORD` token. Rendered headers, problem lists, and room bars for both of his pages and her Spark page are the same, except the h1 id in `Playtest cogito_person2`, which is the session id in `Playtest {id}`.
+The script still takes the room from `dataset.room` (`report/render.py:1461`, `roomAt` at 1526). For every finding in the four files, `_place` and `_group_title` contain no raw `WORD_WORD` token. Rendered headers, problem lists, and room bars for both of his pages and her Spark page are the same, except the h1 id in `Playtest lobby-player-1`, which is the session id in `Playtest {id}`.
 
 Model tag, from `LABELS["head"]["model_names"]`: Spark pages render `Analyzed by <b>Muse Spark 1.2</b>` with `title="muse-spark-1.2-contributor"`. Open pages render `Muse Spark Open (open weights)` with `title="meta-models/muse-spark-open-1026"`. A probe id `evil<model>` is escaped in the tag and in the title attribute (`evil&lt;model&gt;`). The h1 escapes the id and the player. Room text, the room title, and `data-room` escape quotes and `<`.
 

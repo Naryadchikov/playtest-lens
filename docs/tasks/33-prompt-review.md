@@ -13,7 +13,7 @@ Sasha, T3 Code chat, 2026-10-31: "also see where we can improve and update promp
 ## The two sessions (private, git-ignored; never copy anything from them into a tracked file)
 
 - **His** (he designed the level's volumes, knows it well): `recordings/cogito/cogito.mp4` (8:32) and `recordings/cogito/2026-10-28T20-31-08Z.jsonl`, start flash 25.2 s.
-- **Hers** (first time in the level): `recordings/cogito/cogito_person2.mkv` (21:21) and `recordings/cogito/2026-10-30T12-20-05Z.jsonl`, start flash in `runs/check/person2-findings.json` at `session.start_flash_s`.
+- **Hers** (first time in the level): `recordings/cogito/lobby-player-1.mkv` (21:21) and `recordings/cogito/2026-10-30T12-20-05Z.jsonl`, start flash in `runs/check/lobby-player-1-findings.json` at `session.start_flash_s`.
 - Prompts: `analyzer/prompts/spark_test.md` (the candidate pass, video with sound in 120 s windows) and `analyzer/prompts/check.md` (the check: one 20 s clip, its Voice Transcribe text, the log slice, the session outline).
 - Modes: normal is `muse-spark-1.2-contributor` through `tools/run-analyzer.sh`; open is `meta-models/muse-spark-open-1026` on Baseten through `tools/run-baseten.sh` (it also reads the Meta key, for Voice Transcribe). The commands are in README.md, "Run it", and in `analyzer/analyze.py` on main once task 30 lands; use the two-step commands (spark_test, then check with `--log` and `--video-flash-s`) with `--out` paths of your own.
 
@@ -36,7 +36,7 @@ Change as little as the evidence needs. Several small prompt edits tested togeth
 ## Protocol
 
 1. **Worktree setup:** in your worktree root, `ln -s <main checkout>/runs runs`, the same for `recordings` and `.venv`. The model client caches in `runs/cache/` and logs to `runs/costs.jsonl`, so a call made before is free. Write every new output under `runs/check/prompt33/` and `runs/spark_test/prompt33/` with names that say session, mode and before or after; never overwrite an existing file in `runs/`.
-2. **Baselines with today's prompts:** hers already exist (`runs/check/person2-findings.json`, `-open.json`; a rerun should come from the cache at $0: confirm). His need one run per mode with today's prompts (his older findings files used older prompts).
+2. **Baselines with today's prompts:** hers already exist (`runs/check/lobby-player-1-findings.json`, `-open.json`; a rerun should come from the cache at $0: confirm). His need one run per mode with today's prompts (his older findings files used older prompts).
 3. **After:** edit the prompts (and the minimal code for item 2 if you test it), then run both sessions in both modes.
 4. **Compare, per session and mode:** candidates, kept, dropped, kinds, friction; moments matched before and after within 15 s, added, removed; for her Spark run, each reference card kept or lost; for his session, each of his 2026-10-28 points fixed or not. Render before and after pages with `.venv/bin/python -m report.render` into `runs/check/prompt33/`.
 5. **Cost cap:** at most $8 of new spend in total (Meta pool plus Baseten); estimate before each run and stop and report if the next run would pass the cap. Report the spend from `runs/costs.jsonl`.

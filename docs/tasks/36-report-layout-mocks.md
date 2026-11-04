@@ -44,7 +44,7 @@ Open questions for your direction to answer:
 
 ## Inputs (private sessions, git-ignored: never copy any of them into a tracked file)
 
-- **Hers (primary, the busy one):** `runs/check/person2-findings.json` (Contributor Spark 1.2; 21:21, 24 kept, 5 dropped, two floors). Clip paths in it are relative to `runs/check/`. Today's page: `runs/check/person2-report.html`. Open mode: `runs/check/person2-findings-open.json` (33 kept).
+- **Hers (primary, the busy one):** `runs/check/lobby-player-1-findings.json` (Contributor Spark 1.2; 21:21, 24 kept, 5 dropped, two floors). Clip paths in it are relative to `runs/check/`. Today's page: `runs/check/lobby-player-1-report.html`. Open mode: `runs/check/lobby-player-1-findings-open.json` (33 kept).
 - **His (the demo):** `runs/demo-site/cogito-muse-spark-1.2-contributor-findings.json` (8:32, 7 kept, 9 dropped). Clip paths relative to `runs/demo-site/`. Today's page: `runs/demo-site/site/index.html`.
 - **Maps:** `report/maps/lobby.png` and `.json` (ground) and `lobby_upper.png` and `.json` (upper floor, `y_floor_min`); `report/render.py` (`_load_floors`, `world_to_px`) shows the mapping. The findings file's `route` holds `maps`, `points` (`[t, x, z, floor]`), `heat`, `floor_spans`; it also holds `zones`, `events` (readable labels) and `summary.problems`.
 - Design notes so far: `docs/design/UX_PASS.md` (Fable's task 32 pass), `docs/design/DESIGN_NOTES.md` (tokens).

@@ -12,7 +12,7 @@ None.
    `_span` (`report/render.py:401`) returns one m:ss when both ends format the same. The card head (`report/render.py:1055`) and the group notes (`report/render.py:1212`, `report/render.py:1218`) call it. The attempt heading fills `Attempt {n} ({start}-{end})` with two `_mss` calls.
    Input: `tests/fixtures/findings_redesign.json`, the first kept finding, `time_s` 39.2, `end_s` 39.8, `attempt_start_s` 39.2, `attempt_end_s` 39.8.
    Result: the card time is `0:39 (0 s)`, the group note is `1 attempt, 1 moment, 0:39`, and the heading is `Attempt 2 (0:39-0:39)`.
-   On the person2 page the attempt headings are real ranges: 3:41-3:53, 14:20-14:47, 19:16-19:42, 9:39-10:20.
+   On the Player 1 page the attempt headings are real ranges: 3:41-3:53, 14:20-14:47, 19:16-19:42, 9:39-10:20.
 
 2. `docs/design/DESIGN_NOTES.md:18`. Class: the markup note places the clip in two spots.
    The sentence says the card's children are `.card-body`, then the clip, and the body-children list ends with `.clip` as well. In `report/render.py:1095` the clip is the next sibling of `.card-body`. The wide layout is `.card:has(> .clip)`, so a clip placed inside the body would stay under the text.
@@ -21,7 +21,7 @@ None.
 
 `.venv/bin/python -m pytest -q`: 193 passed, exit code 0, 40.52s. No model call. The transcribe tests use a mock HTTP transport.
 
-Rendered `runs/check/person2-findings.json` to `/tmp/review18.html`. Against a render from `c10fbc2`, the visible text differs only in four group notes: `0:39-0:39` to `0:39`, `5:17-5:17` to `5:17`, `5:27-5:27` to `5:27`, `8:59-8:59` to `8:59`. `LABELS` is the same. `tile zero` matches the kinds whose count in the file is 0.
+Rendered `runs/check/lobby-player-1-findings.json` to `/tmp/review18.html`. Against a render from `c10fbc2`, the visible text differs only in four group notes: `0:39-0:39` to `0:39`, `5:17-5:17` to `5:17`, `5:27-5:27` to `5:27`, `8:59-8:59` to `8:59`. `LABELS` is the same. `tile zero` matches the kinds whose count in the file is 0.
 
 Three kept findings from `random.Random(18)`: f6 at 255.0 s (4:15), f4 at 232.0 s (3:52), f29 at 1204.0 s (20:04). Summary, quote, checker note, and time in each card match the file. Every kept string that contains `&`, `<`, `>`, or a quote is escaped in its card.
 
@@ -37,6 +37,6 @@ Pre-existing, outside this diff: the print rule `.clip { display: none }` is one
 
 ## Orchestrator's follow-up (Claude Opus 5.5, Claude Code in T3 Code)
 
-- Nit 1 fixed: the attempt heading now uses `_span` (`LABELS["moments"]["attempt"]` is `Attempt {n} ({span})`). The person2 headings read the same.
+- Nit 1 fixed: the attempt heading now uses `_span` (`LABELS["moments"]["attempt"]` is `Attempt {n} ({span})`). The Player 1 headings read the same.
 - Nit 2 fixed: DESIGN_NOTES.md now says the clip is the body's next sibling.
 - The print finding is pre-existing and went to docs/FOLLOWUPS.md.

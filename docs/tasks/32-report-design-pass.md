@@ -1,6 +1,6 @@
 # 32: The final design and UX pass on the report
 
-Author of this brief: Claude Opus 5.5 (orchestrator, Claude Code in T3 Code), 2026-10-31. Designer and implementer: Claude Fable 5.1, a Claude Code subagent (Sasha's pick). Reviewer: a fresh Grok 4.7 xhigh (code), then a fresh Claude Sonnet 5.5 (captures). Base commit: `c1cd19c` on `main` (task 30 built: the page you start from is `runs/check/person2-report.html`; its screenshots are in `/tmp/t30/shots/`).
+Author of this brief: Claude Opus 5.5 (orchestrator, Claude Code in T3 Code), 2026-10-31. Designer and implementer: Claude Fable 5.1, a Claude Code subagent (Sasha's pick). Reviewer: a fresh Grok 4.7 xhigh (code), then a fresh Claude Sonnet 5.5 (captures). Base commit: `c1cd19c` on `main` (task 30 built: the page you start from is `runs/check/lobby-player-1-report.html`; its screenshots are in `/tmp/t30/shots/`).
 
 Follow `.claude/skills/change-analyzer/SKILL.md` if you touch the analyzer, and `.claude/skills/validate-change/SKILL.md` before you call it done.
 
@@ -58,7 +58,7 @@ What went wrong in all three, the orchestrator's read:
 
 ## Tools
 
-- Data: `runs/check/person2-findings.json` (Spark, the page to show) and `person2-findings-open.json` (Open), after task 30's regeneration; render with `.venv/bin/python -m report.render <findings> -o <page>`. The session is a tester's private recording: never copy anything from `runs/` or `recordings/` into a tracked file; fixtures stay synthetic.
+- Data: `runs/check/lobby-player-1-findings.json` (Spark, the page to show) and `lobby-player-1-findings-open.json` (Open), after task 30's regeneration; render with `.venv/bin/python -m report.render <findings> -o <page>`. The session is a tester's private recording: never copy anything from `runs/` or `recordings/` into a tracked file; fixtures stay synthetic.
 - Browser: Playwright is in `.venv` with its own WebKit and Chromium; both play the H.264 clips. Set `PLAYWRIGHT_BROWSERS_PATH=0` and run scripts with `.venv/bin/python -I`. Use it to click, scroll, play clips, take screenshots at 1920 x 1080, 1440 x 900, 960 x 1080 and 400 px wide, in light and dark, and to record a short video of the main flows. Never run `playwright install`.
 
 ## Deliverables

@@ -45,7 +45,7 @@ A level designer who opens the page cold, with no instructions:
 ## Inputs (private sessions, git-ignored: never copy any of them into a tracked file)
 
 Final findings with the new check prompt (v2 with the friction guard, commit `6c4953c`), in `runs/final/`:
-- `cogito_person2-muse-spark-1.2-contributor-findings.json` (hers, Spark; the busy one) and `cogito_person2-meta-models-muse-spark-open-1026-findings.json` (hers, Open);
+- `lobby-player-1-muse-spark-1.2-contributor-findings.json` (hers, Spark; the busy one) and `lobby-player-1-meta-models-muse-spark-open-1026-findings.json` (hers, Open);
 - `cogito-muse-spark-1.2-contributor-findings.json` (his, Spark; the demo and the GIF) and `cogito-meta-models-muse-spark-open-1026-findings.json` (his, Open).
 Render with `.venv/bin/python -m report.render <findings.json> --out <page.html>` (check `report/render.py --help` for the exact flags) into `runs/final/`. Maps: `report/maps/`. The mocks' renderers show how each piece was drawn; copy what you need.
 

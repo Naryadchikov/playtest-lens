@@ -32,7 +32,7 @@ NOT PASS. 1 blocking finding.
 
 `.venv/bin/python -m pytest -q --tb=line`: 237 passed, exit 0, 40.44 s. No model call.
 
-Fresh render of her Spark findings matches `runs/final/cogito_person2-muse-spark-1.2-contributor-report.html` (`diff -q` exit 0). The four final pages each contain one `<script>` and one `</script>`. The only URL is `http://www.w3.org/2000/svg`. No `/Users/`, no user name, no token. Payloads `</script><script>alert(1)</script>`, `<!--`, and `<!--<img src=x onerror=alert(1)>-->` placed in the verdict, quotes, notes, labels, zones, and events are escaped, and the page still has one script tag. The four changed files have no em dash and no en dash.
+Fresh render of her Spark findings matches `runs/final/lobby-player-1-muse-spark-1.2-contributor-report.html` (`diff -q` exit 0). The four final pages each contain one `<script>` and one `</script>`. The only URL is `http://www.w3.org/2000/svg`. No `/Users/`, no user name, no token. Payloads `</script><script>alert(1)</script>`, `<!--`, and `<!--<img src=x onerror=alert(1)>-->` placed in the verdict, quotes, notes, labels, zones, and events are escaped, and the page still has one script tag. The four changed files have no em dash and no en dash.
 
 `PLAYWRIGHT_BROWSERS_PATH=0 .venv/bin/python -I /tmp/r23/probe.py` (Chromium and WebKit, her Spark page, clips symlinked beside `/tmp/r23/her.html`):
 

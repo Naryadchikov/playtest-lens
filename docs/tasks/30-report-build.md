@@ -49,7 +49,7 @@ Every visible string lives in `LABELS`. Reuse today's wording. Each new string c
 
 ## Regenerate (private data, git-ignored)
 
-1. Copy `runs/check/person2-findings.json` to `runs/check/person2-findings-before-floors.json`, and the same for `-open`. Copy `runs/check/person2-report.html` to `runs/check/person2-report-polish.html`, same for `-open`.
+1. Copy `runs/check/lobby-player-1-findings.json` to `runs/check/lobby-player-1-findings-before-floors.json`, and the same for `-open`. Copy `runs/check/lobby-player-1-report.html` to `runs/check/lobby-player-1-report-polish.html`, same for `-open`.
 2. Run the spatial step on both findings files (the log is `recordings/cogito/2026-10-30T12-20-05Z.jsonl`, the flash is each file's `session.start_flash_s`), then render both pages to their usual names.
 3. Prove the findings did not change: a script that compares, for every finding, `id, kind, time_s, end_s, summary, quote, game_state, rank, check.verdict, check.note, check.friction, check.resolved, beat` before and after, and prints the differences (expected: none).
 

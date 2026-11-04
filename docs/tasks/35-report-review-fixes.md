@@ -33,7 +33,7 @@ Not in scope: review 22's defect 14 (two Play buttons) and 15 (the long full run
 ## Done means
 
 - `.venv/bin/python -m pytest -q` passes offline, with new tests for items 1, 11 and 12.
-- Both person2 pages regenerated; the findings comparison prints 0 differences in every protected field (id, kind, times, summary, quote, game_state, rank, beat, check verdict, note, friction, resolved) for 29 and 47 findings.
+- Both Player 1 pages regenerated; the findings comparison prints 0 differences in every protected field (id, kind, times, summary, quote, game_state, rank, beat, check verdict, note, friction, resolved) for 29 and 47 findings.
 - Playwright flows in **both WebKit and Chromium** (`PLAYWRIGHT_BROWSERS_PATH=0`, `.venv/bin/python -I`): reproduce B1, B2 and the heat-view bug before the fix and show them gone after; captures at 1920 x 1080, 1440 x 900, 960 x 1080 and 400 px, light and dark; drive the Open page's flows too.
 - `docs/design/UX_PASS.md` gets a short "Task 35" section: what changed, new strings.
 
