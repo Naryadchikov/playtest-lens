@@ -32,4 +32,8 @@ Read-only except your report file and `/tmp`. Do not commit, push or change any 
 
 Report: first line names the reviewer, model, harness and the commits. Then PASS or NOT PASS. A blocking finding is anything that should stop the repos going public today; anything else is should fix or nit. Then each finding with its file and line, how you checked each numbered step, and what you did not check. End with a verdict in one sentence. Your final message to the orchestrator: the verdict, the counts, the blocking findings and the report's path, nothing more.
 
-## What came back
+## What came back (2026-11-04)
+
+A fresh Claude Sonnet 5.5 (high), review 39 on `036be54`: **PASS**, 0 blocking, 0 should fix, 6 nits. All three repos clean; the demo site works from a fresh clone in Chromium and WebKit, all 81 clips play; `#m21` opens Moment 21 and plays `c01157.00.mp4`; a fresh recursive clone passes 249 tests; none of 513 rewritten commits is on GitHub.
+
+The orchestrator read the report, confirmed the clip count (the reviewer's 85 is 28 + 47 + 10 with shared clips; 81 unique), and replaced the list of scan words in step 1 with a description, since the report is public. All 6 nits left for now: Sasha's go was conditional only on the verdict, and none blocks. Not checked by the reviewer: the live Pages site (off until the flip) and the clips' sound.
